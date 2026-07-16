@@ -3,7 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './src/config/db.js';
-import authRoutes from './src/routes/AuthRoutes.js';
+import routesAuth from './src/routes/AuthRoutes.js';
+import routesAdminVendeur from './src/routes/admin/AdminVendeurRoutes.js';
+import routesAdminProduit from './src/routes/admin/AdminProduitRoutes.js';
+import routesAdminCategorie from './src/routes/admin/AdminCategorieRoutes.js';
+import routesAdminUtilisateur from './src/routes/admin/AdminUtilisateurRoutes.js';
 
 dotenv.config();
 
@@ -25,7 +29,11 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth',                  routesAuth);
+app.use('/api/admin/vendeurs',        routesAdminVendeur);
+app.use('/api/admin/produits',        routesAdminProduit);
+app.use('/api/admin/categories',      routesAdminCategorie);
+app.use('/api/admin/utilisateurs',    routesAdminUtilisateur);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -46,7 +46,7 @@ export default function Button({
       className={[
         'w-full flex items-center justify-center gap-2',
         'py-3.5 px-6 rounded-lg font-bold text-base',
-        'bg-[#FC7701] hover:bg-[#FC8900] text-white',
+        'bg-accent hover:bg-accent/90 text-white',
         'shadow-md hover:shadow-lg active:scale-[0.99]',
         'transition-all disabled:opacity-60 disabled:cursor-not-allowed',
         className,

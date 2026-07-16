@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         <BrandPanel />
 
         {/* Panneau droit — formulaire */}
-        <section className="flex-1 flex flex-col justify-center items-center px-6 py-5 bg-white">
+        <section className="flex-1 flex flex-col justify-center items-center px-6 py-5 bg-surface">
           <div className="w-full max-w-sm">
             {children}
           </div>

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, googleLogin } from '../controllers/AuthController.js';
+import { register, login, googleLogin } from '../controllers/auth/AuthController.js';
 import validate from '../middlewars/validate.js';
 import { registerValidators, loginValidators } from '../validators/authValidators.js';
 

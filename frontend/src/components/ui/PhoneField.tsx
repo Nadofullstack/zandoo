@@ -19,7 +19,7 @@ export default function PhoneField({ value, onChange, error }: PhoneFieldProps) 
       {/* Label */}
       <label
         htmlFor="phone-input"
-        className="flex items-center gap-1.5 text-xs font-semibold text-[#011023] uppercase tracking-wider"
+        className="flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-wider"
       >
         <Phone size={13} aria-hidden="true" />
         Téléphone
@@ -35,7 +35,7 @@ export default function PhoneField({ value, onChange, error }: PhoneFieldProps) 
           'transition-all focus-within:ring-2',
           error
             ? 'border-red-400 focus-within:border-red-500 focus-within:ring-red-100'
-            : 'border-[#c4c6cd] focus-within:border-[#FC7701] focus-within:ring-[#FC7701]/20',
+            : 'border-[#c4c6cd] focus-within:border-accent focus-within:ring-accent/20',
         ].join(' ')}
       >
         <PhoneInput

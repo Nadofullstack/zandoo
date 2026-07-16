@@ -15,11 +15,11 @@ import logo from '../../assets/logo.jpg';
 function champClass(aErreur: boolean): string {
   return [
     'w-full px-4 py-3 bg-white border rounded-lg',
-    'text-sm text-[#011023] placeholder:text-gray-400',
+    'text-sm text-primary placeholder:text-gray-400',
     'transition-all outline-none focus:ring-2',
     aErreur
       ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-      : 'border-[#c4c6cd] focus:border-[#FC7701] focus:ring-[#FC7701]/20',
+      : 'border-[#c4c6cd] focus:border-accent focus:ring-accent/20',
   ].join(' ');
 }
 
@@ -43,8 +43,14 @@ export default function LoginForm() {
     if (!credentialResponse.credential) return;
     setGoogleErreur('');
     try {
-      await googleLoginUser(credentialResponse.credential);
-      navigate('/');
+      const reponse = await googleLoginUser(credentialResponse.credential);
+      /* Redirection selon le rôle */
+      const role = reponse.data?.user?.role;
+      if (role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch {
       setGoogleErreur('La connexion Google a échoué. Veuillez réessayer.');
     }
@@ -64,7 +70,7 @@ export default function LoginForm() {
 
       {/* En-tête */}
       <header className="mb-3 text-center">
-        <h2 className="text-lg font-bold text-[#011023] mb-0.5">Connexion</h2>
+        <h2 className="text-lg font-bold text-primary mb-0.5">Connexion</h2>
         <p className="text-xs text-[#74777d]">
           Veuillez entrer vos identifiants pour accéder à votre compte.
         </p>
@@ -123,7 +129,7 @@ export default function LoginForm() {
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="identifier"
-            className="flex items-center gap-1.5 text-xs font-semibold text-[#011023] uppercase tracking-wider"
+            className="flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-wider"
           >
             <Mail size={13} aria-hidden="true" />
             E-mail ou Téléphone
@@ -152,13 +158,13 @@ export default function LoginForm() {
           <div className="flex items-center justify-between">
             <label
               htmlFor="login-password"
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#011023] uppercase tracking-wider"
+              className="flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-wider"
             >
               <Lock size={13} aria-hidden="true" />
               Mot de passe
             </label>
             {/* Lien mot de passe oublié */}
-            <a href="#" className="text-xs font-semibold text-[#FC7701] hover:underline transition-colors">
+            <a href="#" className="text-xs font-semibold text-accent hover:underline transition-colors">
               Mot de passe oublié ?
             </a>
           </div>
@@ -181,7 +187,7 @@ export default function LoginForm() {
               type="button"
               onClick={() => setMotDePasseVisible((v) => !v)}
               aria-label={motDePasseVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#74777d] hover:text-[#011023] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#74777d] hover:text-primary transition-colors"
             >
               {motDePasseVisible ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -201,7 +207,7 @@ export default function LoginForm() {
             type="checkbox"
             checked={form.remember}
             onChange={handleChange}
-            className="w-4 h-4 rounded border-gray-300 text-[#FC7701] focus:ring-[#FC7701] cursor-pointer"
+            className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent cursor-pointer"
           />
           <label htmlFor="remember" className="text-sm text-[#74777d] select-none cursor-pointer">
             Se Souvenir de moi
@@ -220,7 +226,7 @@ export default function LoginForm() {
       <footer className="mt-5 text-center">
         <p className="text-sl text-[#74777d]">
           Pas encore de compte ?{' '}
-          <Link to="/inscription" className="text-[#011023] font-bold hover:text-[#FC7701] transition-colors">
+          <Link to="/inscription" className="text-primary font-bold hover:text-accent transition-colors">
             S'inscrire
           </Link>
         </p>

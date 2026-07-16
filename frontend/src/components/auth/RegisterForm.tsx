@@ -21,7 +21,7 @@ export default function RegisterForm() {
           alt="ZANDOO"
           className="h-10 w-10 mx-auto mb-2 object-contain rounded-xl shadow-sm"
         />
-        <h2 className="text-lg font-extrabold text-[#011023]">Créer un compte</h2>
+        <h2 className="text-lg font-extrabold text-primary">Créer un compte</h2>
         <p className="mt-0.5 text-xs text-[#74777d]">
           Rejoignez ZANDOO et commencez à acheter ou vendre.
         </p>
@@ -98,14 +98,14 @@ export default function RegisterForm() {
             checked={form.tos}
             onChange={handleChange}
             aria-invalid={!!errors.tos}
-            className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FC7701] focus:ring-[#FC7701] cursor-pointer shrink-0"
+            className="mt-0.5 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent cursor-pointer shrink-0"
           />
           <div>
             <label htmlFor="tos" className="text-xs text-[#44474c] leading-relaxed cursor-pointer">
               J'accepte les{' '}
-              <a href="#" className="text-[#FC7701] font-semibold hover:underline">CGU</a>
+              <a href="#" className="text-accent font-semibold hover:underline">CGU</a>
               {' '}et la{' '}
-              <a href="#" className="text-[#FC7701] font-semibold hover:underline">Politique de confidentialité</a>.
+              <a href="#" className="text-accent font-semibold hover:underline">Politique de confidentialité</a>.
             </label>
             {errors.tos && (
               <p role="alert" className="mt-0.5 text-xs text-red-600">{errors.tos}</p>
@@ -127,7 +127,7 @@ export default function RegisterForm() {
       {/* Lien connexion */}
       <p className="mt-3 text-center text-sl text-[#74777d]">
         Déjà inscrit ?{' '}
-        <Link to="/connexion" className="text-[#011023] font-bold hover:text-[#FC7701] transition-colors">
+        <Link to="/connexion" className="text-primary font-bold hover:text-accent transition-colors">
           Se connecter
         </Link>
       </p>

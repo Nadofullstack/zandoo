@@ -45,9 +45,18 @@ export function useLoginForm() {
     setErrors({});
 
     try {
-      await loginUser(form.identifier.trim(), form.password);
+      const reponse = await loginUser(form.identifier.trim(), form.password);
       setIsSuccess(true);
-      setTimeout(() => navigate('/'), 1500);
+
+      /* Redirection selon le rôle — délai court pour afficher le message succès */
+      const role = reponse.data?.user?.role;
+      setTimeout(() => {
+        if (role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }, 1200);
     } catch (err) {
       const apiErr = err as ApiServiceError;
       if (apiErr.errors?.length) {

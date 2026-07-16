@@ -25,9 +25,9 @@ export default function LoginBrandPanel() {
           className="w-full h-full object-cover object-center"
         />
         {/* Superposition de couleur */}
-        <div className="absolute inset-0 bg-[#011023]/60 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-primary/60 mix-blend-multiply" />
         {/* Dégradé du bas vers le haut */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#011023] via-[#011023]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent" />
       </div>
 
       {/* Contenu positionné par-dessus l'image */}
@@ -40,7 +40,7 @@ export default function LoginBrandPanel() {
         {/* Accroche principale et preuve sociale */}
         <div className="max-w-sl">
           <h1 className="text-3xl font-extrabold mb-2 leading-snug tracking-tight">
-            Connectez votre business <span className="text-[#FC7701]">au marché global.</span>
+            Connectez votre business <span className="text-accent">au marché global.</span>
           </h1>
           <p className="text-sl opacity-90 leading-relaxed mb-3">
             La plateforme de référence pour le commerce moderne en Afrique de l'Ouest.

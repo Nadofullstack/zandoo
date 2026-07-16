@@ -5,12 +5,14 @@ export interface RegisterPayload {
   password: string;
 }
 
+export type RoleAuth = 'acheteur' | 'vendeur' | 'livreur' | 'admin';
+
 export interface AuthUser {
   id: string;
   fullName: string;
   email: string;
   phone: string;
-  role: 'buyer' | 'seller';
+  role: RoleAuth;
 }
 
 export interface AuthResponse {

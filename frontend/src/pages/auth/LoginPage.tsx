@@ -16,7 +16,7 @@ export default function LoginPage() {
         <LoginBrandPanel />
 
         {/* Panneau droit : formulaire de connexion — padding non réduit */}
-        <section className="flex-1 flex flex-col justify-center items-center px-8 py-8 bg-[#FDFDFD] overflow-y-auto">
+        <section className="flex-1 flex flex-col justify-center items-center px-8 py-8 bg-surface overflow-y-auto">
           <div className="w-full max-w-xs">
             <LoginForm />
           </div>

@@ -9,7 +9,7 @@ interface AlertProps {
 const STYLES: Record<AlertProps['variant'], string> = {
   success: 'bg-green-50 border-green-200 text-green-800',
   error:   'bg-red-50   border-red-200   text-red-700',
-  info:    'bg-[#eff4ff] border-[#dce9ff] text-[#011023]',
+  info:    'bg-[#eff4ff] border-[#dce9ff] text-primary',
 };
 
 const ICONS: Record<AlertProps['variant'], LucideIcon> = {
