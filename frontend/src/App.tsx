@@ -10,6 +10,15 @@ import DetailProduitAdmin from './pages/admin/produit/DetailProduitAdmin';
 import GestionCategoriesAdmin from './pages/admin/categorie/GestionCategoriesAdmin';
 import ListeUtilisateursAdmin from './pages/admin/utilisateur/ListeUtilisateursAdmin';
 import ProfilUtilisateurAdmin from './pages/admin/utilisateur/ProfilUtilisateurAdmin';
+import ListeCommandesAdmin from './pages/admin/commande/ListeCommandesAdmin';
+import DetailCommandeAdmin from './pages/admin/commande/DetailCommandeAdmin';
+import ListeReclamationsAdmin from './pages/admin/reclamation/ListeReclamationsAdmin';
+import DetailReclamationAdmin from './pages/admin/reclamation/DetailReclamationAdmin';
+import ListePublicitesAdmin from './pages/admin/publicite/ListePublicitesAdmin';
+import FormulairePubliciteAdmin from './pages/admin/publicite/FormulairePubliciteAdmin';
+import GestionPagesStatiquesAdmin from './pages/admin/contenu/GestionPagesStatiquesAdmin';
+import ListeArticlesAdmin from './pages/admin/contenu/ListeArticlesAdmin';
+import EditeurArticleAdmin from './pages/admin/contenu/EditeurArticleAdmin';
 import GardeRouteAdmin from './components/admin/layout/GardeRouteAdmin';
 
 export default function App() {
@@ -38,6 +47,27 @@ export default function App() {
 
         {/* Catégories */}
         <Route path="/admin/categories" element={<GardeRouteAdmin><GestionCategoriesAdmin /></GardeRouteAdmin>} />
+
+        {/* Commandes */}
+        <Route path="/admin/commandes"     element={<GardeRouteAdmin><ListeCommandesAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/commandes/:id" element={<GardeRouteAdmin><DetailCommandeAdmin /></GardeRouteAdmin>} />
+
+        {/* Réclamations */}
+        <Route path="/admin/reclamations"     element={<GardeRouteAdmin><ListeReclamationsAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/reclamations/:id" element={<GardeRouteAdmin><DetailReclamationAdmin /></GardeRouteAdmin>} />
+
+        {/* Publicités */}
+        <Route path="/admin/publicites"          element={<GardeRouteAdmin><ListePublicitesAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/publicites/nouvelle" element={<GardeRouteAdmin><FormulairePubliciteAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/publicites/:id"      element={<GardeRouteAdmin><FormulairePubliciteAdmin /></GardeRouteAdmin>} />
+
+        {/* Contenu — Pages statiques */}
+        <Route path="/admin/pages-statiques" element={<GardeRouteAdmin><GestionPagesStatiquesAdmin /></GardeRouteAdmin>} />
+
+        {/* Contenu — Blog */}
+        <Route path="/admin/articles"         element={<GardeRouteAdmin><ListeArticlesAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/articles/nouveau" element={<GardeRouteAdmin><EditeurArticleAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/articles/:id"     element={<GardeRouteAdmin><EditeurArticleAdmin /></GardeRouteAdmin>} />
 
         {/* ── Défaut ─────────────────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/inscription" replace />} />

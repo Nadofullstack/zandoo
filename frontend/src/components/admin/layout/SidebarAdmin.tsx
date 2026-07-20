@@ -1,5 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { Store, LayoutDashboard, Package, Tag, Users } from 'lucide-react';
+import {
+  Store, LayoutDashboard, Package, Tag, Users,
+  ShoppingCart, MessageSquare, Megaphone, FileText, BookOpen,
+} from 'lucide-react';
 import logo from '../../../assets/logo.jpg';
 
 interface LienNav {
@@ -15,6 +18,11 @@ const LIENS_NAV: LienNav[] = [
   { vers: '/admin/vendeurs',       libelle: 'Vendeurs',        icone: Store            },
   { vers: '/admin/produits',       libelle: 'Produits',        icone: Package          },
   { vers: '/admin/categories',     libelle: 'Catégories',      icone: Tag              },
+  { vers: '/admin/commandes',      libelle: 'Commandes',       icone: ShoppingCart     },
+  { vers: '/admin/reclamations',   libelle: 'Réclamations',    icone: MessageSquare    },
+  { vers: '/admin/publicites',     libelle: 'Publicités',      icone: Megaphone        },
+  { vers: '/admin/pages-statiques',libelle: 'Pages statiques', icone: FileText         },
+  { vers: '/admin/articles',       libelle: 'Blog',            icone: BookOpen         },
 ];
 
 /**
