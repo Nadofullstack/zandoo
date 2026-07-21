@@ -50,7 +50,7 @@ const pageStatiqueSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-pageStatiqueSchema.index({ slug: 1 });
+// pageStatiqueSchema.index({ slug: 1 });
 
 const PageStatique = mongoose.model('PageStatique', pageStatiqueSchema);
 export default PageStatique;

@@ -11,7 +11,7 @@ import {
   modifierUtilisateur,
   modifierStatutUtilisateur,
   supprimerUtilisateur,
-} from '../../../services/adminUtilisateurService';
+} from '../../../services/admin/adminUtilisateurService';
 import type { UtilisateurAdmin, FormulaireUtilisateur } from '../../../types/admin';
 
 type TypeModal = 'activer' | 'suspendre' | 'supprimer';

@@ -5,7 +5,7 @@ import ArbreCategories from '../../../components/admin/categories/ArbreCategorie
 import FormulaireCategorie from '../../../components/admin/categories/FormulaireCategorie';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
-import { useGestionCategories } from '../../../hooks/useGestionCategories';
+import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
 import type { Categorie } from '../../../types/admin';
 
 type ModeFormulaire = 'creer' | 'modifier' | null;

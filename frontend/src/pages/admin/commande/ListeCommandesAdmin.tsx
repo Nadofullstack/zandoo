@@ -7,7 +7,7 @@ import TableauCommandes from '../../../components/admin/commandes/TableauCommand
 import FiltresCommandes from '../../../components/admin/commandes/FiltresCommandes';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import { useGestionCommandes } from '../../../hooks/useGestionCommandes';
+import { useGestionCommandes } from '../../../hooks/admin/useGestionCommandes';
 import type { StatutCommande } from '../../../types/admin';
 
 export default function ListeCommandesAdmin() {

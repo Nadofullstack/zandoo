@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import Alert from '../../../components/ui/Alert';
-import { creerPublicite, modifierPublicite, getPubliciteParId } from '../../../services/adminPubliciteService';
+import { creerPublicite, modifierPublicite, getPubliciteParId } from '../../../services/admin/adminPubliciteService';
 import type { Publicite, FormulairePublicite, StatutPublicite, TypePublicite, EmplacementPublicite } from '../../../types/admin';
 
 const TYPES: { v: TypePublicite; l: string }[] = [

@@ -5,7 +5,7 @@ import TableauUtilisateurs from '../../../components/admin/utilisateurs/TableauU
 import FiltresUtilisateurs from '../../../components/admin/utilisateurs/FiltresUtilisateurs';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import { useGestionUtilisateurs } from '../../../hooks/useGestionUtilisateurs';
+import { useGestionUtilisateurs } from '../../../hooks/admin/useGestionUtilisateurs';
 import type { RoleUtilisateur } from '../../../types/admin';
 
 export default function ListeUtilisateursAdmin() {

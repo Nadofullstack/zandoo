@@ -75,7 +75,7 @@ const articleSchema = new mongoose.Schema(
 );
 
 articleSchema.index({ statut: 1, publieAt: -1 });
-articleSchema.index({ slug: 1 });
+// articleSchema.index({ slug: 1 });
 
 /* Génération automatique du slug depuis le titre */
 articleSchema.pre('save', function () {

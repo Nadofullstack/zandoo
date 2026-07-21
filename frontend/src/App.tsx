@@ -19,7 +19,13 @@ import FormulairePubliciteAdmin from './pages/admin/publicite/FormulairePublicit
 import GestionPagesStatiquesAdmin from './pages/admin/contenu/GestionPagesStatiquesAdmin';
 import ListeArticlesAdmin from './pages/admin/contenu/ListeArticlesAdmin';
 import EditeurArticleAdmin from './pages/admin/contenu/EditeurArticleAdmin';
+import ListeLivreursAdmin from './pages/admin/livreur/ListeLivreursAdmin';
+import ProfilLivreurAdmin from './pages/admin/livreur/ProfilLivreurAdmin';
 import GardeRouteAdmin from './components/admin/layout/GardeRouteAdmin';
+import GardeLivreur from './components/livreur/GardeLivreur';
+import ActivationPage from './pages/livreur/ActivationPage';
+import ChangerMotDePassePage from './pages/livreur/ChangerMotDePassePage';
+import CompleterProfilPage from './pages/livreur/CompleterProfilPage';
 
 export default function App() {
   return (
@@ -28,6 +34,16 @@ export default function App() {
         {/* ── Auth ───────────────────────────────────────────────────────── */}
         <Route path="/inscription" element={<RegisterPage />} />
         <Route path="/connexion"   element={<LoginPage />} />
+
+        {/* ── Livreur — flux d'activation (public, token dans l'URL) ─────── */}
+        <Route path="/livreur/activation/:token"                          element={<ActivationPage />} />
+        <Route path="/livreur/activation/:token/changer-mot-de-passe"    element={<ChangerMotDePassePage />} />
+
+        {/* ── Livreur — pages protégées (JWT + rôle livreur) ─────────────── */}
+        <Route
+          path="/livreur/completer-profil"
+          element={<GardeLivreur><CompleterProfilPage /></GardeLivreur>}
+        />
 
         {/* ── Admin ──────────────────────────────────────────────────────── */}
         <Route path="/admin" element={<GardeRouteAdmin><TableauDeBordAdmin /></GardeRouteAdmin>} />
@@ -39,6 +55,10 @@ export default function App() {
         {/* Vendeurs */}
         <Route path="/admin/vendeurs"         element={<GardeRouteAdmin><ListeVendeursAdmin /></GardeRouteAdmin>} />
         <Route path="/admin/vendeurs/:id"     element={<GardeRouteAdmin><ProfilVendeurAdmin /></GardeRouteAdmin>} />
+
+        {/* Livreurs */}
+        <Route path="/admin/livreurs"         element={<GardeRouteAdmin><ListeLivreursAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/livreurs/:id"     element={<GardeRouteAdmin><ProfilLivreurAdmin /></GardeRouteAdmin>} />
 
         {/* Produits */}
         <Route path="/admin/produits"         element={<GardeRouteAdmin><ListeProduitsAdmin /></GardeRouteAdmin>} />

@@ -150,7 +150,7 @@ const reclamationSchema = new mongoose.Schema(
 /* ── Index ────────────────────────────────────────────────────────────── */
 reclamationSchema.index({ utilisateur: 1, createdAt: -1 });
 reclamationSchema.index({ statut: 1 });
-reclamationSchema.index({ numero: 1 });
+// reclamationSchema.index({ numero: 1 });
 reclamationSchema.index({ assigneA: 1 });
 
 /* ── Génération automatique du numéro de ticket ──────────────────────── */

@@ -142,7 +142,7 @@ const commandeSchema = new mongoose.Schema(
 /* ── Index pour les recherches fréquentes ────────────────────────────── */
 commandeSchema.index({ acheteur: 1, createdAt: -1 });
 commandeSchema.index({ statut: 1 });
-commandeSchema.index({ numero: 1 });
+// commandeSchema.index({ numero: 1 });
 
 /* ── Génération automatique du numéro de commande ────────────────────── */
 commandeSchema.pre('save', async function () {

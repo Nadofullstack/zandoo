@@ -6,8 +6,8 @@ import FormulaireProduit from '../../../components/admin/produits/FormulaireProd
 import BadgeStatutProduit from '../../../components/admin/produits/BadgeStatutProduit';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
-import { useGestionCategories } from '../../../hooks/useGestionCategories';
-import { getProduitParId, modifierProduit, modifierStatutProduit, supprimerProduit } from '../../../services/adminProduitService';
+import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
+import { getProduitParId, modifierProduit, modifierStatutProduit, supprimerProduit } from '../../../services/admin/adminProduitService';
 import type { Produit, FormulaireProduiit } from '../../../types/admin';
 import { useEffect } from 'react';
 

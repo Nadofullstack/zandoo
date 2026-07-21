@@ -72,7 +72,7 @@ const categorieSchema = new mongoose.Schema(
 );
 
 /* Index pour les recherches sur slug et parent */
-categorieSchema.index({ slug: 1 });
+// categorieSchema.index({ slug: 1 });
 categorieSchema.index({ parent: 1 });
 
 const Categorie = mongoose.model('Categorie', categorieSchema);

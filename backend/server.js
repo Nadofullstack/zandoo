@@ -3,19 +3,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './src/config/db.js';
-import routesAuth from './src/routes/AuthRoutes.js';
-import routesAdminVendeur from './src/routes/admin/AdminVendeurRoutes.js';
-import routesAdminProduit from './src/routes/admin/AdminProduitRoutes.js';
-import routesAdminCategorie from './src/routes/admin/AdminCategorieRoutes.js';
+import routesAuth             from './src/routes/AuthRoutes.js';
+import routesAdminVendeur     from './src/routes/admin/AdminVendeurRoutes.js';
+import routesAdminProduit     from './src/routes/admin/AdminProduitRoutes.js';
+import routesAdminCategorie   from './src/routes/admin/AdminCategorieRoutes.js';
 import routesAdminUtilisateur from './src/routes/admin/AdminUtilisateurRoutes.js';
-import routesAdminCommande     from './src/routes/admin/AdminCommandeRoutes.js';
-import routesAdminReclamation  from './src/routes/admin/AdminReclamationRoutes.js';
-import routesAdminPublicite    from './src/routes/admin/AdminPubliciteRoutes.js';
+import routesAdminCommande    from './src/routes/admin/AdminCommandeRoutes.js';
+import routesAdminReclamation from './src/routes/admin/AdminReclamationRoutes.js';
+import routesAdminPublicite   from './src/routes/admin/AdminPubliciteRoutes.js';
 import routesAdminPageStatique from './src/routes/admin/AdminPageStatiqueRoutes.js';
-import routesAdminArticle      from './src/routes/admin/AdminArticleRoutes.js';
-// import routesAdminPublicite   from './src/routes/admin/AdminPubliciteRoutes.js';
-import routesAdminPage        from './src/routes/admin/AdminPageStatiqueRoutes.js';
-// import routesAdminArticle     from './src/routes/admin/AdminArticleRoutes.js';
+import routesAdminArticle     from './src/routes/admin/AdminArticleRoutes.js';
+import routesAdminLivreur     from './src/routes/admin/AdminLivreurRoutes.js';
+import routesLivreur          from './src/routes/LivreurRoutes.js';
 
 dotenv.config();
 
@@ -37,19 +36,18 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth',                  routesAuth);
-app.use('/api/admin/vendeurs',        routesAdminVendeur);
-app.use('/api/admin/produits',        routesAdminProduit);
-app.use('/api/admin/categories',      routesAdminCategorie);
-app.use('/api/admin/utilisateurs',    routesAdminUtilisateur);
-app.use('/api/admin/commandes',        routesAdminCommande);
-app.use('/api/admin/reclamations',     routesAdminReclamation);
-app.use('/api/admin/publicites',       routesAdminPublicite);
-app.use('/api/admin/pages-statiques',  routesAdminPageStatique);
-app.use('/api/admin/articles',         routesAdminArticle);
-app.use('/api/admin/publicites',      routesAdminPublicite);
-app.use('/api/admin/pages',           routesAdminPage);
-app.use('/api/admin/articles',        routesAdminArticle);
+app.use('/api/auth',                 routesAuth);
+app.use('/api/admin/vendeurs',       routesAdminVendeur);
+app.use('/api/admin/produits',       routesAdminProduit);
+app.use('/api/admin/categories',     routesAdminCategorie);
+app.use('/api/admin/utilisateurs',   routesAdminUtilisateur);
+app.use('/api/admin/commandes',      routesAdminCommande);
+app.use('/api/admin/reclamations',   routesAdminReclamation);
+app.use('/api/admin/publicites',     routesAdminPublicite);
+app.use('/api/admin/pages-statiques',routesAdminPageStatique);
+app.use('/api/admin/articles',       routesAdminArticle);
+app.use('/api/admin/livreurs',       routesAdminLivreur);
+app.use('/api/livreur',              routesLivreur);
 
 // Health check
 app.get('/api/health', (_req, res) => {

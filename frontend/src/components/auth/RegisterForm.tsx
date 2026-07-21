@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { User, Mail } from 'lucide-react';
-import { useRegisterForm } from '../../hooks/useRegisterForm';
+import { useRegisterForm } from '../../hooks/auth/useRegisterForm';
 import Alert from '../ui/Alert';
 import Button from '../ui/Button';
 import FormField, { inputClass } from '../ui/FormField';

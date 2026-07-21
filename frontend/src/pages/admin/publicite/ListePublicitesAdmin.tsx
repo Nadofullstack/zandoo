@@ -6,7 +6,7 @@ import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
 import Pagination from '../../../components/admin/modal/Pagination';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
-import { useGestionPublicites } from '../../../hooks/useGestionPublicites';
+import { useGestionPublicites } from '../../../hooks/admin/useGestionPublicites';
 import type { Publicite, StatutPublicite, TypePublicite, EmplacementPublicite } from '../../../types/admin';
 
 /* ── Badges ─────────────────────────────────────────────────────────────── */

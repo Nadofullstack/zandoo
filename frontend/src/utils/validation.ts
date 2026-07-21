@@ -1,4 +1,4 @@
-import type { RegisterPayload } from '../types/auth';
+import type { RegisterPayload } from '../types/auth/auth';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 
 export interface FormErrors {

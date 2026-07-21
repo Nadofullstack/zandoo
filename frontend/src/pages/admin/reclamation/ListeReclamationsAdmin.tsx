@@ -5,7 +5,7 @@ import TableauReclamations from '../../../components/admin/reclamations/TableauR
 import FiltresReclamations from '../../../components/admin/reclamations/FiltresReclamations';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import { useGestionReclamations } from '../../../hooks/useGestionReclamations';
+import { useGestionReclamations } from '../../../hooks/admin/useGestionReclamations';
 import type { StatutReclamation, PrioriteReclamation, CategorieReclamation } from '../../../types/admin';
 
 export default function ListeReclamationsAdmin() {

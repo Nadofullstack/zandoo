@@ -12,7 +12,7 @@ import {
   ajouterMessage,
   modifierPriorite,
   modifierNotesReclamation,
-} from '../../../services/adminReclamationService';
+} from '../../../services/admin/adminReclamationService';
 import type { Reclamation, StatutReclamation, PrioriteReclamation } from '../../../types/admin';
 
 const LABELS_CATEGORIE: Record<string, string> = {

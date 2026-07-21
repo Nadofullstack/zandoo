@@ -164,8 +164,8 @@ const produitSchema = new mongoose.Schema(
 produitSchema.index({ nom: 'text', description: 'text', reference: 'text' });
 produitSchema.index({ categorie: 1, statut: 1 });
 produitSchema.index({ vendeur: 1, statut: 1 });
-produitSchema.index({ slug: 1 });
-produitSchema.index({ reference: 1 });
+// produitSchema.index({ slug: 1 });
+// produitSchema.index({ reference: 1 });
 
 const Produit = mongoose.model('Produit', produitSchema);
 export default Produit;

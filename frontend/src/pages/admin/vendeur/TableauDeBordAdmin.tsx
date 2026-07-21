@@ -1,7 +1,7 @@
 import { Store, Clock, CheckCircle2, Ban } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
-import { useGestionVendeurs } from '../../../hooks/useGestionVendeurs';
+import { useGestionVendeurs } from '../../../hooks/admin/useGestionVendeurs';
 
 /**
  * Page d'accueil du panneau d'administration.

@@ -54,6 +54,29 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    /* ── Champs pour le flux d'activation livreur ───────────────── */
+
+    /** Indique que le livreur doit changer son mot de passe à la prochaine connexion */
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
+
+    /** Token signé envoyé par email pour l'activation du compte livreur */
+    activationToken: {
+      type: String,
+      default: undefined,
+      select: false,
+    },
+
+    /** Date d'expiration du token d'activation (48h) */
+    activationTokenExp: {
+      type: Date,
+      default: undefined,
+      select: false,
+    },
   },
   {
     timestamps: true, // ajoute createdAt et updatedAt automatiquement

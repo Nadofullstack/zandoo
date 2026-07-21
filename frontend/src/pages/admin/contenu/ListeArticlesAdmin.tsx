@@ -7,7 +7,7 @@ import Pagination from '../../../components/admin/modal/Pagination';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
 import ChampRecherche from '../../../components/admin/modal/ChampRecherche';
-import { useGestionArticles } from '../../../hooks/useGestionArticles';
+import { useGestionArticles } from '../../../hooks/admin/useGestionArticles';
 import type { Article, StatutArticle, CategorieEditoriale } from '../../../types/admin';
 
 const BADGE_STATUT: Record<StatutArticle, string> = {

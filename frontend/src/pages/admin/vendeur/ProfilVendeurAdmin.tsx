@@ -8,7 +8,7 @@ import HistoriqueStatut from '../../../components/admin/vendeurs/HistoriqueStatu
 import NotesAdmin from '../../../components/admin/vendeurs/NotesAdmin';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
-import { useProfilVendeur } from '../../../hooks/useProfilVendeur';
+import { useProfilVendeur } from '../../../hooks/admin/useProfilVendeur';
 import type { StatutVendeur } from '../../../types/admin';
 
 /**

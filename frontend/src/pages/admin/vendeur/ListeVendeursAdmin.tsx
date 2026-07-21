@@ -5,7 +5,7 @@ import FiltresVendeurs from '../../../components/admin/vendeurs/FiltresVendeurs'
 import TableauVendeurs from '../../../components/admin/vendeurs/TableauVendeurs';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import { useGestionVendeurs } from '../../../hooks/useGestionVendeurs';
+import { useGestionVendeurs } from '../../../hooks/admin/useGestionVendeurs';
 import type { StatutVendeur } from '../../../types/admin';
 
 /**

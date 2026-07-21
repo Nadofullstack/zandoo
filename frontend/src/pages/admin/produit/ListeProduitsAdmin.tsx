@@ -6,8 +6,8 @@ import TableauProduits from '../../../components/admin/produits/TableauProduits'
 import FiltresProduits from '../../../components/admin/produits/FiltresProduits';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import { useGestionProduits } from '../../../hooks/useGestionProduits';
-import { useGestionCategories } from '../../../hooks/useGestionCategories';
+import { useGestionProduits } from '../../../hooks/admin/useGestionProduits';
+import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
 import type { StatutProduit } from '../../../types/admin';
 
 export default function ListeProduitsAdmin() {

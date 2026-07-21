@@ -4,8 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import FormulaireProduit from '../../../components/admin/produits/FormulaireProduit';
 import Alert from '../../../components/ui/Alert';
-import { useGestionCategories } from '../../../hooks/useGestionCategories';
-import { creerProduit } from '../../../services/adminProduitService';
+import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
+import { creerProduit } from '../../../services/admin/adminProduitService';
 import type { FormulaireProduiit } from '../../../types/admin';
 
 export default function CreerProduitAdmin() {

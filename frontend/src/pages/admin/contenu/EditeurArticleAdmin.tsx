@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import Alert from '../../../components/ui/Alert';
-import { creerArticle, modifierArticle, getArticleParId } from '../../../services/adminArticleService';
+import { creerArticle, modifierArticle, getArticleParId } from '../../../services/admin/adminArticleService';
 import type { Article, FormulaireArticle, StatutArticle, CategorieEditoriale } from '../../../types/admin';
 
 const inputCls  = "w-full px-3 py-2.5 bg-white border border-[#c4c6cd] rounded-lg text-sm text-primary placeholder:text-gray-400 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all";

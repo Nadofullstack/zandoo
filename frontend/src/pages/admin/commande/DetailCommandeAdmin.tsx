@@ -5,7 +5,7 @@ import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin'
 import BadgeStatutCommande from '../../../components/admin/commandes/BadgeStatutCommande';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
-import { getCommandeParId, modifierStatutCommande, modifierNotesCommande } from '../../../services/adminCommandeService';
+import { getCommandeParId, modifierStatutCommande, modifierNotesCommande } from '../../../services/admin/adminCommandeService';
 import type { Commande, StatutCommande } from '../../../types/admin';
 
 /* Transitions disponibles selon le statut actuel */

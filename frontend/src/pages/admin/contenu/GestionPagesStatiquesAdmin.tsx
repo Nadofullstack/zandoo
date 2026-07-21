@@ -3,7 +3,7 @@ import { FileText, Edit2, Trash2, Plus, Eye, EyeOff, Loader2, X, Save } from 'lu
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
-import { useGestionPagesStatiques } from '../../../hooks/useGestionPagesStatiques';
+import { useGestionPagesStatiques } from '../../../hooks/admin/useGestionPagesStatiques';
 import type { PageStatique, FormulairePageStatique } from '../../../types/admin';
 
 const inputCls  = "w-full px-3 py-2.5 bg-white border border-[#c4c6cd] rounded-lg text-sm text-primary placeholder:text-gray-400 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all";
