@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import Livreur from '../../models/Livreur.js';
 import User   from '../../models/User.js';
 import { envoyerInvitationLivreur } from '../../services/emailService.js';
+import env from '../../config/env.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Helpers
@@ -96,7 +97,7 @@ export const creerLivreur = async (req, res) => {
     await Livreur.create({ utilisateur: utilisateur._id });
 
     /* Construction du lien d'activation */
-    const lienActivation = `${process.env.CLIENT_URL}/livreur/activation/${tokenActivation}`;
+    const lienActivation = `${env.server.clientUrl}/livreur/activation/${tokenActivation}`;
 
     /* Envoi de l'email d'invitation */
     try {
@@ -323,7 +324,7 @@ export const renvoyerInvitation = async (req, res) => {
     utilisateur.isVerified          = false;
     await utilisateur.save();
 
-    const lienActivation = `${process.env.CLIENT_URL}/livreur/activation/${tokenActivation}`;
+    const lienActivation = `${env.server.clientUrl}/livreur/activation/${tokenActivation}`;
 
     try {
       await envoyerInvitationLivreur({

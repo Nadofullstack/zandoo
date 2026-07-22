@@ -1,28 +1,23 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../../models/User.js';
+import env from '../../config/env.js';
 
 /* Client Google pour vérifier les tokens envoyés depuis le frontend */
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client(env.google.clientId);
 
-/**
- * Génère un token JWT signé pour un utilisateur.
- */
 const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  return jwt.sign({ id: userId }, env.jwt.secret, {
+    expiresIn: env.jwt.expiresIn,
   });
 };
 
-/**
- * Définit le cookie httpOnly contenant le token JWT.
- */
 const setCookieToken = (res, token) => {
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure:   env.server.nodeEnv === 'production',
     sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+    maxAge:   7 * 24 * 60 * 60 * 1000,
   });
 };
 
@@ -45,7 +40,7 @@ export const googleLogin = async (req, res) => {
     /* Vérification du token auprès des serveurs Google */
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: env.google.clientId,
     });
 
     const payload = ticket.getPayload();

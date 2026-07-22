@@ -68,7 +68,6 @@ export default function SidebarAdmin() {
       <div className="px-5 py-4 border-t border-white/10">
         <p className="text-white/30 text-xs">© {new Date().getFullYear()} ZANDOO</p>
       </div>
-
     </aside>
   );
 }

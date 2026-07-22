@@ -1,23 +1,28 @@
 import nodemailer from 'nodemailer';
+import env from '../config/env.js';
 
-/**
- * Crée et retourne le transporteur SMTP configuré depuis les variables d'environnement.
- * Supporte Gmail, Mailtrap (dev) ou tout service SMTP compatible.
- */
 function creerTransporteur() {
   return nodemailer.createTransport({
-    host:   process.env.SMTP_HOST || 'smtp.gmail.com',
-    port:   parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: process.env.SMTP_SECURE === 'true', // true = port 465
+    host:   env.smtp.host,
+    port:   env.smtp.port,
+    secure: env.smtp.secure,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: env.smtp.user,
+      pass: env.smtp.pass,
     },
   });
 }
+console.log(env.smtp.user);
+console.log(env.smtp.pass);
 
-/** Expéditeur par défaut */
-const EXPEDITEUR = `"ZANDOO" <${process.env.SMTP_USER}>`;
+const transporter = creerTransporteur();
+
+await transporter.verify();
+
+console.log("✅ Serveur SMTP Gmail prêt");
+
+
+const EXPEDITEUR = `"ZANDOO" <${env.smtp.user}>`;
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Template HTML — Invitation livreur

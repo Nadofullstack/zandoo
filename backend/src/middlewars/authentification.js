@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import env from '../config/env.js';
 
 /**
  * Middleware protect — vérifie le JWT dans le cookie httpOnly.
@@ -16,7 +17,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.jwt.secret);
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {

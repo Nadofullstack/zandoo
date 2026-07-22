@@ -12,7 +12,7 @@ import connectDB from '../config/db.js';
 dotenv.config();
 
 /* Identifiants de l'administrateur — définis ici et dans les variables d'environnement */
-const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || 'Zandoo154@gmail.com';
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || 'zandoo154@gmail.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ZanDoloo123@';
 const ADMIN_NAME     = 'Admin ZANDOO';
 

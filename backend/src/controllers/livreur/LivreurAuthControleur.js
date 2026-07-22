@@ -1,26 +1,22 @@
 import jwt    from 'jsonwebtoken';
 import User    from '../../models/User.js';
 import Livreur from '../../models/Livreur.js';
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Helpers
-───────────────────────────────────────────────────────────────────────────── */
+import env from '../../config/env.js';
 
 const REGEX_MDP_FORT = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-/** Pose le cookie JWT httpOnly */
 function setCookieToken(res, token) {
   res.cookie('token', token, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
+    secure:   env.server.nodeEnv === 'production',
     sameSite: 'strict',
     maxAge:   7 * 24 * 60 * 60 * 1000,
   });
 }
 
 function genererToken(userId) {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  return jwt.sign({ id: userId }, env.jwt.secret, {
+    expiresIn: env.jwt.expiresIn,
   });
 }
 
