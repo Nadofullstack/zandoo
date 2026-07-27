@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Eye, UserCheck, UserX, Trash2, Loader2, ShieldCheck, ShieldOff } from 'lucide-react';
 import type { UtilisateurAdmin } from '../../../types/admin';
 import BadgeRole from './BadgeRole';
 import ModalConfirmation from '../modal/ModalConfirmation';
+import ModalProfilUtilisateur from './ModalProfilUtilisateur';
 
 interface Props {
   utilisateurs: UtilisateurAdmin[];
@@ -40,6 +40,7 @@ function AvatarUtilisateur({ utilisateur }: { utilisateur: UtilisateurAdmin }) {
 
 export default function TableauUtilisateurs({ utilisateurs, chargementAction, onActiver, onSuspendre, onSupprimer }: Props) {
   const [modal, setModal] = useState<EtatModal>(MODAL_INIT);
+  const [utilisateurProfil, setUtilisateurProfil] = useState<UtilisateurAdmin | null>(null);
 
   const ouvrir = (type: TypeModal, u: UtilisateurAdmin) =>
     setModal({ ouvert: true, type, id: u._id, nom: u.fullName });
@@ -132,12 +133,15 @@ export default function TableauUtilisateurs({ utilisateurs, chargementAction, on
                       {enCours ? (
                         <Loader2 size={17} className="animate-spin text-accent" />
                       ) : (
-                        <>
-                          {/* Voir profil */}
-                          <Link to={`/admin/utilisateurs/${u._id}`} title="Voir le profil"
-                            className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors">
+                      <>
+                          {/* Voir profil — ouvre le modal */}
+                          <button
+                            onClick={() => setUtilisateurProfil(u)}
+                            title="Voir le profil"
+                            className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
+                          >
                             <Eye size={16} />
-                          </Link>
+                          </button>
 
                           {/* Activer / Suspendre */}
                           {u.isActive ? (
@@ -191,6 +195,12 @@ export default function TableauUtilisateurs({ utilisateurs, chargementAction, on
         chargement={!!chargementAction}
         onConfirmer={handleConfirmer}
         onAnnuler={fermer}
+      />
+
+      {/* Modal profil utilisateur */}
+      <ModalProfilUtilisateur
+        utilisateur={utilisateurProfil}
+        onFermer={() => setUtilisateurProfil(null)}
       />
     </>
   );

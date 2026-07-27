@@ -33,7 +33,7 @@ export default function ListeLivreursAdmin() {
         </div>
         <button
           onClick={() => setModalCreation(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
+          className="cursor-pointer flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0"
         >
           <UserPlus size={16} aria-hidden="true" />
           Créer un livreur

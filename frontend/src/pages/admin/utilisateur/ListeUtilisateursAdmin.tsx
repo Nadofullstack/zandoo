@@ -1,4 +1,4 @@
-import { Users, UserCheck, UserX, ShoppingBag, Store } from 'lucide-react';
+import { UserCheck, UserX, ShoppingBag, Store, Users } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
 import TableauUtilisateurs from '../../../components/admin/utilisateurs/TableauUtilisateurs';
@@ -26,14 +26,13 @@ export default function ListeUtilisateursAdmin() {
         </p>
       </header>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <CarteStatistique titre="Total"     valeur={statistiques?.total     ?? 0} icone={Users}      couleur="primary" />
+      {/* Statistiques — sans la carte Total */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <CarteStatistique titre="Actifs"    valeur={statistiques?.actifs    ?? 0} icone={UserCheck}  couleur="success" />
         <CarteStatistique titre="Suspendus" valeur={statistiques?.suspendus ?? 0} icone={UserX}      couleur="danger"  />
         <CarteStatistique titre="Acheteurs" valeur={statistiques?.acheteurs ?? 0} icone={ShoppingBag} couleur="primary" />
         <CarteStatistique titre="Vendeurs"  valeur={statistiques?.vendeurs  ?? 0} icone={Store}      couleur="accent"  />
-        <CarteStatistique titre="Admins"    valeur={statistiques?.admins    ?? 0} icone={Users}      couleur="warning" />
+        {/* <CarteStatistique titre="Admins"    valeur={statistiques?.admins    ?? 0} icone={Users}      couleur="warning" /> */}
       </div>
 
       {erreur && <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>}
