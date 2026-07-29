@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
-import FormulaireProduit from '../../../components/admin/produits/FormulaireProduit';
 import BadgeStatutProduit from '../../../components/admin/produits/BadgeStatutProduit';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
@@ -132,13 +131,6 @@ export default function DetailProduitAdmin() {
 
       {erreur      && <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>}
       {messageSucces && <div className="mb-4"><Alert variant="success">{messageSucces}</Alert></div>}
-
-      <FormulaireProduit
-        produitInitial={produit}
-        categories={categories}
-        onSoumettre={handleModifier}
-        chargement={chargementAction}
-      />
 
       <ModalConfirmation
         ouvert={modalStatut.ouvert}

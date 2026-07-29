@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
-import FormulaireProduit from '../../../components/admin/produits/FormulaireProduit';
 import Alert from '../../../components/ui/Alert';
 import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
 import { creerProduit } from '../../../services/admin/adminProduitService';
@@ -41,11 +40,6 @@ export default function CreerProduitAdmin() {
 
       {erreur && <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>}
 
-      <FormulaireProduit
-        categories={categories}
-        onSoumettre={handleSoumettre}
-        chargement={chargement}
-      />
     </DispositionAdmin>
   );
 }

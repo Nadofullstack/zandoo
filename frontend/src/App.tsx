@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import AccueilPage from './pages/acheteur/AccueilPage';
+import CataloguePage from './pages/acheteur/CataloguePage';
+import DetailProduitPage from './pages/acheteur/DetailProduitPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import LoginPage from './pages/auth/LoginPage';
 import TableauDeBordAdmin from './pages/admin/vendeur/TableauDeBordAdmin';
@@ -31,6 +34,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ── Acheteur ───────────────────────────────────────────────────────── */}
+        <Route path="/"                             element={<AccueilPage />} />
+        <Route path="/catalogue"                    element={<CataloguePage />} />
+        <Route path="/catalogue/categorie/:slug"    element={<CataloguePage />} />
+        <Route path="/produit/:slug"                element={<DetailProduitPage />} />
+
         {/* ── Auth ───────────────────────────────────────────────────────── */}
         <Route path="/inscription" element={<RegisterPage />} />
         <Route path="/connexion"   element={<LoginPage />} />
@@ -90,7 +99,7 @@ export default function App() {
         <Route path="/admin/articles/:id"     element={<GardeRouteAdmin><EditeurArticleAdmin /></GardeRouteAdmin>} />
 
         {/* ── Défaut ─────────────────────────────────────────────────────── */}
-        <Route path="*" element={<Navigate to="/inscription" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
