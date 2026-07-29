@@ -6,12 +6,10 @@ import {
 } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import BadgeStatutLivreur from '../../../components/admin/livreurs/BadgeStatutLivreur';
-import NotesAdmin from '../../../components/admin/vendeurs/NotesAdmin';
 import HistoriqueStatut from '../../../components/admin/vendeurs/HistoriqueStatut';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
 import { useProfilLivreur } from '../../../hooks/admin/useProfilLivreur';
-import type { StatutLivreur } from '../../../types/admin';
 
 const LIBELLE_VEHICULE: Record<string, string> = {
   moto:        'Moto',
@@ -35,7 +33,6 @@ export default function ProfilLivreurAdmin() {
     erreur,
     messageSucces,
     changerStatut,
-    sauvegarderNotes,
     renvoyerInvitation,
   } = useProfilLivreur(id ?? '');
 
@@ -257,11 +254,6 @@ export default function ProfilLivreurAdmin() {
 
         {/* Colonne latérale */}
         <div className="space-y-5">
-          <NotesAdmin
-            notesInitiales={livreur.notesAdmin ?? ''}
-            chargement={chargementAction}
-            onSauvegarder={sauvegarderNotes}
-          />
           <HistoriqueStatut historique={livreur.historiqueStatut} />
         </div>
 

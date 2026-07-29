@@ -120,7 +120,6 @@ export const creerLivreur = async (req, res) => {
           utilisateurId: utilisateur._id,
           nomComplet,
           email: emailNorm,
-          lienActivation, // retourné pour l'admin (fallback si email échoue)
         },
       },
     });
@@ -263,35 +262,6 @@ export const modifierStatutLivreur = async (req, res) => {
     });
   } catch (erreur) {
     console.error('Erreur modifierStatutLivreur:', erreur);
-    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-};
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   PATCH /api/admin/livreurs/:id/notes
-   Mise à jour des notes internes.
-───────────────────────────────────────────────────────────────────────────── */
-export const modifierNotesAdmin = async (req, res) => {
-  try {
-    const { notesAdmin = '' } = req.body;
-
-    const livreur = await Livreur.findByIdAndUpdate(
-      req.params.id,
-      { notesAdmin: notesAdmin.trim().slice(0, 500) },
-      { new: true, runValidators: true }
-    ).populate('utilisateur', 'fullName email').lean();
-
-    if (!livreur) {
-      return res.status(404).json({ success: false, message: 'Livreur introuvable.' });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Notes mises à jour.',
-      data: { livreur },
-    });
-  } catch (erreur) {
-    console.error('Erreur modifierNotesAdmin:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };

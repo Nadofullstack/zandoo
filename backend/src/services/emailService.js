@@ -12,8 +12,7 @@ function creerTransporteur() {
     },
   });
 }
-console.log(env.smtp.user);
-console.log(env.smtp.pass);
+
 
 const transporter = creerTransporteur();
 
@@ -93,10 +92,7 @@ function htmlInvitationLivreur({ prenomNom, email, motDePasseTemporaire, lienAct
                 </a>
               </div>
 
-              <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;text-align:center;">
-                Si vous n'avez pas demandé ce compte, ignorez cet email ou contactez notre support.
-                <br/>Lien direct : <a href="${lienActivation}" style="color:#FC7701;">${lienActivation}</a>
-              </p>
+       
             </td>
           </tr>
 

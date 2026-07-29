@@ -3,7 +3,6 @@ import type { Livreur, StatutLivreur } from '../../types/admin';
 import {
   getLivreurParId,
   modifierStatutLivreur,
-  modifierNotesAdminLivreur,
   renvoyerInvitationLivreur,
 } from '../../services/admin/adminLivreurService';
 
@@ -14,7 +13,6 @@ interface EtatHook {
   erreur: string | null;
   messageSucces: string | null;
   changerStatut: (statut: StatutLivreur, raison?: string) => Promise<void>;
-  sauvegarderNotes: (notes: string) => Promise<void>;
   renvoyerInvitation: () => Promise<void>;
 }
 
@@ -75,24 +73,6 @@ export function useProfilLivreur(id: string): EtatHook {
     [id, afficherSucces]
   );
 
-  /** Sauvegarde les notes internes admin */
-  const sauvegarderNotes = useCallback(
-    async (notes: string) => {
-      setChargementAction(true);
-      setErreur(null);
-      try {
-        const rep = await modifierNotesAdminLivreur(id, notes);
-        setLivreur(rep.data.livreur);
-        afficherSucces('Notes sauvegardées.');
-      } catch (err) {
-        setErreur(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.');
-      } finally {
-        setChargementAction(false);
-      }
-    },
-    [id, afficherSucces]
-  );
-
   /** Renvoie l'email d'invitation */
   const renvoyerInvitation = useCallback(async () => {
     setChargementAction(true);
@@ -114,7 +94,6 @@ export function useProfilLivreur(id: string): EtatHook {
     erreur,
     messageSucces,
     changerStatut,
-    sauvegarderNotes,
     renvoyerInvitation,
   };
 }

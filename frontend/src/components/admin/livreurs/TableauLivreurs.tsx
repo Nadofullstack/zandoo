@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Eye, UserCheck, Ban, Trash2, Loader2, Mail, CheckCircle2 } from 'lucide-react';
 import type { Livreur } from '../../../types/admin';
 import BadgeStatutLivreur from './BadgeStatutLivreur';
 import ModalConfirmation from '../modal/ModalConfirmation';
+import ModalDetailLivreur from './ModalDetailLivreur';
 
 interface Props {
   livreurs: Livreur[];
@@ -70,6 +70,7 @@ export default function TableauLivreurs({
   onRenvoyerInvitation,
 }: Props) {
   const [modal, setModal] = useState<EtatModal>(MODAL_INIT);
+  const [livreurDetailId, setLivreurDetailId] = useState<string | null>(null);
 
   const ouvrir = (type: TypeModal, l: Livreur) =>
     setModal({ ouvert: true, type, id: l._id, nom: l.utilisateur?.fullName ?? '—' });
@@ -174,14 +175,14 @@ export default function TableauLivreurs({
                         <Loader2 size={17} className="animate-spin text-accent" />
                       ) : (
                         <>
-                          {/* Voir le profil */}
-                          <Link
-                            to={`/admin/livreurs/${l._id}`}
-                            title="Voir le profil"
+                          {/* Voir les détails */}
+                          <button
+                            onClick={() => setLivreurDetailId(l._id)}
+                            title="Voir les détails"
                             className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
                           >
                             <Eye size={16} />
-                          </Link>
+                          </button>
 
                           {/* Activer */}
                           {l.statut === 'suspendu' && (
@@ -265,6 +266,12 @@ export default function TableauLivreurs({
         chargement={!!chargementAction}
         onConfirmer={handleConfirmer}
         onAnnuler={fermer}
+      />
+
+      {/* Modal de détails */}
+      <ModalDetailLivreur
+        livreurId={livreurDetailId}
+        onFermer={() => setLivreurDetailId(null)}
       />
     </>
   );

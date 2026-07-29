@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { lireSession } from '../../services/auth/authService';
+import { lireSession } from '../../../services/auth/authService';
 
 /**
  * Garde de route pour les pages livreur authentifiées.

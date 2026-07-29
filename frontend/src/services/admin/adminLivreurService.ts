@@ -92,21 +92,6 @@ export async function modifierStatutLivreur(
 }
 
 /**
- * Met à jour les notes internes de l'administrateur.
- */
-export async function modifierNotesAdminLivreur(
-  id: string,
-  notesAdmin: string
-): Promise<ReponseLivreur> {
-  const res = await fetch(`${API_URL}/admin/livreurs/${id}/notes`, {
-    ...optionsBase,
-    method: 'PATCH',
-    body:   JSON.stringify({ notesAdmin }),
-  });
-  return verifierReponse<ReponseLivreur>(res);
-}
-
-/**
  * Renvoie l'email d'invitation avec un nouveau token.
  */
 export async function renvoyerInvitationLivreur(

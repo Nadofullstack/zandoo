@@ -16,7 +16,6 @@ export interface Livreur {
   telephone: string | null;
   statut: StatutLivreur;
   profilComplete: boolean;
-  notesAdmin?: string;
   historiqueStatut?: HistoriqueStatut[];
   createdAt: string;
   updatedAt: string;

@@ -63,13 +63,6 @@ const livreurSchema = new mongoose.Schema(
       default: false,
     },
 
-    /* Notes internes de l'administrateur */
-    notesAdmin: {
-      type: String,
-      maxlength: 500,
-      default: '',
-    },
-
     /* Historique des changements de statut */
     historiqueStatut: [
       {

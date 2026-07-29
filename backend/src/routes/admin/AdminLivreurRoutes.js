@@ -5,7 +5,6 @@ import {
   getLivreurs,
   getLivreurParId,
   modifierStatutLivreur,
-  modifierNotesAdmin,
   renvoyerInvitation,
   supprimerLivreur,
 } from '../../controllers/admin/AdminLivreurControleur.js';
@@ -30,9 +29,6 @@ routeur.get('/:id', getLivreurParId);
 
 /* PATCH /api/admin/livreurs/:id/statut  — activer / suspendre */
 routeur.patch('/:id/statut', modifierStatutLivreur);
-
-/* PATCH /api/admin/livreurs/:id/notes   — notes internes admin */
-routeur.patch('/:id/notes', modifierNotesAdmin);
 
 /* POST  /api/admin/livreurs/:id/renvoyer-invitation */
 routeur.post('/:id/renvoyer-invitation', renvoyerInvitation);

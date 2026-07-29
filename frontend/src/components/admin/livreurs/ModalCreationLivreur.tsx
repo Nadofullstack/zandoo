@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, UserPlus, Mail, User, AlertCircle, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import { X, UserPlus, Mail, User, AlertCircle } from 'lucide-react';
 import Button from '../../ui/Button';
 import Alert from '../../ui/Alert';
 import { creerLivreur } from '../../../services/admin/adminLivreurService';
@@ -34,12 +34,6 @@ export default function ModalCreationLivreur({ ouvert, onFermer, onSucces }: Pro
   const [form, setForm]       = useState<EtatFormulaire>(FORMULAIRE_INITIAL);
   const [erreurs, setErreurs] = useState<Partial<EtatFormulaire & { global: string }>>({});
   const [chargement, setChargement] = useState(false);
-  const [resultat, setResultat]     = useState<{
-    nomComplet: string;
-    email: string;
-    lienActivation: string;
-  } | null>(null);
-  const [copie, setCopie] = useState(false);
 
   if (!ouvert) return null;
 
@@ -68,13 +62,9 @@ export default function ModalCreationLivreur({ ouvert, onFermer, onSucces }: Pro
 
     setChargement(true);
     try {
-      const rep = await creerLivreur(form);
-      setResultat({
-        nomComplet:     rep.data.livreur.nomComplet,
-        email:          rep.data.livreur.email,
-        lienActivation: rep.data.livreur.lienActivation,
-      });
+      await creerLivreur(form);
       onSucces();
+      handleFermer();
     } catch (err) {
       setErreurs({ global: err instanceof Error ? err.message : 'Erreur lors de la création.' });
     } finally {
@@ -82,18 +72,9 @@ export default function ModalCreationLivreur({ ouvert, onFermer, onSucces }: Pro
     }
   };
 
-  const copierLien = async () => {
-    if (!resultat) return;
-    await navigator.clipboard.writeText(resultat.lienActivation);
-    setCopie(true);
-    setTimeout(() => setCopie(false), 2000);
-  };
-
   const handleFermer = () => {
     setForm(FORMULAIRE_INITIAL);
     setErreurs({});
-    setResultat(null);
-    setCopie(false);
     onFermer();
   };
 
@@ -129,67 +110,8 @@ export default function ModalCreationLivreur({ ouvert, onFermer, onSucces }: Pro
         </div>
 
         <div className="p-6">
-          {/* ── État succès ────────────────────────────────────────── */}
-          {resultat ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                <CheckCircle size={22} className="text-green-600 shrink-0" aria-hidden="true" />
-                <div>
-                  <p className="font-semibold text-green-800 text-sm">Compte créé avec succès !</p>
-                  <p className="text-green-700 text-xs mt-0.5">
-                    Un email a été envoyé à <strong>{resultat.email}</strong>.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider">Résumé</p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#74777d]">Nom complet</span>
-                  <span className="font-semibold text-primary">{resultat.nomComplet}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#74777d]">Email</span>
-                  <span className="font-semibold text-primary">{resultat.email}</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">
-                  Lien d'activation (copie de secours)
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    readOnly
-                    value={resultat.lienActivation}
-                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-[#74777d] font-mono truncate outline-none"
-                  />
-                  <button
-                    onClick={copierLien}
-                    title="Copier le lien"
-                    className="p-2 rounded-lg border border-gray-200 text-[#74777d] hover:bg-gray-100 transition-colors shrink-0"
-                  >
-                    {copie ? <CheckCircle size={16} className="text-green-600" /> : <Copy size={16} />}
-                  </button>
-                  <a
-                    href={resultat.lienActivation}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Ouvrir le lien"
-                    className="p-2 rounded-lg border border-gray-200 text-[#74777d] hover:bg-gray-100 transition-colors shrink-0"
-                  >
-                    <ExternalLink size={16} />
-                  </a>
-                </div>
-              </div>
-
-              <Button onClick={handleFermer} className="!w-auto px-6 py-2.5 text-sm ml-auto">
-                Fermer
-              </Button>
-            </div>
-          ) : (
-            /* ── Formulaire de création ────────────────────────────── */
-            <form onSubmit={handleSoumettre} noValidate className="space-y-4">
+          {/* ── Formulaire de création ────────────────────────────── */}
+          <form onSubmit={handleSoumettre} noValidate className="space-y-4">
 
               {erreurs.global && (
                 <Alert variant="error">{erreurs.global}</Alert>
@@ -281,7 +203,7 @@ export default function ModalCreationLivreur({ ouvert, onFermer, onSucces }: Pro
                   type="button"
                   onClick={handleFermer}
                   disabled={chargement}
-                  className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#74777d] hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  className=" cursor-pointer px-4 py-2.5 rounded-xl text-sm font-semibold text-[#74777d] hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                   Annuler
                 </button>
@@ -289,16 +211,14 @@ export default function ModalCreationLivreur({ ouvert, onFermer, onSucces }: Pro
                   type="submit"
                   isLoading={chargement}
                   loadingText="Création…"
-                  className="!w-auto px-6 py-2.5 text-sm"
+                  className="!w-auto px-6 py-2.5 text-sm cursor-pointer"
                 >
                   Créer le compte
                 </Button>
               </div>
 
             </form>
-          )}
         </div>
-
       </div>
     </div>
   );

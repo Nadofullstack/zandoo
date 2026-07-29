@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Plus, Package, Clock, CheckCircle2, XCircle, FileText } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
@@ -6,6 +6,7 @@ import TableauProduits from '../../../components/admin/produits/TableauProduits'
 import FiltresProduits from '../../../components/admin/produits/FiltresProduits';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
+import ModalCreationProduit from '../../../components/admin/produits/ModalCreationProduit';
 import { useGestionProduits } from '../../../hooks/admin/useGestionProduits';
 import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
 import type { StatutProduit } from '../../../types/admin';
@@ -13,13 +14,21 @@ import type { StatutProduit } from '../../../types/admin';
 export default function ListeProduitsAdmin() {
   const {
     produits, pagination, statistiques, chargement, chargementAction, erreur,
-    filtre, setFiltre, approuverProduit, rejeterProduit, supprimerProduit,
+    filtre, setFiltre, approuverProduit, rejeterProduit, supprimerProduit, recharger,
   } = useGestionProduits();
 
   const { categories } = useGestionCategories();
+  const [modalOuvert, setModalOuvert] = useState(false);
 
   return (
     <DispositionAdmin>
+
+      {/* Modal création produit */}
+      <ModalCreationProduit
+        ouvert={modalOuvert}
+        onFermer={() => setModalOuvert(false)}
+        onSucces={() => { setModalOuvert(false); recharger(); }}
+      />
 
       {/* En-tête */}
       <div className="flex items-center justify-between mb-6">
@@ -27,10 +36,11 @@ export default function ListeProduitsAdmin() {
           <h1 className="text-2xl font-extrabold text-primary">Gestion des produits</h1>
           <p className="text-sm text-[#74777d] mt-1">Catalogue global — validation et modération.</p>
         </div>
-        <Link to="/admin/produits/nouveau"
+        <button
+          onClick={() => setModalOuvert(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors">
-          <Plus size={16} /> Nouveau produit
-        </Link>
+          <Plus size={16} aria-hidden /> Nouveau produit
+        </button>
       </div>
 
       {/* Statistiques */}

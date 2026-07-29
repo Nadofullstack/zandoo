@@ -22,7 +22,7 @@ import EditeurArticleAdmin from './pages/admin/contenu/EditeurArticleAdmin';
 import ListeLivreursAdmin from './pages/admin/livreur/ListeLivreursAdmin';
 import ProfilLivreurAdmin from './pages/admin/livreur/ProfilLivreurAdmin';
 import GardeRouteAdmin from './components/admin/layout/GardeRouteAdmin';
-import GardeLivreur from './components/livreur/GardeLivreur';
+import GardeLivreur from './components/admin/livreurs/GardeLivreur';
 import ActivationPage from './pages/livreur/ActivationPage';
 import ChangerMotDePassePage from './pages/livreur/ChangerMotDePassePage';
 import CompleterProfilPage from './pages/livreur/CompleterProfilPage';
