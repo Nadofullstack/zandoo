@@ -1,18 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Package, RefreshCw, ImagePlus, DollarSign, Layers } from 'lucide-react';
+import { X, Package, RefreshCw, ImagePlus, DollarSign, Layers, Pencil } from 'lucide-react';
 import Button from '../../ui/Button';
 import Alert from '../../ui/Alert';
 import OngletInformations from './OngletInformations';
 import OngletMedias from './OngletMedias';
 import OngletPrix from './OngletPrix';
 import OngletVariantes from './OngletVariantes';
-import { creerProduit } from '../../../services/admin/adminProduitService';
+import { getProduitParId, modifierProduit } from '../../../services/admin/adminProduitService';
 import { creerCategorie, getCategoriesPlates } from '../../../services/admin/adminCategorieService';
 import { uploadPhotos, uploadVideo } from '../../../services/admin/adminUploadService';
 import type { Categorie, StatutProduit, VarianteProduit } from '../../../types/admin';
 
-/* ── Types ───────────────────────────────────────────────────────────────── */
-interface Props { ouvert: boolean; onFermer: () => void; onSucces: () => void; }
+/* ── Types ────────────────────────────────────────────────────────────────── */
+interface Props {
+  produitId: string | null;
+  onFermer: () => void;
+  onSucces: () => void;
+}
 
 type Onglet = 'infos' | 'medias' | 'prix' | 'variantes';
 const ORDRE: Onglet[] = ['infos', 'medias', 'prix', 'variantes'];
@@ -32,7 +36,8 @@ interface EtatErreurs {
 
 const INIT: EtatForm = {
   nom: '', reference: '', description: '', categorieId: '',
-  prix: '', prixPromotionnel: '', quantiteDisponible: '', statut: 'en_stock', variantes: [],
+  prix: '', prixPromotionnel: '', quantiteDisponible: '',
+  statut: 'en_stock', variantes: [],
 };
 
 const ONGLETS: { id: Onglet; libelle: string; icone: React.ElementType }[] = [
@@ -42,32 +47,24 @@ const ONGLETS: { id: Onglet; libelle: string; icone: React.ElementType }[] = [
   { id: 'variantes', libelle: 'Variantes',     icone: Layers     },
 ];
 
-function genRef() {
-  const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let r = 'REF-';
-  for (let i = 0; i < 8; i++) r += c[Math.floor(Math.random() * c.length)];
-  return r;
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   Composant principal — orchestrateur léger
-   ══════════════════════════════════════════════════════════════════════════ */
-export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Props) {
+/* ══════════════════════════════════════════════════════════════════════════ */
+export default function ModalModificationProduit({ produitId, onFermer, onSucces }: Props) {
 
   /* ── État formulaire ─────────────────────────────────── */
   const [form, setForm]       = useState<EtatForm>(INIT);
   const [erreurs, setErreurs] = useState<EtatErreurs>({});
   const [onglet, setOnglet]   = useState<Onglet>('infos');
-  const [chargement, setChargement] = useState(false);
+  const [chargement, setChargement]     = useState(false);
+  const [chargProduit, setChargProduit] = useState(false);
 
   /* ── Données externes ────────────────────────────────── */
   const [categories, setCategories] = useState<Categorie[]>([]);
   const [chargCat,   setChargCat]   = useState(false);
 
   /* ── Catégorie inline ────────────────────────────────── */
-  const [ajoutCat,     setAjoutCat]     = useState(false);
+  const [ajoutCat,      setAjoutCat]      = useState(false);
   const [chargCreatCat, setChargCreatCat] = useState(false);
-  const [errCreatCat,  setErrCreatCat]  = useState<string | undefined>();
+  const [errCreatCat,   setErrCreatCat]   = useState<string | undefined>();
 
   /* ── Médias ──────────────────────────────────────────── */
   const [photosPreview, setPhotosPreview] = useState<{ fichier: File; preview: string }[]>([]);
@@ -77,34 +74,67 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   const [videoUrl,      setVideoUrl]      = useState<string | null>(null);
   const [videoFichier,  setVideoFichier]  = useState<File | null>(null);
 
-  /* ── Chargement catégories + vendeurs à l'ouverture ──── */
+  /* ── Chargement catégories + produit à l'ouverture ───── */
   useEffect(() => {
-    if (!ouvert) return;
+    if (!produitId) return;
+
+    /* Catégories */
     setChargCat(true);
     getCategoriesPlates()
       .then((r) => setCategories(r.data.categories))
       .catch(() => {})
       .finally(() => setChargCat(false));
-  }, [ouvert]);
+
+    /* Produit existant */
+    setChargProduit(true);
+    setErreurs({});
+    getProduitParId(produitId)
+      .then((r) => {
+        const p = r.data.produit;
+        setForm({
+          nom:               p.nom,
+          reference:         p.reference,
+          description:       p.description,
+          categorieId:       typeof p.categorie === 'object' ? p.categorie._id : p.categorie,
+          prix:              String(p.prix),
+          prixPromotionnel:  p.prixPromotionnel ? String(p.prixPromotionnel) : '',
+          quantiteDisponible: String(p.quantiteDisponible),
+          statut:            p.statut,
+          variantes:         p.variantes ?? [],
+        });
+        /* Photos existantes : pas de File, juste les URLs */
+        setPhotosUrls(p.photos ?? []);
+        setPhotosPreview(
+          (p.photos ?? []).map((url) => ({ fichier: null as unknown as File, preview: url }))
+        );
+        if (p.video) { setVideoUrl(p.video); setVideoPreview(p.video); }
+      })
+      .catch((err) => {
+        setErreurs({ global: err instanceof Error ? err.message : 'Erreur de chargement.' });
+      })
+      .finally(() => setChargProduit(false));
+  }, [produitId]);
 
   /* ── Reset ───────────────────────────────────────────── */
   const reset = useCallback(() => {
     setForm(INIT); setErreurs({}); setOnglet('infos');
     setAjoutCat(false); setErrCreatCat(undefined);
-    photosPreview.forEach((p) => URL.revokeObjectURL(p.preview));
+    /* Ne pas révoquer les URLs distantes (Cloudinary), seulement les blobs locaux */
+    photosPreview.forEach((p) => { if (p.preview.startsWith('blob:')) URL.revokeObjectURL(p.preview); });
     setPhotosPreview([]); setPhotosUrls([]);
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoPreview?.startsWith('blob:')) URL.revokeObjectURL(videoPreview);
     setVideoPreview(null); setVideoUrl(null); setVideoFichier(null);
   }, [photosPreview, videoPreview]);
 
   const handleFermer = () => { reset(); onFermer(); };
-  if (!ouvert) return null;
+
+  if (!produitId) return null;
 
   /* ── Handlers champs ─────────────────────────────────── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
-    setErreurs((p) => ({ ...p, [name as keyof EtatErreurs]: undefined, global: undefined }));
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErreurs((prev) => ({ ...prev, [name as keyof EtatErreurs]: undefined, global: undefined }));
   };
 
   /* ── Catégorie inline ────────────────────────────────── */
@@ -113,10 +143,10 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
     try {
       const rep = await creerCategorie({ nom });
       const nouv = rep.data.categorie;
-      setCategories((p) => [...p, nouv]);
-      setForm((p) => ({ ...p, categorieId: nouv._id }));
+      setCategories((prev) => [...prev, nouv]);
+      setForm((prev) => ({ ...prev, categorieId: nouv._id }));
       setAjoutCat(false);
-      setErreurs((p) => ({ ...p, categorieId: undefined }));
+      setErreurs((prev) => ({ ...prev, categorieId: undefined }));
     } catch (err) {
       setErrCreatCat(err instanceof Error ? err.message : 'Erreur création catégorie.');
     } finally { setChargCreatCat(false); }
@@ -126,26 +156,36 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   const handleSelectionPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fichiers = Array.from(e.target.files ?? []).slice(0, 10 - photosPreview.length);
     if (!fichiers.length) return;
-    setPhotosPreview((p) => [...p, ...fichiers.map((f) => ({ fichier: f, preview: URL.createObjectURL(f) }))]);
-    setErreurs((p) => ({ ...p, photos: undefined }));
+    setPhotosPreview((prev) => [...prev, ...fichiers.map((f) => ({ fichier: f, preview: URL.createObjectURL(f) }))]);
+    setErreurs((prev) => ({ ...prev, photos: undefined }));
     if (e.target) e.target.value = '';
   };
 
   const supprimerPhoto = (i: number) => {
-    URL.revokeObjectURL(photosPreview[i].preview);
-    setPhotosPreview((p) => p.filter((_, k) => k !== i));
-    setPhotosUrls((p) => p.filter((_, k) => k !== i));
+    if (photosPreview[i].preview.startsWith('blob:')) URL.revokeObjectURL(photosPreview[i].preview);
+    setPhotosPreview((prev) => prev.filter((_, k) => k !== i));
+    setPhotosUrls((prev) => prev.filter((_, k) => k !== i));
   };
 
-  const uploaderPhotos = async (): Promise<string[]> => {
-    const nonUp = photosPreview.filter((_, i) => !photosUrls[i]);
-    if (!nonUp.length) return photosUrls;
+  const uploaderNouvellesPhotos = async (): Promise<string[]> => {
+    /* Séparer les photos déjà uploadées (URL distante) des nouvelles (blob) */
+    const existantes: string[] = [];
+    const nouvellesFichiers: File[] = [];
+
+    photosPreview.forEach((p, i) => {
+      if (!p.preview.startsWith('blob:')) {
+        existantes.push(photosUrls[i] ?? p.preview);
+      } else {
+        nouvellesFichiers.push(p.fichier);
+      }
+    });
+
+    if (!nouvellesFichiers.length) return existantes;
+
     setUploadEnCours(true);
     try {
-      const urls = await uploadPhotos(nonUp.map((p) => p.fichier));
-      const toutes = [...photosUrls, ...urls];
-      setPhotosUrls(toutes);
-      return toutes;
+      const nouvellesUrls = await uploadPhotos(nouvellesFichiers);
+      return [...existantes, ...nouvellesUrls];
     } finally { setUploadEnCours(false); }
   };
 
@@ -153,31 +193,31 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   const handleSelectionVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoPreview?.startsWith('blob:')) URL.revokeObjectURL(videoPreview);
     setVideoFichier(f); setVideoPreview(URL.createObjectURL(f)); setVideoUrl(null);
     if (e.target) e.target.value = '';
   };
 
   const supprimerVideo = () => {
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoPreview?.startsWith('blob:')) URL.revokeObjectURL(videoPreview);
     setVideoFichier(null); setVideoPreview(null); setVideoUrl(null);
   };
 
   /* ── Variantes ───────────────────────────────────────── */
   const ajouterVariante = () =>
-    setForm((p) => ({ ...p, variantes: [...p.variantes, { nom: '', valeurs: [] }] }));
+    setForm((prev) => ({ ...prev, variantes: [...prev.variantes, { nom: '', valeurs: [] }] }));
 
   const modifierNomVariante = (i: number, nom: string) =>
-    setForm((p) => { const v = [...p.variantes]; v[i] = { ...v[i], nom }; return { ...p, variantes: v }; });
+    setForm((prev) => { const v = [...prev.variantes]; v[i] = { ...v[i], nom }; return { ...prev, variantes: v }; });
 
   const ajouterValeurVariante = (i: number, valeur: string) =>
-    setForm((p) => { const v = [...p.variantes]; v[i] = { ...v[i], valeurs: [...v[i].valeurs, valeur] }; return { ...p, variantes: v }; });
+    setForm((prev) => { const v = [...prev.variantes]; v[i] = { ...v[i], valeurs: [...v[i].valeurs, valeur] }; return { ...prev, variantes: v }; });
 
   const supprimerValeurVariante = (iV: number, iK: number) =>
-    setForm((p) => { const v = [...p.variantes]; v[iV] = { ...v[iV], valeurs: v[iV].valeurs.filter((_, k) => k !== iK) }; return { ...p, variantes: v }; });
+    setForm((prev) => { const v = [...prev.variantes]; v[iV] = { ...v[iV], valeurs: v[iV].valeurs.filter((_, k) => k !== iK) }; return { ...prev, variantes: v }; });
 
   const supprimerVariante = (i: number) =>
-    setForm((p) => ({ ...p, variantes: p.variantes.filter((_, k) => k !== i) }));
+    setForm((prev) => ({ ...prev, variantes: prev.variantes.filter((_, k) => k !== i) }));
 
   /* ── Validation ──────────────────────────────────────── */
   const valider = (): boolean => {
@@ -205,34 +245,39 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   /* ── Soumission ──────────────────────────────────────── */
   const handleSoumettre = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!valider()) return;
+    if (!valider() || !produitId) return;
     setChargement(true);
-    setErreurs((p) => ({ ...p, global: undefined }));
+    setErreurs((prev) => ({ ...prev, global: undefined }));
     try {
-      let urlsPhotos = photosUrls;
-      if (photosPreview.length > photosUrls.length) urlsPhotos = await uploaderPhotos();
+      const urlsPhotos = await uploaderNouvellesPhotos();
 
-      let urlVideo: string | null = videoUrl;
+      let urlVideo: string | null | undefined = videoUrl;
       if (videoFichier && !videoUrl) {
         setUploadEnCours(true);
         urlVideo = await uploadVideo(videoFichier);
         setVideoUrl(urlVideo);
         setUploadEnCours(false);
       }
+      if (!videoPreview) urlVideo = undefined; /* vidéo supprimée */
 
-      await creerProduit({
-        nom: form.nom.trim(), reference: form.reference.trim().toUpperCase(),
-        description: form.description.trim(), categorie: form.categorieId,
-        prix: form.prix, prixPromotionnel: form.prixPromotionnel || undefined,
-        quantiteDisponible: form.quantiteDisponible, enStock: Number(form.quantiteDisponible) > 0,
-        photos: urlsPhotos, video: urlVideo ?? undefined,
-        variantes: form.variantes.filter((v) => v.nom.trim()),
-        statut: form.statut,
+      await modifierProduit(produitId, {
+        nom:               form.nom.trim(),
+        reference:         form.reference.trim().toUpperCase(),
+        description:       form.description.trim(),
+        categorie:         form.categorieId,
+        prix:              form.prix,
+        prixPromotionnel:  form.prixPromotionnel || undefined,
+        quantiteDisponible: form.quantiteDisponible,
+        enStock:           Number(form.quantiteDisponible) > 0,
+        photos:            urlsPhotos,
+        video:             urlVideo ?? undefined,
+        variantes:         form.variantes.filter((v) => v.nom.trim()),
+        statut:            form.statut,
       } as never);
 
       onSucces(); handleFermer();
     } catch (err) {
-      setErreurs((p) => ({ ...p, global: err instanceof Error ? err.message : 'Erreur lors de la création.' }));
+      setErreurs((prev) => ({ ...prev, global: err instanceof Error ? err.message : 'Erreur lors de la modification.' }));
     } finally { setChargement(false); setUploadEnCours(false); }
   };
 
@@ -247,18 +292,20 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
      ═══════════════════════════════════════════════════════ */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/60 backdrop-blur-sm px-4"
-      role="dialog" aria-modal="true" aria-labelledby="modal-produit-titre">
+      role="dialog" aria-modal="true" aria-labelledby="modal-modif-produit-titre">
       <div className="bg-surface w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 rounded-xl">
-              <Package size={18} className="text-accent" aria-hidden />
+            <div className="p-2 bg-blue-100 rounded-xl">
+              <Pencil size={18} className="text-blue-600" aria-hidden />
             </div>
             <div>
-              <h2 id="modal-produit-titre" className="text-base font-bold text-primary">Nouveau produit</h2>
-              <p className="text-xs text-[#74777d]">Remplissez les informations du produit.</p>
+              <h2 id="modal-modif-produit-titre" className="text-base font-bold text-primary">
+                Modifier le produit
+              </h2>
+              <p className="text-xs text-[#74777d]">Modifiez les informations et sauvegardez.</p>
             </div>
           </div>
           <button onClick={handleFermer} aria-label="Fermer"
@@ -286,53 +333,63 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
         <form onSubmit={handleSoumettre} noValidate className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
+            {chargProduit && (
+              <div className="flex items-center gap-2 text-xs text-primary bg-gray-50 border border-gray-200 rounded-xl p-3">
+                <RefreshCw size={13} className="animate-spin" aria-hidden /> Chargement du produit…
+              </div>
+            )}
+
             {erreurs.global && <Alert variant="error">{erreurs.global}</Alert>}
+
             {uploadEnCours && (
               <div className="flex items-center gap-2 text-xs text-accent bg-orange-50 border border-orange-200 rounded-xl p-3">
                 <RefreshCw size={13} className="animate-spin" aria-hidden /> Upload en cours vers Cloudinary…
               </div>
             )}
 
-            {onglet === 'infos' && (
-              <OngletInformations
-                form={form} erreurs={erreurs}
-                categories={categories}
-                chargCat={chargCat}
-                ajoutCat={ajoutCat} chargCreatCat={chargCreatCat} errCreatCat={errCreatCat}
-                onChange={handleChange}
-                onGenererRef={() => { setForm((p) => ({ ...p, reference: genRef() })); setErreurs((p) => ({ ...p, reference: undefined })); }}
-                onStatutChange={(s) => setForm((p) => ({ ...p, statut: s }))}
-                onToggleAjoutCat={() => setAjoutCat((p) => !p)}
-                onCreerCategorie={handleCreerCategorie}
-                onAnnulerAjoutCat={() => { setAjoutCat(false); setErrCreatCat(undefined); }}
-              />
+            {!chargProduit && (
+              <>
+                {onglet === 'infos' && (
+                  <OngletInformations
+                    form={form} erreurs={erreurs}
+                    categories={categories}
+                    chargCat={chargCat}
+                    ajoutCat={ajoutCat} chargCreatCat={chargCreatCat} errCreatCat={errCreatCat}
+                    onChange={handleChange}
+                    onGenererRef={() => {}}
+                    onStatutChange={(s) => setForm((prev) => ({ ...prev, statut: s }))}
+                    onToggleAjoutCat={() => setAjoutCat((prev) => !prev)}
+                    onCreerCategorie={handleCreerCategorie}
+                    onAnnulerAjoutCat={() => { setAjoutCat(false); setErrCreatCat(undefined); }}
+                  />
+                )}
+                {onglet === 'medias' && (
+                  <OngletMedias
+                    photosPreview={photosPreview} photosUrls={photosUrls}
+                    videoPreview={videoPreview} videoUrl={videoUrl} erreurPhotos={erreurs.photos}
+                    onSelectionPhotos={handleSelectionPhotos} onSupprimerPhoto={supprimerPhoto}
+                    onSelectionVideo={handleSelectionVideo} onSupprimerVideo={supprimerVideo}
+                  />
+                )}
+                {onglet === 'prix' && (
+                  <OngletPrix
+                    form={{ prix: form.prix, prixPromotionnel: form.prixPromotionnel, quantiteDisponible: form.quantiteDisponible }}
+                    erreurs={{ prix: erreurs.prix, prixPromotionnel: erreurs.prixPromotionnel, quantiteDisponible: erreurs.quantiteDisponible }}
+                    onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
+                  />
+                )}
+                {onglet === 'variantes' && (
+                  <OngletVariantes
+                    variantes={form.variantes}
+                    onAjouter={ajouterVariante}
+                    onNomChange={modifierNomVariante}
+                    onAjouterValeur={ajouterValeurVariante}
+                    onSupprimerValeur={supprimerValeurVariante}
+                    onSupprimer={supprimerVariante}
+                  />
+                )}
+              </>
             )}
-            {onglet === 'medias' && (
-              <OngletMedias
-                photosPreview={photosPreview} photosUrls={photosUrls}
-                videoPreview={videoPreview} videoUrl={videoUrl} erreurPhotos={erreurs.photos}
-                onSelectionPhotos={handleSelectionPhotos} onSupprimerPhoto={supprimerPhoto}
-                onSelectionVideo={handleSelectionVideo} onSupprimerVideo={supprimerVideo}
-              />
-            )}
-            {onglet === 'prix' && (
-              <OngletPrix
-                form={{ prix: form.prix, prixPromotionnel: form.prixPromotionnel, quantiteDisponible: form.quantiteDisponible }}
-                erreurs={{ prix: erreurs.prix, prixPromotionnel: erreurs.prixPromotionnel, quantiteDisponible: erreurs.quantiteDisponible }}
-                onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
-              />
-            )}
-            {onglet === 'variantes' && (
-              <OngletVariantes
-                variantes={form.variantes}
-                onAjouter={ajouterVariante}
-                onNomChange={modifierNomVariante}
-                onAjouterValeur={ajouterValeurVariante}
-                onSupprimerValeur={supprimerValeurVariante}
-                onSupprimer={supprimerVariante}
-              />
-            )}
-
           </div>
 
           {/* Footer */}
@@ -356,9 +413,9 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
                 </button>
               ) : (
                 <Button type="submit" isLoading={chargement || uploadEnCours}
-                  loadingText={uploadEnCours ? 'Upload…' : 'Création…'}
+                  loadingText={uploadEnCours ? 'Upload…' : 'Sauvegarde…'}
                   className="!w-auto px-6 py-2.5 text-sm cursor-pointer">
-                  Créer le produit
+                  Sauvegarder
                 </Button>
               )}
             </div>

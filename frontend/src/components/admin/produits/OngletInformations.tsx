@@ -1,23 +1,22 @@
 import { Wand2, Plus, ChevronDown, Tag, BarChart2, CheckCircle2 } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import FormNouvelleCategorie from './FormNouvelleCategorie';
-import type { Categorie, Vendeur, StatutProduit } from '../../../types/admin';
+import type { Categorie, StatutProduit } from '../../../types/admin';
 
 /* ── Types ────────────────────────────────────────────── */
 interface EtatForm {
   nom: string; reference: string; description: string;
-  categorieId: string; vendeurId: string; statut: StatutProduit;
+  categorieId: string; statut: StatutProduit;
 }
 interface EtatErreurs {
   nom?: string; reference?: string; description?: string;
-  categorieId?: string; vendeurId?: string;
+  categorieId?: string;
 }
 
 const STATUTS: { valeur: StatutProduit; libelle: string; couleur: string }[] = [
-  { valeur: 'approuve',   libelle: 'Approuvé',   couleur: 'bg-green-100 text-green-700'   },
-  { valeur: 'en_attente', libelle: 'En attente', couleur: 'bg-yellow-100 text-yellow-700'  },
-  { valeur: 'brouillon',  libelle: 'Brouillon',  couleur: 'bg-gray-100 text-gray-600'     },
-  { valeur: 'rejete',     libelle: 'Rejeté',     couleur: 'bg-red-100 text-red-700'       },
+  { valeur: 'en_stock',   libelle: 'En stock',    couleur: 'bg-green-100 text-green-700'  },
+  { valeur: 'faible',     libelle: 'Faible',      couleur: 'bg-yellow-100 text-yellow-700' },
+  { valeur: 'en_rupture', libelle: 'En rupture',  couleur: 'bg-red-100 text-red-700'      },
 ];
 
 function champCls(err?: string) {
@@ -43,9 +42,7 @@ interface Props {
   form: EtatForm;
   erreurs: EtatErreurs;
   categories: Categorie[];
-  vendeurs: Vendeur[];
   chargCat: boolean;
-  chargVend: boolean;
   ajoutCat: boolean;
   chargCreatCat: boolean;
   errCreatCat?: string;
@@ -58,8 +55,8 @@ interface Props {
 }
 
 export default function OngletInformations({
-  form, erreurs, categories, vendeurs,
-  chargCat, chargVend, ajoutCat, chargCreatCat, errCreatCat,
+  form, erreurs, categories,
+  chargCat, ajoutCat, chargCreatCat, errCreatCat,
   onChange, onGenererRef, onStatutChange,
   onToggleAjoutCat, onCreerCategorie, onAnnulerAjoutCat,
 }: Props) {
@@ -135,22 +132,6 @@ export default function OngletInformations({
             chargement={chargCreatCat} erreur={errCreatCat}
           />
         )}
-      </div>
-
-      {/* Vendeur */}
-      <div>
-        <label htmlFor="prod-vend" className="label-admin">Vendeur *</label>
-        <div className="relative">
-          <select id="prod-vend" name="vendeurId" value={form.vendeurId}
-            onChange={onChange} disabled={chargVend}
-            aria-invalid={!!erreurs.vendeurId} aria-describedby="prod-vend-err"
-            className={champCls(erreurs.vendeurId) + ' appearance-none pr-8'}>
-            <option value="">{chargVend ? 'Chargement…' : '— Sélectionner —'}</option>
-            {vendeurs.map((v) => <option key={v._id} value={v._id}>{v.nomEntreprise}</option>)}
-          </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        </div>
-        <ErrChamp msg={erreurs.vendeurId} id="prod-vend-err" />
       </div>
 
       {/* Statut */}

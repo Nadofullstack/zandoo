@@ -18,8 +18,8 @@ export const getAccueil = async (_req, res) => {
         .limit(10)
         .lean(),
 
-      /* Nouveautés : produits approuvés les plus récents */
-      Produit.find({ statut: 'approuve', enStock: true })
+      /* Nouveautés : produits en stock les plus récents */
+      Produit.find({ statut: 'en_stock', enStock: true })
         .select('nom slug photos prix prixPromotionnel categorie vendeur')
         .populate('categorie', 'nom slug')
         .populate('vendeur', 'nomEntreprise')
@@ -27,8 +27,8 @@ export const getAccueil = async (_req, res) => {
         .limit(8)
         .lean(),
 
-      /* Best sellers : produits approuvés les plus anciens (logique à enrichir avec les commandes) */
-      Produit.find({ statut: 'approuve', enStock: true })
+      /* Best sellers : produits en stock (logique à enrichir avec les commandes) */
+      Produit.find({ statut: 'en_stock', enStock: true })
         .select('nom slug photos prix prixPromotionnel categorie vendeur')
         .populate('categorie', 'nom slug')
         .populate('vendeur', 'nomEntreprise')

@@ -3,7 +3,7 @@ import type { AttributCategorie } from './categorie';
 
 /* ─── Produits ───────────────────────────────────────────────────────────── */
 
-export type StatutProduit = 'en_attente' | 'approuve' | 'rejete' | 'brouillon';
+export type StatutProduit = 'en_stock' | 'en_rupture' | 'faible';
 
 export interface VarianteProduit {
   nom: string;
@@ -61,10 +61,9 @@ export interface FormulaireProduiit {
 }
 
 export interface StatistiquesProduits {
-  enAttente: number;
-  approuves: number;
-  rejetes: number;
-  brouillons: number;
+  enStock: number;
+  enRupture: number;
+  faible: number;
   total: number;
 }
 

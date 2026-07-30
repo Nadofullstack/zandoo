@@ -12,11 +12,10 @@ interface Props {
 }
 
 const OPTIONS_STATUT: { valeur: StatutProduit | ''; libelle: string }[] = [
-  { valeur: '',           libelle: 'Tous les statuts'  },
-  { valeur: 'en_attente', libelle: 'En attente'        },
-  { valeur: 'approuve',   libelle: 'Approuvés'         },
-  { valeur: 'rejete',     libelle: 'Rejetés'           },
-  { valeur: 'brouillon',  libelle: 'Brouillons'        },
+  { valeur: '',           libelle: 'Tous les statuts' },
+  { valeur: 'en_stock',   libelle: 'En stock'         },
+  { valeur: 'faible',     libelle: 'Faible'           },
+  { valeur: 'en_rupture', libelle: 'En rupture'       },
 ];
 
 export default function FiltresProduits({

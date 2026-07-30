@@ -39,14 +39,28 @@ const produitSchema = new mongoose.Schema(
     },
 
     /* ── Médias ─────────────────────────────────────────────────────────── */
-    photos: {
-      type: [String],
-      validate: {
-        validator: (arr) => arr.length <= 10,
-        message: 'Maximum 10 photos par produit',
-      },
-      default: [],
+
+    /* Photo de couverture principale (1 seule) */
+    photoCouverture: {
+      type: String,
+      default: null,
+      trim: true,
     },
+
+    /* Variantes photos : [{ nom: "Rouge", photos: ["url1","url2"] }] */
+    variantesPhotos: [
+      {
+        nom: { type: String, required: true, trim: true, maxlength: 100 },
+        photos: {
+          type: [String],
+          validate: {
+            validator: (arr) => arr.length <= 10,
+            message: 'Maximum 10 photos par variante photo',
+          },
+          default: [],
+        },
+      },
+    ],
 
     video: {
       type: String,
@@ -65,7 +79,7 @@ const produitSchema = new mongoose.Schema(
     vendeur: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Vendeur',
-      required: [true, 'Le vendeur est requis'],
+      default: null,
     },
 
     /* ── Prix ───────────────────────────────────────────────────────────── */
@@ -124,11 +138,11 @@ const produitSchema = new mongoose.Schema(
       },
     ],
 
-    /* ── Statut de validation ───────────────────────────────────────────── */
+    /* ── Statut de stock ────────────────────────────────────────────────── */
     statut: {
       type: String,
-      enum: ['en_attente', 'approuve', 'rejete', 'brouillon'],
-      default: 'en_attente',
+      enum: ['en_stock', 'en_rupture', 'faible'],
+      default: 'en_stock',
     },
 
     /* Motif de rejet renseigné par l'admin */
@@ -148,7 +162,7 @@ const produitSchema = new mongoose.Schema(
     /* Historique des changements de statut */
     historiqueStatut: [
       {
-        statut:      { type: String, enum: ['en_attente', 'approuve', 'rejete', 'brouillon'] },
+        statut:      { type: String, enum: ['en_stock', 'en_rupture', 'faible'] },
         modifiePar:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         raison:      { type: String, maxlength: 500 },
         modifieAt:   { type: Date, default: Date.now },

@@ -28,8 +28,7 @@ interface EtatHook {
   erreur: string | null;
   filtre: EtatFiltre;
   setFiltre: (f: Partial<EtatFiltre>) => void;
-  approuverProduit: (id: string) => Promise<void>;
-  rejeterProduit: (id: string, raison: string) => Promise<void>;
+  changerStatutProduit: (id: string, statut: StatutProduit) => Promise<void>;
   supprimerProduit: (id: string) => Promise<void>;
   recharger: () => void;
 }
@@ -80,21 +79,10 @@ export function useGestionProduits(): EtatHook {
     return () => { annule = true; };
   }, [filtre.statut, filtre.categorie, filtre.vendeur, filtre.recherche, filtre.page, compteur]);
 
-  const approuverProduit = useCallback(async (id: string) => {
+  const changerStatutProduit = useCallback(async (id: string, statut: StatutProduit) => {
     setChargementAction(id);
     try {
-      const rep = await modifierStatutProduit(id, 'approuve');
-      setProduits((prev) => prev.map((p) => (p._id === id ? rep.data.produit : p)));
-      recharger();
-    } catch (err) {
-      setErreur(err instanceof Error ? err.message : 'Erreur.');
-    } finally { setChargementAction(null); }
-  }, [recharger]);
-
-  const rejeterProduit = useCallback(async (id: string, raison: string) => {
-    setChargementAction(id);
-    try {
-      const rep = await modifierStatutProduit(id, 'rejete', raison);
+      const rep = await modifierStatutProduit(id, statut);
       setProduits((prev) => prev.map((p) => (p._id === id ? rep.data.produit : p)));
       recharger();
     } catch (err) {
@@ -116,7 +104,7 @@ export function useGestionProduits(): EtatHook {
   return {
     produits, pagination, statistiques, chargement, chargementAction, erreur,
     filtre, setFiltre,
-    approuverProduit, rejeterProduit,
+    changerStatutProduit,
     supprimerProduit: supprimerProduitAction,
     recharger,
   };

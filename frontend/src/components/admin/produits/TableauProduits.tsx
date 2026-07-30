@@ -1,19 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, CheckCircle, XCircle, Trash2, Loader2 } from 'lucide-react';
-import type { Produit } from '../../../types/admin';
+import { Pencil, PackageCheck, PackageX, AlertTriangle, Trash2, Loader2 } from 'lucide-react';
+import type { Produit, StatutProduit } from '../../../types/admin';
 import BadgeStatutProduit from './BadgeStatutProduit';
 import ModalConfirmation from '../modal/ModalConfirmation';
 
 interface Props {
   produits: Produit[];
   chargementAction: string | null;
-  onApprouver: (id: string) => void;
-  onRejeter: (id: string, raison: string) => void;
+  onChangerStatut: (id: string, statut: StatutProduit) => void;
   onSupprimer: (id: string) => void;
+  onModifier: (id: string) => void;
 }
 
-type TypeModal = 'approuver' | 'rejeter' | 'supprimer';
+type TypeModal = StatutProduit | 'supprimer';
 
 interface EtatModal {
   ouvert: boolean;
@@ -22,24 +21,29 @@ interface EtatModal {
   nomProduit: string;
 }
 
-const MODAL_INITIAL: EtatModal = { ouvert: false, type: 'approuver', produitId: '', nomProduit: '' };
+const MODAL_INITIAL: EtatModal = { ouvert: false, type: 'en_stock', produitId: '', nomProduit: '' };
 
-/** Formate un prix en F CFA */
 function formatPrix(v: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(v);
 }
 
-export default function TableauProduits({ produits, chargementAction, onApprouver, onRejeter, onSupprimer }: Props) {
+const LABEL_MODAL: Record<TypeModal, string> = {
+  en_stock:   'Marquer en stock ?',
+  faible:     'Marquer stock faible ?',
+  en_rupture: 'Marquer en rupture ?',
+  supprimer:  'Supprimer ce produit ?',
+};
+
+export default function TableauProduits({ produits, chargementAction, onChangerStatut, onSupprimer, onModifier }: Props) {
   const [modal, setModal] = useState<EtatModal>(MODAL_INITIAL);
 
   const ouvrir = (type: TypeModal, p: Produit) =>
     setModal({ ouvert: true, type, produitId: p._id, nomProduit: p.nom });
   const fermer = () => setModal(MODAL_INITIAL);
 
-  const handleConfirmer = (raison?: string) => {
-    if (modal.type === 'approuver') onApprouver(modal.produitId);
-    else if (modal.type === 'rejeter') onRejeter(modal.produitId, raison ?? '');
-    else onSupprimer(modal.produitId);
+  const handleConfirmer = () => {
+    if (modal.type === 'supprimer') onSupprimer(modal.produitId);
+    else onChangerStatut(modal.produitId, modal.type);
     fermer();
   };
 
@@ -53,7 +57,7 @@ export default function TableauProduits({ produits, chargementAction, onApprouve
         <table className="w-full text-sm" aria-label="Liste des produits">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              {['Produit', 'Catégorie', 'Vendeur', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
+              {['Produit', 'Catégorie', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-[#74777d] uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -65,6 +69,7 @@ export default function TableauProduits({ produits, chargementAction, onApprouve
               const enCours = chargementAction === p._id;
               return (
                 <tr key={p._id} className="hover:bg-gray-50/60 transition-colors">
+
                   {/* Produit */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
@@ -85,11 +90,6 @@ export default function TableauProduits({ produits, chargementAction, onApprouve
                     {p.categorie?.nom ?? '—'}
                   </td>
 
-                  {/* Vendeur */}
-                  <td className="px-4 py-3.5 text-[#74777d] text-xs whitespace-nowrap">
-                    {p.vendeur?.nomEntreprise ?? '—'}
-                  </td>
-
                   {/* Prix */}
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     <p className="font-semibold text-primary">{formatPrix(p.prix)}</p>
@@ -101,7 +101,7 @@ export default function TableauProduits({ produits, chargementAction, onApprouve
                   {/* Stock */}
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     <span className={`text-xs font-semibold ${p.enStock ? 'text-green-700' : 'text-red-600'}`}>
-                      {p.enStock ? `${p.quantiteDisponible} en stock` : 'Rupture'}
+                      {p.quantiteDisponible} unité{p.quantiteDisponible !== 1 ? 's' : ''}
                     </span>
                   </td>
 
@@ -117,22 +117,35 @@ export default function TableauProduits({ produits, chargementAction, onApprouve
                         <Loader2 size={17} className="animate-spin text-accent" />
                       ) : (
                         <>
-                          {p.statut !== 'approuve' && (
-                            <button onClick={() => ouvrir('approuver', p)} title="Approuver"
+                          {/* Modifier */}
+                          <button
+                            onClick={() => onModifier(p._id)}
+                            title="Modifier le produit"
+                            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors">
+                            <Pencil size={16} />
+                          </button>
+
+                          {/* Changer statut stock */}
+                          {p.statut !== 'en_stock' && (
+                            <button onClick={() => ouvrir('en_stock', p)} title="Marquer en stock"
                               className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors">
-                              <CheckCircle size={16} />
+                              <PackageCheck size={16} />
                             </button>
                           )}
-                          {p.statut !== 'rejete' && p.statut !== 'brouillon' && (
-                            <button onClick={() => ouvrir('rejeter', p)} title="Rejeter"
+                          {p.statut !== 'faible' && (
+                            <button onClick={() => ouvrir('faible', p)} title="Marquer stock faible"
+                              className="p-1.5 rounded-lg text-yellow-500 hover:bg-yellow-50 transition-colors">
+                              <AlertTriangle size={16} />
+                            </button>
+                          )}
+                          {p.statut !== 'en_rupture' && (
+                            <button onClick={() => ouvrir('en_rupture', p)} title="Marquer en rupture"
                               className="p-1.5 rounded-lg text-orange-500 hover:bg-orange-50 transition-colors">
-                              <XCircle size={16} />
+                              <PackageX size={16} />
                             </button>
                           )}
-                          <Link to={`/admin/produits/${p._id}`} title="Voir / Modifier"
-                            className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors">
-                            <Eye size={16} />
-                          </Link>
+
+                          {/* Supprimer */}
                           <button onClick={() => ouvrir('supprimer', p)} title="Supprimer"
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
                             <Trash2 size={16} />
@@ -150,20 +163,14 @@ export default function TableauProduits({ produits, chargementAction, onApprouve
 
       <ModalConfirmation
         ouvert={modal.ouvert}
-        titre={
-          modal.type === 'approuver' ? 'Approuver ce produit ?' :
-          modal.type === 'rejeter'   ? 'Rejeter ce produit ?' :
-                                       'Supprimer ce produit ?'
-        }
+        titre={LABEL_MODAL[modal.type]}
         description={
-          modal.type === 'approuver' ? `« ${modal.nomProduit} » sera publié sur la plateforme.` :
-          modal.type === 'rejeter'   ? `« ${modal.nomProduit} » sera rejeté et le vendeur notifié.` :
-                                       `Cette action est irréversible. « ${modal.nomProduit} » sera définitivement supprimé.`
+          modal.type === 'supprimer'
+            ? `Cette action est irréversible. « ${modal.nomProduit} » sera définitivement supprimé.`
+            : `Le statut de « ${modal.nomProduit} » sera mis à jour.`
         }
-        labelConfirmer={modal.type === 'approuver' ? 'Approuver' : modal.type === 'rejeter' ? 'Rejeter' : 'Supprimer'}
-        variante={modal.type === 'approuver' ? 'success' : 'danger'}
-        avecRaison={modal.type === 'rejeter'}
-        labelRaison="Motif du rejet (requis)"
+        labelConfirmer={modal.type === 'supprimer' ? 'Supprimer' : 'Confirmer'}
+        variante={modal.type === 'supprimer' ? 'danger' : 'success'}
         chargement={!!chargementAction}
         onConfirmer={handleConfirmer}
         onAnnuler={fermer}

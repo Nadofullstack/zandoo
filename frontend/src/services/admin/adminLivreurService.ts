@@ -1,3 +1,4 @@
+import api from '../api';
 import type {
   ReponseListeLivreurs,
   ReponseLivreur,
@@ -7,112 +8,52 @@ import type {
   FormulaireCreationLivreur,
 } from '../../types/admin';
 
-const API_URL = import.meta.env.VITE_API_URL as string;
-
-/** Options fetch communes — cookie httpOnly inclus automatiquement */
-const optionsBase: RequestInit = {
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-};
-
-/** Gestion centralisée des erreurs HTTP */
-async function verifierReponse<T>(res: Response): Promise<T> {
-  const donnees = await res.json();
-  if (!res.ok) {
-    throw new Error(donnees.message || 'Erreur serveur.');
-  }
-  return donnees as T;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────── */
-
-/**
- * Statistiques des livreurs (compteurs par statut).
- */
 export async function getStatistiquesLivreurs(): Promise<ReponseStatistiquesLivreurs> {
-  const res = await fetch(`${API_URL}/admin/livreurs/statistiques`, optionsBase);
-  return verifierReponse<ReponseStatistiquesLivreurs>(res);
+  const { data } = await api.get('/admin/livreurs/statistiques');
+  return data;
 }
 
-/**
- * Liste paginée des livreurs avec filtres optionnels.
- */
 export async function getLivreurs(params?: {
   statut?: StatutLivreur;
   recherche?: string;
   page?: number;
   limite?: number;
 }): Promise<ReponseListeLivreurs> {
-  const qs = new URLSearchParams();
-  if (params?.statut)    qs.set('statut',    params.statut);
-  if (params?.recherche) qs.set('recherche', params.recherche);
-  if (params?.page)      qs.set('page',      String(params.page));
-  if (params?.limite)    qs.set('limite',    String(params.limite));
-
-  const res = await fetch(`${API_URL}/admin/livreurs?${qs.toString()}`, optionsBase);
-  return verifierReponse<ReponseListeLivreurs>(res);
+  const { data } = await api.get('/admin/livreurs', { params });
+  return data;
 }
 
-/**
- * Profil complet d'un livreur par son ID.
- */
 export async function getLivreurParId(id: string): Promise<ReponseLivreur> {
-  const res = await fetch(`${API_URL}/admin/livreurs/${id}`, optionsBase);
-  return verifierReponse<ReponseLivreur>(res);
+  const { data } = await api.get(`/admin/livreurs/${id}`);
+  return data;
 }
 
-/**
- * Création d'un compte livreur (admin).
- */
 export async function creerLivreur(
   donnees: FormulaireCreationLivreur
 ): Promise<ReponseCreationLivreur> {
-  const res = await fetch(`${API_URL}/admin/livreurs`, {
-    ...optionsBase,
-    method: 'POST',
-    body:   JSON.stringify(donnees),
-  });
-  return verifierReponse<ReponseCreationLivreur>(res);
+  const { data } = await api.post('/admin/livreurs', donnees);
+  return data;
 }
 
-/**
- * Modifie le statut d'un livreur.
- */
 export async function modifierStatutLivreur(
   id: string,
   statut: StatutLivreur,
   raison?: string
 ): Promise<ReponseLivreur> {
-  const res = await fetch(`${API_URL}/admin/livreurs/${id}/statut`, {
-    ...optionsBase,
-    method: 'PATCH',
-    body:   JSON.stringify({ statut, raison: raison ?? '' }),
-  });
-  return verifierReponse<ReponseLivreur>(res);
+  const { data } = await api.patch(`/admin/livreurs/${id}/statut`, { statut, raison: raison ?? '' });
+  return data;
 }
 
-/**
- * Renvoie l'email d'invitation avec un nouveau token.
- */
 export async function renvoyerInvitationLivreur(
   id: string
 ): Promise<{ success: boolean; message: string; data: { lienActivation: string } }> {
-  const res = await fetch(`${API_URL}/admin/livreurs/${id}/renvoyer-invitation`, {
-    ...optionsBase,
-    method: 'POST',
-  });
-  return verifierReponse(res);
+  const { data } = await api.post(`/admin/livreurs/${id}/renvoyer-invitation`);
+  return data;
 }
 
-/**
- * Supprime un livreur et son compte utilisateur.
- */
 export async function supprimerLivreur(
   id: string
 ): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`${API_URL}/admin/livreurs/${id}`, {
-    ...optionsBase,
-    method: 'DELETE',
-  });
-  return verifierReponse(res);
+  const { data } = await api.delete(`/admin/livreurs/${id}`);
+  return data;
 }

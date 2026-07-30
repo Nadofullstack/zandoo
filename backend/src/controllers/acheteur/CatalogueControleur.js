@@ -11,7 +11,7 @@ const PROJECTION_PUBLIQUE = {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GET /api/acheteur/produits
-   Liste paginée des produits approuvés avec filtres : catégorie, recherche,
+   Liste paginée des produits en stock avec filtres : catégorie, recherche,
    tri, fourchette de prix.
 ───────────────────────────────────────────────────────────────────────────── */
 export const getProduits = async (req, res) => {
@@ -26,8 +26,8 @@ export const getProduits = async (req, res) => {
       limite = 20,
     } = req.query;
 
-    /* Seuls les produits approuvés et en stock sont visibles */
-    const filtre = { statut: 'approuve' };
+    /* Seuls les produits en stock sont visibles */
+    const filtre = { statut: 'en_stock' };
 
     if (categorie) {
       /* Cherche aussi les produits des sous-catégories */
@@ -93,7 +93,10 @@ export const getProduits = async (req, res) => {
 ───────────────────────────────────────────────────────────────────────────── */
 export const getProduitParSlug = async (req, res) => {
   try {
-    const produit = await Produit.findOne({ slug: req.params.slug, statut: 'approuve' }, PROJECTION_PUBLIQUE)
+    const produit = await Produit.findOne(
+      { slug: req.params.slug, statut: 'en_stock' },
+      PROJECTION_PUBLIQUE
+    )
       .populate('categorie', 'nom slug attributs')
       .populate('vendeur', 'nomEntreprise logoUrl')
       .lean();
@@ -104,7 +107,7 @@ export const getProduitParSlug = async (req, res) => {
 
     /* Produits similaires (même catégorie, jusqu'à 4) */
     const similaires = await Produit.find(
-      { statut: 'approuve', enStock: true, categorie: produit.categorie._id, _id: { $ne: produit._id } },
+      { statut: 'en_stock', enStock: true, categorie: produit.categorie._id, _id: { $ne: produit._id } },
       PROJECTION_PUBLIQUE
     )
       .select('nom slug photos prix prixPromotionnel categorie')
@@ -167,7 +170,7 @@ export const getProduitsParCategorie = async (req, res) => {
 
     const { tri = 'recent', prixMin, prixMax, page = 1, limite = 20 } = req.query;
 
-    const filtre = { statut: 'approuve', categorie: { $in: ids } };
+    const filtre = { statut: 'en_stock', categorie: { $in: ids } };
     if (prixMin || prixMax) {
       filtre.prix = {};
       if (prixMin) filtre.prix.$gte = Number(prixMin);
@@ -219,7 +222,7 @@ export const rechercherProduits = async (req, res) => {
       return res.status(422).json({ success: false, message: 'Terme de recherche requis.' });
     }
 
-    const filtre = { statut: 'approuve', $text: { $search: q.trim() } };
+    const filtre = { statut: 'en_stock', $text: { $search: q.trim() } };
     const saut = (Number(page) - 1) * Number(limite);
 
     const [produits, total] = await Promise.all([

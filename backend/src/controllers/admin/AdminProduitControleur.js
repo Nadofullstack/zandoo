@@ -5,7 +5,7 @@ import Produit from '../../models/Produit.js';
    Helpers
 ───────────────────────────────────────────────────────────────────────────── */
 
-const STATUTS_VALIDES = ['en_attente', 'approuve', 'rejete', 'brouillon'];
+const STATUTS_VALIDES = ['en_stock', 'en_rupture', 'faible'];
 
 async function genererSlugUnique(nom, idExclure = null) {
   const base = slugify(nom, { lower: true, strict: true, locale: 'fr' });
@@ -34,17 +34,16 @@ const PROJECTION_LISTE = {
 ───────────────────────────────────────────────────────────────────────────── */
 export const getStatistiquesProduits = async (_req, res) => {
   try {
-    const [enAttente, approuves, rejetes, brouillons, total] = await Promise.all([
-      Produit.countDocuments({ statut: 'en_attente' }),
-      Produit.countDocuments({ statut: 'approuve' }),
-      Produit.countDocuments({ statut: 'rejete' }),
-      Produit.countDocuments({ statut: 'brouillon' }),
+    const [enStock, enRupture, faible, total] = await Promise.all([
+      Produit.countDocuments({ statut: 'en_stock' }),
+      Produit.countDocuments({ statut: 'en_rupture' }),
+      Produit.countDocuments({ statut: 'faible' }),
       Produit.countDocuments(),
     ]);
 
     return res.status(200).json({
       success: true,
-      data: { statistiques: { enAttente, approuves, rejetes, brouillons, total } },
+      data: { statistiques: { enStock, enRupture, faible, total } },
     });
   } catch (erreur) {
     console.error('Erreur getStatistiquesProduits:', erreur);
@@ -137,7 +136,7 @@ export const getProduitParId = async (req, res) => {
 export const creerProduit = async (req, res) => {
   try {
     const {
-      nom, description, reference, categorie, vendeur,
+      nom, description, reference, categorie,
       prix, prixPromotionnel, quantiteDisponible, enStock,
       photos, video, variantes, attributs, statut,
     } = req.body;
@@ -150,7 +149,6 @@ export const creerProduit = async (req, res) => {
       description:        description.trim(),
       reference:          reference.trim().toUpperCase(),
       categorie,
-      vendeur,
       prix:               Number(prix),
       prixPromotionnel:   prixPromotionnel ? Number(prixPromotionnel) : null,
       quantiteDisponible: Number(quantiteDisponible),
@@ -159,9 +157,9 @@ export const creerProduit = async (req, res) => {
       video:              video ?? null,
       variantes:          variantes ?? [],
       attributs:          attributs ?? [],
-      statut:             statut ?? 'approuve',
+      statut:             statut ?? 'en_stock',
       historiqueStatut: [{
-        statut:     statut ?? 'approuve',
+        statut:     statut ?? 'en_stock',
         modifiePar: req.user._id,
         raison:     'Création par l\'administrateur',
         modifieAt:  new Date(),
@@ -268,10 +266,6 @@ export const modifierStatutProduit = async (req, res) => {
     }
 
     produit.statut = statut;
-
-    if (statut === 'rejete') {
-      produit.motifRejet = raison.trim().slice(0, 500);
-    }
 
     produit.historiqueStatut.push({
       statut,

@@ -1,3 +1,4 @@
+import api from '../api';
 import type {
   ReponseListePages,
   ReponsePage,
@@ -9,60 +10,43 @@ import type {
   Article,
 } from '../../types/admin';
 
-const API_URL = import.meta.env.VITE_API_URL as string;
-const optionsBase: RequestInit = {
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-};
-
-async function verifierReponse<T>(res: Response): Promise<T> {
-  const d = await res.json();
-  if (!res.ok) throw new Error(d.message || 'Erreur serveur.');
-  return d as T;
-}
-
 /* ── Pages statiques ─────────────────────────────────────────────────── */
+
 export async function getPages(): Promise<ReponseListePages> {
-  const res = await fetch(`${API_URL}/admin/pages`, optionsBase);
-  return verifierReponse<ReponseListePages>(res);
+  const { data } = await api.get('/admin/pages');
+  return data;
 }
 
 export async function getPageParSlug(slug: string): Promise<ReponsePage> {
-  const res = await fetch(`${API_URL}/admin/pages/${slug}`, optionsBase);
-  return verifierReponse<ReponsePage>(res);
+  const { data } = await api.get(`/admin/pages/${slug}`);
+  return data;
 }
 
 export async function creerPage(
   donnees: Pick<PageStatique, 'slug' | 'titre'> & Partial<PageStatique>
 ): Promise<ReponsePage> {
-  const res = await fetch(`${API_URL}/admin/pages`, {
-    ...optionsBase, method: 'POST',
-    body: JSON.stringify(donnees),
-  });
-  return verifierReponse<ReponsePage>(res);
+  const { data } = await api.post('/admin/pages', donnees);
+  return data;
 }
 
 export async function sauvegarderPage(
-  slug: string, donnees: Partial<PageStatique>
+  slug: string,
+  donnees: Partial<PageStatique>
 ): Promise<ReponsePage> {
-  const res = await fetch(`${API_URL}/admin/pages/${slug}`, {
-    ...optionsBase, method: 'PUT',
-    body: JSON.stringify(donnees),
-  });
-  return verifierReponse<ReponsePage>(res);
+  const { data } = await api.put(`/admin/pages/${slug}`, donnees);
+  return data;
 }
 
 export async function supprimerPage(slug: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`${API_URL}/admin/pages/${slug}`, {
-    ...optionsBase, method: 'DELETE',
-  });
-  return verifierReponse(res);
+  const { data } = await api.delete(`/admin/pages/${slug}`);
+  return data;
 }
 
 /* ── Articles ────────────────────────────────────────────────────────── */
+
 export async function getStatistiquesArticles(): Promise<ReponseStatistiquesArticles> {
-  const res = await fetch(`${API_URL}/admin/articles/statistiques`, optionsBase);
-  return verifierReponse<ReponseStatistiquesArticles>(res);
+  const { data } = await api.get('/admin/articles/statistiques');
+  return data;
 }
 
 export async function getArticles(params?: {
@@ -71,40 +55,29 @@ export async function getArticles(params?: {
   page?: number;
   limite?: number;
 }): Promise<ReponseListeArticles> {
-  const qs = new URLSearchParams();
-  if (params?.statut)    qs.set('statut',    params.statut);
-  if (params?.recherche) qs.set('recherche', params.recherche);
-  if (params?.page)      qs.set('page',      String(params.page));
-  if (params?.limite)    qs.set('limite',    String(params.limite));
-
-  const res = await fetch(`${API_URL}/admin/articles?${qs}`, optionsBase);
-  return verifierReponse<ReponseListeArticles>(res);
+  const { data } = await api.get('/admin/articles', { params });
+  return data;
 }
 
 export async function getArticleParId(id: string): Promise<ReponseArticle> {
-  const res = await fetch(`${API_URL}/admin/articles/${id}`, optionsBase);
-  return verifierReponse<ReponseArticle>(res);
+  const { data } = await api.get(`/admin/articles/${id}`);
+  return data;
 }
 
 export async function creerArticle(donnees: Partial<Article>): Promise<ReponseArticle> {
-  const res = await fetch(`${API_URL}/admin/articles`, {
-    ...optionsBase, method: 'POST',
-    body: JSON.stringify(donnees),
-  });
-  return verifierReponse<ReponseArticle>(res);
+  const { data } = await api.post('/admin/articles', donnees);
+  return data;
 }
 
-export async function modifierArticle(id: string, donnees: Partial<Article>): Promise<ReponseArticle> {
-  const res = await fetch(`${API_URL}/admin/articles/${id}`, {
-    ...optionsBase, method: 'PUT',
-    body: JSON.stringify(donnees),
-  });
-  return verifierReponse<ReponseArticle>(res);
+export async function modifierArticle(
+  id: string,
+  donnees: Partial<Article>
+): Promise<ReponseArticle> {
+  const { data } = await api.put(`/admin/articles/${id}`, donnees);
+  return data;
 }
 
 export async function supprimerArticle(id: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`${API_URL}/admin/articles/${id}`, {
-    ...optionsBase, method: 'DELETE',
-  });
-  return verifierReponse(res);
+  const { data } = await api.delete(`/admin/articles/${id}`);
+  return data;
 }

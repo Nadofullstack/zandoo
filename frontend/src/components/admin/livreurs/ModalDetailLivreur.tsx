@@ -50,7 +50,6 @@ export default function ModalDetailLivreur({ livreurId, onFermer }: Props) {
     setChargement(true);
     setErreur(null);
     setLivreur(null);
-    setNotesSucces(false);
 
     getLivreurParId(livreurId)
       .then((rep) => {
