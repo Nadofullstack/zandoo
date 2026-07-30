@@ -73,8 +73,8 @@ export default function TableauProduits({ produits, chargementAction, onChangerS
                   {/* Produit */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      {p.photos[0] ? (
-                        <img src={p.photos[0]} alt={p.nom} className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0" />
+                      {p.photoCouverture ? (
+                        <img src={p.photoCouverture} alt={p.nom} className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0" />
                       ) : (
                         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 text-xs">N/A</div>
                       )}

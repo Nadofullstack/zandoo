@@ -138,7 +138,7 @@ export const creerProduit = async (req, res) => {
     const {
       nom, description, reference, categorie,
       prix, prixPromotionnel, quantiteDisponible, enStock,
-      photos, video, variantes, attributs, statut,
+      photoCouverture, variantesPhotos, video, variantes, attributs, statut,
     } = req.body;
 
     const slug = await genererSlugUnique(nom);
@@ -153,7 +153,8 @@ export const creerProduit = async (req, res) => {
       prixPromotionnel:   prixPromotionnel ? Number(prixPromotionnel) : null,
       quantiteDisponible: Number(quantiteDisponible),
       enStock:            enStock ?? Number(quantiteDisponible) > 0,
-      photos:             photos ?? [],
+      photoCouverture:    photoCouverture ?? null,
+      variantesPhotos:    variantesPhotos ?? [],
       video:              video ?? null,
       variantes:          variantes ?? [],
       attributs:          attributs ?? [],
@@ -200,9 +201,9 @@ export const modifierProduit = async (req, res) => {
     }
 
     const champs = [
-      'description', 'categorie', 'vendeur',
+      'description', 'categorie',
       'prix', 'prixPromotionnel', 'quantiteDisponible', 'enStock',
-      'photos', 'video', 'variantes', 'attributs',
+      'photoCouverture', 'variantesPhotos', 'video', 'variantes', 'attributs',
     ];
 
     /* Mise à jour du nom + slug si le nom change */

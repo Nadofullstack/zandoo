@@ -1,87 +1,240 @@
 import { useRef } from 'react';
-import { Upload, ImagePlus, Video, CheckCircle2, X, AlertCircle } from 'lucide-react';
+import {
+  Upload, ImagePlus, Video, CheckCircle2, X,
+  AlertCircle, Plus, Trash2,
+} from 'lucide-react';
+import type { VariantePhoto } from '../../../types/admin';
 
-interface PhotoPreview { fichier: File; preview: string; }
+/* ── Types ───────────────────────────────────────────────────────────────── */
 
-interface Props {
-  photosPreview: PhotoPreview[];
-  photosUrls: string[];
-  videoPreview: string | null;
-  videoUrl: string | null;
-  erreurPhotos?: string;
-  onSelectionPhotos: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSupprimerPhoto: (index: number) => void;
-  onSelectionVideo: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSupprimerVideo: () => void;
+/** Photo couverture */
+interface PhotoCouv {
+  fichier: File | null;
+  preview: string;   // blob: ou URL distante
+  uploadee: boolean; // déjà sur Cloudinary
 }
 
+/** Variante photo (état local) */
+interface VariantePhotoLocal {
+  nom: string;
+  photos: { fichier: File | null; preview: string; uploadee: boolean }[];
+}
+
+interface Props {
+  /* ── Couverture ── */
+  couverture: PhotoCouv | null;
+  onSelectionCouverture: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSupprimerCouverture: () => void;
+
+  /* ── Variantes photos ── */
+  variantesPhotos: VariantePhotoLocal[];
+  onAjouterVariante: () => void;
+  onSupprimerVariante: (iv: number) => void;
+  onNomVarianteChange: (iv: number, nom: string) => void;
+  onAjouterPhotosVariante: (iv: number, e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSupprimerPhotoVariante: (iv: number, ip: number) => void;
+
+  /* ── Vidéo ── */
+  videoPreview: string | null;
+  videoUrl: string | null;
+  onSelectionVideo: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSupprimerVideo: () => void;
+
+  erreurCouverture?: string;
+}
+
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+function ZoneUpload({ onClick, label, sub }: { onClick: () => void; label: string; sub: string }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="w-full flex flex-col items-center justify-center gap-2 py-6 border-2
+                 border-dashed border-gray-300 rounded-xl text-gray-400
+                 hover:border-accent hover:text-accent transition-colors bg-gray-50">
+      <Upload size={20} aria-hidden />
+      <span className="text-xs font-medium">{label}</span>
+      <span className="text-xs">{sub}</span>
+    </button>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════ */
 export default function OngletMedias({
-  photosPreview, photosUrls, videoPreview, videoUrl, erreurPhotos,
-  onSelectionPhotos, onSupprimerPhoto, onSelectionVideo, onSupprimerVideo,
+  couverture, onSelectionCouverture, onSupprimerCouverture,
+  variantesPhotos, onAjouterVariante, onSupprimerVariante,
+  onNomVarianteChange, onAjouterPhotosVariante, onSupprimerPhotoVariante,
+  videoPreview, videoUrl, onSelectionVideo, onSupprimerVideo,
+  erreurCouverture,
 }: Props) {
-  const inputPhotos = useRef<HTMLInputElement>(null);
-  const inputVideo  = useRef<HTMLInputElement>(null);
+  const inputCouv  = useRef<HTMLInputElement>(null);
+  const inputVideo = useRef<HTMLInputElement>(null);
+  /* Refs dynamiques pour chaque variante */
+  const inputsVariantes = useRef<(HTMLInputElement | null)[]>([]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
-      {/* ── Photos ─────────────────────────────────────── */}
-      <div>
-        <label className="label-admin">
-          <ImagePlus size={11} className="inline mr-1" aria-hidden />
-          Photos ({photosPreview.length}/10)
+      {/* ════════════════════════════════
+          1. PHOTO DE COUVERTURE
+          ════════════════════════════════ */}
+      <section>
+        <label className="label-admin flex items-center gap-1 mb-2">
+          <ImagePlus size={12} aria-hidden /> Photo de couverture *
         </label>
 
-        {/* Grille de prévisualisations */}
-        {photosPreview.length > 0 && (
-          <div className="grid grid-cols-4 gap-2 mb-3">
-            {photosPreview.map(({ preview }, i) => (
-              <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                <img src={preview} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                {photosUrls[i] && (
-                  <div className="absolute top-1 left-1 bg-green-500 text-white rounded-full p-0.5" title="Uploadée">
-                    <CheckCircle2 size={10} />
-                  </div>
-                )}
-                <button type="button" onClick={() => onSupprimerPhoto(i)}
-                  aria-label={`Supprimer la photo ${i + 1}`}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5
-                             opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
-                  <X size={10} />
-                </button>
+        {couverture ? (
+          <div className="relative group w-full max-w-xs aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+            <img
+              src={couverture.preview}
+              alt="Couverture"
+              className="w-full h-full object-cover"
+            />
+            {couverture.uploadee && (
+              <div className="absolute top-2 left-2 bg-green-500 text-white rounded-full p-0.5" title="Uploadée">
+                <CheckCircle2 size={12} />
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Zone de dépôt */}
-        {photosPreview.length < 10 && (
-          <>
-            <input ref={inputPhotos} type="file" multiple
-              accept="image/jpeg,image/jpg,image/png,image/webp"
-              onChange={onSelectionPhotos} className="hidden" aria-label="Sélectionner des photos" />
-            <button type="button" onClick={() => inputPhotos.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-2 py-8 border-2
-                         border-dashed border-gray-300 rounded-xl text-gray-400
-                         hover:border-accent hover:text-accent transition-colors bg-gray-50">
-              <Upload size={24} aria-hidden />
-              <span className="text-sm font-medium">Cliquez pour ajouter des photos</span>
-              <span className="text-xs">JPEG, PNG, WebP — max 5 Mo par fichier</span>
+            )}
+            <button
+              type="button"
+              onClick={onSupprimerCouverture}
+              aria-label="Supprimer la photo de couverture"
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1
+                         opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
+              <X size={13} />
             </button>
+          </div>
+        ) : (
+          <>
+            <input
+              ref={inputCouv}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={onSelectionCouverture}
+              className="hidden"
+              aria-label="Sélectionner la photo de couverture"
+            />
+            <ZoneUpload
+              onClick={() => inputCouv.current?.click()}
+              label="Cliquez pour ajouter la photo principale"
+              sub="JPEG, PNG, WebP — max 5 Mo"
+            />
           </>
         )}
 
-        {erreurPhotos && (
+        {erreurCouverture && (
           <p role="alert" className="flex items-center gap-1 text-xs text-red-600 mt-1">
-            <AlertCircle size={11} aria-hidden /> {erreurPhotos}
+            <AlertCircle size={11} aria-hidden /> {erreurCouverture}
           </p>
         )}
-      </div>
+      </section>
 
-      {/* ── Vidéo ──────────────────────────────────────── */}
-      <div>
-        <label className="label-admin">
-          <Video size={11} className="inline mr-1" aria-hidden /> Vidéo produit (optionnel)
+      {/* ════════════════════════════════
+          2. VARIANTES PHOTOS
+          ════════════════════════════════ */}
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <label className="label-admin mb-0">
+            Variantes de photos
+            <span className="ml-1 text-xs text-[#74777d] font-normal">(ex : Rouge, Bleu…)</span>
+          </label>
+          <button
+            type="button"
+            onClick={onAjouterVariante}
+            className="flex items-center gap-1 text-xs font-semibold text-accent hover:underline">
+            <Plus size={13} /> Ajouter une variante
+          </button>
+        </div>
+
+        {variantesPhotos.length === 0 && (
+          <p className="text-xs text-[#74777d] bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+            Aucune variante. Ajoutez-en une si votre produit existe en plusieurs couleurs ou versions.
+          </p>
+        )}
+
+        <div className="space-y-4">
+          {variantesPhotos.map((variante, iv) => (
+            <div key={iv} className="border border-gray-200 rounded-xl p-4 bg-gray-50/60">
+
+              {/* En-tête variante */}
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="text"
+                  value={variante.nom}
+                  onChange={(e) => onNomVarianteChange(iv, e.target.value)}
+                  placeholder="Nom de la variante (ex : Rouge)"
+                  maxLength={100}
+                  className="flex-1 px-3 py-2 bg-white border border-[#c4c6cd] rounded-lg text-sm
+                             text-primary placeholder:text-gray-400 outline-none
+                             focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => onSupprimerVariante(iv)}
+                  title="Supprimer cette variante"
+                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors shrink-0">
+                  <Trash2 size={15} />
+                </button>
+              </div>
+
+              {/* Grille photos de la variante */}
+              {variante.photos.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {variante.photos.map((photo, ip) => (
+                    <div key={ip}
+                      className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
+                      <img src={photo.preview} alt={`${variante.nom} photo ${ip + 1}`}
+                        className="w-full h-full object-cover" />
+                      {photo.uploadee && (
+                        <div className="absolute top-1 left-1 bg-green-500 text-white rounded-full p-0.5">
+                          <CheckCircle2 size={9} />
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onSupprimerPhotoVariante(iv, ip)}
+                        aria-label="Supprimer"
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5
+                                   opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
+                        <X size={9} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Ajouter photos à cette variante */}
+              {variante.photos.length < 10 && (
+                <>
+                  <input
+                    ref={(el) => { inputsVariantes.current[iv] = el; }}
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => onAjouterPhotosVariante(iv, e)}
+                    className="hidden"
+                    aria-label={`Ajouter des photos à la variante ${variante.nom || iv + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => inputsVariantes.current[iv]?.click()}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-dashed
+                               border-gray-300 rounded-lg text-xs text-gray-500
+                               hover:border-accent hover:text-accent transition-colors bg-white">
+                    <Plus size={13} aria-hidden />
+                    Ajouter des photos ({variante.photos.length}/10)
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ════════════════════════════════
+          3. VIDÉO
+          ════════════════════════════════ */}
+      <section>
+        <label className="label-admin flex items-center gap-1 mb-2">
+          <Video size={12} aria-hidden /> Vidéo produit (optionnel)
         </label>
 
         {videoPreview ? (
@@ -92,26 +245,36 @@ export default function OngletMedias({
                 <CheckCircle2 size={11} /> Uploadée
               </div>
             )}
-            <button type="button" onClick={onSupprimerVideo} aria-label="Supprimer la vidéo"
+            <button
+              type="button"
+              onClick={onSupprimerVideo}
+              aria-label="Supprimer la vidéo"
               className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors">
               <X size={14} />
             </button>
           </div>
         ) : (
           <>
-            <input ref={inputVideo} type="file" accept="video/mp4,video/webm,video/ogg"
-              onChange={onSelectionVideo} className="hidden" aria-label="Sélectionner une vidéo" />
-            <button type="button" onClick={() => inputVideo.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-2 py-6 border-2
-                         border-dashed border-gray-300 rounded-xl text-gray-400
-                         hover:border-accent hover:text-accent transition-colors bg-gray-50">
-              <Video size={24} aria-hidden />
-              <span className="text-sm font-medium">Cliquez pour ajouter une vidéo</span>
-              <span className="text-xs">MP4, WebM, OGG — max 50 Mo</span>
-            </button>
+            <input
+              ref={inputVideo}
+              type="file"
+              accept="video/mp4,video/webm,video/ogg"
+              onChange={onSelectionVideo}
+              className="hidden"
+              aria-label="Sélectionner une vidéo"
+            />
+            <ZoneUpload
+              onClick={() => inputVideo.current?.click()}
+              label="Cliquez pour ajouter une vidéo"
+              sub="MP4, WebM, OGG — max 50 Mo"
+            />
           </>
         )}
-      </div>
+      </section>
+
     </div>
   );
 }
+
+/* ── Export du type local pour les parents ────────────────────────────────── */
+export type { VariantePhotoLocal };

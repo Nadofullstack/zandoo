@@ -3,7 +3,7 @@ import { X, Package, RefreshCw, ImagePlus, DollarSign, Layers } from 'lucide-rea
 import Button from '../../ui/Button';
 import Alert from '../../ui/Alert';
 import OngletInformations from './OngletInformations';
-import OngletMedias from './OngletMedias';
+import OngletMedias, { type VariantePhotoLocal } from './OngletMedias';
 import OngletPrix from './OngletPrix';
 import OngletVariantes from './OngletVariantes';
 import { creerProduit } from '../../../services/admin/adminProduitService';
@@ -17,22 +17,23 @@ interface Props { ouvert: boolean; onFermer: () => void; onSucces: () => void; }
 type Onglet = 'infos' | 'medias' | 'prix' | 'variantes';
 const ORDRE: Onglet[] = ['infos', 'medias', 'prix', 'variantes'];
 
+interface PhotoCouv { fichier: File | null; preview: string; uploadee: boolean; }
+
 interface EtatForm {
-  nom: string; reference: string; description: string;
-  categorieId: string;
+  nom: string; reference: string; description: string; categorieId: string;
   prix: string; prixPromotionnel: string; quantiteDisponible: string;
   statut: StatutProduit; variantes: VarianteProduit[];
 }
 interface EtatErreurs {
-  nom?: string; reference?: string; description?: string;
-  categorieId?: string;
-  prix?: string; prixPromotionnel?: string; quantiteDisponible?: string;
-  photos?: string; global?: string;
+  nom?: string; reference?: string; description?: string; categorieId?: string;
+  couverture?: string; prix?: string; prixPromotionnel?: string;
+  quantiteDisponible?: string; global?: string;
 }
 
 const INIT: EtatForm = {
   nom: '', reference: '', description: '', categorieId: '',
-  prix: '', prixPromotionnel: '', quantiteDisponible: '', statut: 'en_stock', variantes: [],
+  prix: '', prixPromotionnel: '', quantiteDisponible: '',
+  statut: 'en_stock', variantes: [],
 };
 
 const ONGLETS: { id: Onglet; libelle: string; icone: React.ElementType }[] = [
@@ -49,9 +50,7 @@ function genRef() {
   return r;
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   Composant principal — orchestrateur léger
-   ══════════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════ */
 export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Props) {
 
   /* ── État formulaire ─────────────────────────────────── */
@@ -65,19 +64,23 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   const [chargCat,   setChargCat]   = useState(false);
 
   /* ── Catégorie inline ────────────────────────────────── */
-  const [ajoutCat,     setAjoutCat]     = useState(false);
+  const [ajoutCat,      setAjoutCat]      = useState(false);
   const [chargCreatCat, setChargCreatCat] = useState(false);
-  const [errCreatCat,  setErrCreatCat]  = useState<string | undefined>();
+  const [errCreatCat,   setErrCreatCat]   = useState<string | undefined>();
 
-  /* ── Médias ──────────────────────────────────────────── */
-  const [photosPreview, setPhotosPreview] = useState<{ fichier: File; preview: string }[]>([]);
-  const [photosUrls,    setPhotosUrls]    = useState<string[]>([]);
+  /* ── Médias — couverture ─────────────────────────────── */
+  const [couverture, setCouverture] = useState<PhotoCouv | null>(null);
   const [uploadEnCours, setUploadEnCours] = useState(false);
-  const [videoPreview,  setVideoPreview]  = useState<string | null>(null);
-  const [videoUrl,      setVideoUrl]      = useState<string | null>(null);
-  const [videoFichier,  setVideoFichier]  = useState<File | null>(null);
 
-  /* ── Chargement catégories + vendeurs à l'ouverture ──── */
+  /* ── Médias — variantes photos ───────────────────────── */
+  const [variantesPhotos, setVariantesPhotos] = useState<VariantePhotoLocal[]>([]);
+
+  /* ── Médias — vidéo ──────────────────────────────────── */
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoUrl,     setVideoUrl]     = useState<string | null>(null);
+  const [videoFichier, setVideoFichier] = useState<File | null>(null);
+
+  /* ── Chargement catégories ───────────────────────────── */
   useEffect(() => {
     if (!ouvert) return;
     setChargCat(true);
@@ -91,11 +94,15 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   const reset = useCallback(() => {
     setForm(INIT); setErreurs({}); setOnglet('infos');
     setAjoutCat(false); setErrCreatCat(undefined);
-    photosPreview.forEach((p) => URL.revokeObjectURL(p.preview));
-    setPhotosPreview([]); setPhotosUrls([]);
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (couverture?.preview.startsWith('blob:')) URL.revokeObjectURL(couverture.preview);
+    setCouverture(null);
+    variantesPhotos.forEach((v) =>
+      v.photos.forEach((p) => { if (p.preview.startsWith('blob:')) URL.revokeObjectURL(p.preview); })
+    );
+    setVariantesPhotos([]);
+    if (videoPreview?.startsWith('blob:')) URL.revokeObjectURL(videoPreview);
     setVideoPreview(null); setVideoUrl(null); setVideoFichier(null);
-  }, [photosPreview, videoPreview]);
+  }, [couverture, variantesPhotos, videoPreview]);
 
   const handleFermer = () => { reset(); onFermer(); };
   if (!ouvert) return null;
@@ -122,62 +129,110 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
     } finally { setChargCreatCat(false); }
   };
 
-  /* ── Photos ──────────────────────────────────────────── */
-  const handleSelectionPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fichiers = Array.from(e.target.files ?? []).slice(0, 10 - photosPreview.length);
-    if (!fichiers.length) return;
-    setPhotosPreview((p) => [...p, ...fichiers.map((f) => ({ fichier: f, preview: URL.createObjectURL(f) }))]);
-    setErreurs((p) => ({ ...p, photos: undefined }));
+  /* ── Couverture ──────────────────────────────────────── */
+  const handleSelectionCouverture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (couverture?.preview.startsWith('blob:')) URL.revokeObjectURL(couverture.preview);
+    setCouverture({ fichier: f, preview: URL.createObjectURL(f), uploadee: false });
+    setErreurs((p) => ({ ...p, couverture: undefined }));
     if (e.target) e.target.value = '';
   };
 
-  const supprimerPhoto = (i: number) => {
-    URL.revokeObjectURL(photosPreview[i].preview);
-    setPhotosPreview((p) => p.filter((_, k) => k !== i));
-    setPhotosUrls((p) => p.filter((_, k) => k !== i));
+  const supprimerCouverture = () => {
+    if (couverture?.preview.startsWith('blob:')) URL.revokeObjectURL(couverture.preview);
+    setCouverture(null);
   };
 
-  const uploaderPhotos = async (): Promise<string[]> => {
-    const nonUp = photosPreview.filter((_, i) => !photosUrls[i]);
-    if (!nonUp.length) return photosUrls;
-    setUploadEnCours(true);
-    try {
-      const urls = await uploadPhotos(nonUp.map((p) => p.fichier));
-      const toutes = [...photosUrls, ...urls];
-      setPhotosUrls(toutes);
-      return toutes;
-    } finally { setUploadEnCours(false); }
+  /* ── Variantes photos ────────────────────────────────── */
+  const ajouterVariantePhoto = () =>
+    setVariantesPhotos((p) => [...p, { nom: '', photos: [] }]);
+
+  const supprimerVariantePhoto = (iv: number) => {
+    variantesPhotos[iv].photos.forEach((p) => { if (p.preview.startsWith('blob:')) URL.revokeObjectURL(p.preview); });
+    setVariantesPhotos((p) => p.filter((_, k) => k !== iv));
+  };
+
+  const nomVarianteChange = (iv: number, nom: string) =>
+    setVariantesPhotos((p) => { const v = [...p]; v[iv] = { ...v[iv], nom }; return v; });
+
+  const ajouterPhotosVariante = (iv: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const fichiers = Array.from(e.target.files ?? [])
+      .slice(0, 10 - variantesPhotos[iv].photos.length);
+    if (!fichiers.length) return;
+    setVariantesPhotos((prev) => {
+      const v = [...prev];
+      v[iv] = {
+        ...v[iv],
+        photos: [...v[iv].photos, ...fichiers.map((f) => ({ fichier: f, preview: URL.createObjectURL(f), uploadee: false }))],
+      };
+      return v;
+    });
+    if (e.target) e.target.value = '';
+  };
+
+  const supprimerPhotoVariante = (iv: number, ip: number) => {
+    const p = variantesPhotos[iv].photos[ip];
+    if (p.preview.startsWith('blob:')) URL.revokeObjectURL(p.preview);
+    setVariantesPhotos((prev) => {
+      const v = [...prev];
+      v[iv] = { ...v[iv], photos: v[iv].photos.filter((_, k) => k !== ip) };
+      return v;
+    });
   };
 
   /* ── Vidéo ───────────────────────────────────────────── */
   const handleSelectionVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoPreview?.startsWith('blob:')) URL.revokeObjectURL(videoPreview);
     setVideoFichier(f); setVideoPreview(URL.createObjectURL(f)); setVideoUrl(null);
     if (e.target) e.target.value = '';
   };
 
   const supprimerVideo = () => {
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoPreview?.startsWith('blob:')) URL.revokeObjectURL(videoPreview);
     setVideoFichier(null); setVideoPreview(null); setVideoUrl(null);
   };
 
-  /* ── Variantes ───────────────────────────────────────── */
+  /* ── Variantes (produit) ─────────────────────────────── */
   const ajouterVariante = () =>
     setForm((p) => ({ ...p, variantes: [...p.variantes, { nom: '', valeurs: [] }] }));
-
   const modifierNomVariante = (i: number, nom: string) =>
     setForm((p) => { const v = [...p.variantes]; v[i] = { ...v[i], nom }; return { ...p, variantes: v }; });
-
   const ajouterValeurVariante = (i: number, valeur: string) =>
     setForm((p) => { const v = [...p.variantes]; v[i] = { ...v[i], valeurs: [...v[i].valeurs, valeur] }; return { ...p, variantes: v }; });
-
   const supprimerValeurVariante = (iV: number, iK: number) =>
     setForm((p) => { const v = [...p.variantes]; v[iV] = { ...v[iV], valeurs: v[iV].valeurs.filter((_, k) => k !== iK) }; return { ...p, variantes: v }; });
-
   const supprimerVariante = (i: number) =>
     setForm((p) => ({ ...p, variantes: p.variantes.filter((_, k) => k !== i) }));
+
+  /* ── Upload helpers ──────────────────────────────────── */
+  const uploaderCouverture = async (): Promise<string | null> => {
+    if (!couverture?.fichier) return couverture?.uploadee ? couverture.preview : null;
+    setUploadEnCours(true);
+    try {
+      const [url] = await uploadPhotos([couverture.fichier]);
+      setCouverture((c) => c ? { ...c, uploadee: true, preview: url } : c);
+      return url;
+    } finally { setUploadEnCours(false); }
+  };
+
+  const uploaderVariantesPhotos = async () => {
+    const resultat: { nom: string; photos: string[] }[] = [];
+    for (const variante of variantesPhotos) {
+      const nouvelles = variante.photos.filter((p) => !p.uploadee && p.fichier);
+      const deja      = variante.photos.filter((p) => p.uploadee).map((p) => p.preview);
+      let urlsNouvelles: string[] = [];
+      if (nouvelles.length) {
+        setUploadEnCours(true);
+        urlsNouvelles = await uploadPhotos(nouvelles.map((p) => p.fichier as File));
+        setUploadEnCours(false);
+      }
+      resultat.push({ nom: variante.nom, photos: [...deja, ...urlsNouvelles] });
+    }
+    return resultat;
+  };
 
   /* ── Validation ──────────────────────────────────────── */
   const valider = (): boolean => {
@@ -196,7 +251,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
     const nbErr = Object.keys(e).length;
     if (nbErr > 0) {
       if (e.nom || e.reference || e.description || e.categorieId) setOnglet('infos');
-      else if (e.photos) setOnglet('medias');
+      else if (e.couverture) setOnglet('medias');
       else setOnglet('prix');
     }
     return nbErr === 0;
@@ -209,8 +264,8 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
     setChargement(true);
     setErreurs((p) => ({ ...p, global: undefined }));
     try {
-      let urlsPhotos = photosUrls;
-      if (photosPreview.length > photosUrls.length) urlsPhotos = await uploaderPhotos();
+      const urlCouverture   = await uploaderCouverture();
+      const urlsVariantes   = await uploaderVariantesPhotos();
 
       let urlVideo: string | null = videoUrl;
       if (videoFichier && !videoUrl) {
@@ -221,13 +276,19 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
       }
 
       await creerProduit({
-        nom: form.nom.trim(), reference: form.reference.trim().toUpperCase(),
-        description: form.description.trim(), categorie: form.categorieId,
-        prix: form.prix, prixPromotionnel: form.prixPromotionnel || undefined,
-        quantiteDisponible: form.quantiteDisponible, enStock: Number(form.quantiteDisponible) > 0,
-        photos: urlsPhotos, video: urlVideo ?? undefined,
-        variantes: form.variantes.filter((v) => v.nom.trim()),
-        statut: form.statut,
+        nom:              form.nom.trim(),
+        reference:        form.reference.trim().toUpperCase(),
+        description:      form.description.trim(),
+        categorie:        form.categorieId,
+        prix:             form.prix,
+        prixPromotionnel: form.prixPromotionnel || undefined,
+        quantiteDisponible: form.quantiteDisponible,
+        enStock:          Number(form.quantiteDisponible) > 0,
+        photoCouverture:  urlCouverture ?? undefined,
+        variantesPhotos:  urlsVariantes,
+        video:            urlVideo ?? undefined,
+        variantes:        form.variantes.filter((v) => v.nom.trim()),
+        statut:           form.statut,
       } as never);
 
       onSucces(); handleFermer();
@@ -239,7 +300,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   /* ── Indicateurs d'erreur par onglet ─────────────────── */
   const aErreurOnglet = (id: Onglet) =>
     (id === 'infos'  && (erreurs.nom || erreurs.reference || erreurs.description || erreurs.categorieId)) ||
-    (id === 'medias' && erreurs.photos) ||
+    (id === 'medias' && erreurs.couverture) ||
     (id === 'prix'   && (erreurs.prix || erreurs.prixPromotionnel || erreurs.quantiteDisponible));
 
   /* ═══════════════════════════════════════════════════════
@@ -296,8 +357,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
             {onglet === 'infos' && (
               <OngletInformations
                 form={form} erreurs={erreurs}
-                categories={categories}
-                chargCat={chargCat}
+                categories={categories} chargCat={chargCat}
                 ajoutCat={ajoutCat} chargCreatCat={chargCreatCat} errCreatCat={errCreatCat}
                 onChange={handleChange}
                 onGenererRef={() => { setForm((p) => ({ ...p, reference: genRef() })); setErreurs((p) => ({ ...p, reference: undefined })); }}
@@ -309,10 +369,20 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
             )}
             {onglet === 'medias' && (
               <OngletMedias
-                photosPreview={photosPreview} photosUrls={photosUrls}
-                videoPreview={videoPreview} videoUrl={videoUrl} erreurPhotos={erreurs.photos}
-                onSelectionPhotos={handleSelectionPhotos} onSupprimerPhoto={supprimerPhoto}
-                onSelectionVideo={handleSelectionVideo} onSupprimerVideo={supprimerVideo}
+                couverture={couverture}
+                onSelectionCouverture={handleSelectionCouverture}
+                onSupprimerCouverture={supprimerCouverture}
+                variantesPhotos={variantesPhotos}
+                onAjouterVariante={ajouterVariantePhoto}
+                onSupprimerVariante={supprimerVariantePhoto}
+                onNomVarianteChange={nomVarianteChange}
+                onAjouterPhotosVariante={ajouterPhotosVariante}
+                onSupprimerPhotoVariante={supprimerPhotoVariante}
+                videoPreview={videoPreview}
+                videoUrl={videoUrl}
+                onSelectionVideo={handleSelectionVideo}
+                onSupprimerVideo={supprimerVideo}
+                erreurCouverture={erreurs.couverture}
               />
             )}
             {onglet === 'prix' && (
@@ -332,7 +402,6 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
                 onSupprimer={supprimerVariante}
               />
             )}
-
           </div>
 
           {/* Footer */}

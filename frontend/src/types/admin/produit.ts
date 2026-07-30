@@ -5,6 +5,11 @@ import type { AttributCategorie } from './categorie';
 
 export type StatutProduit = 'en_stock' | 'en_rupture' | 'faible';
 
+export interface VariantePhoto {
+  nom: string;
+  photos: string[];
+}
+
 export interface VarianteProduit {
   nom: string;
   valeurs: string[];
@@ -25,7 +30,8 @@ export interface Produit {
   slug: string;
   description: string;
   reference: string;
-  photos: string[];
+  photoCouverture?: string | null;
+  variantesPhotos: VariantePhoto[];
   video?: string | null;
   categorie: { _id: string; nom: string; slug: string; attributs?: AttributCategorie[] };
   vendeur: { _id: string; nomEntreprise: string };
@@ -53,7 +59,8 @@ export interface FormulaireProduiit {
   prixPromotionnel: string;
   quantiteDisponible: string;
   enStock: boolean;
-  photos: string[];
+  photoCouverture?: string;
+  variantesPhotos: VariantePhoto[];
   video: string;
   variantes: VarianteProduit[];
   attributs: AttributProduit[];
