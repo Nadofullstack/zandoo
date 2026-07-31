@@ -85,9 +85,9 @@ export default function DetailProduitPage() {
           {/* Galerie */}
           <div>
             <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
-              {produit.photos?.[0] ? (
+              {produit.photoCouverture ? (
                 <img
-                  src={produit.photos[0]}
+                  src={produit.photoCouverture}
                   alt={produit.nom}
                   className="w-full h-full object-cover"
                 />
@@ -97,14 +97,15 @@ export default function DetailProduitPage() {
                 </div>
               )}
             </div>
-            {produit.photos?.length > 1 && (
-              <div className="flex gap-3 mt-4">
-                {produit.photos.slice(1, 5).map((photo, i) => (
+            {/* Miniatures des variantes photos */}
+            {produit.variantesPhotos && produit.variantesPhotos.length > 0 && (
+              <div className="flex gap-3 mt-4 flex-wrap">
+                {produit.variantesPhotos.flatMap((v) => v.photos).slice(0, 4).map((photo, i) => (
                   <div
                     key={i}
                     className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 cursor-pointer hover:border-[#FC7701] transition-colors"
                   >
-                    <img src={photo} alt={`${produit.nom} ${i + 2}`} className="w-full h-full object-cover" />
+                    <img src={photo} alt={`${produit.nom} ${i + 1}`} className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -133,6 +134,42 @@ export default function DetailProduitPage() {
 
             <p className="text-gray-500 leading-relaxed mb-8">{produit.description}</p>
 
+            {/* Variantes */}
+            {produit.variantes && produit.variantes.length > 0 && (
+              <div className="mb-6 space-y-4">
+                {produit.variantes.map((v, i) => (
+                  <div key={i}>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{v.nom}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {v.valeurs.map((val, j) => (
+                        <span
+                          key={j}
+                          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#011023] font-medium hover:border-[#FC7701] cursor-pointer transition-colors"
+                        >
+                          {val}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Attributs techniques */}
+            {produit.attributs && produit.attributs.length > 0 && (
+              <div className="mb-8 bg-gray-50 rounded-xl p-4">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Caractéristiques</p>
+                <div className="space-y-2">
+                  {produit.attributs.map((attr, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-gray-500">{attr.nom}</span>
+                      <span className="font-semibold text-[#011023]">{attr.valeur}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex gap-3">
               <button
@@ -151,15 +188,17 @@ export default function DetailProduitPage() {
             </div>
 
             {/* Vendeur */}
-            <div className="mt-8 pt-6 border-t border-gray-100">
-              <p className="text-xs text-gray-400 mb-2 uppercase font-semibold tracking-wide">Vendu par</p>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#FC7701]/10 flex items-center justify-center">
-                  <Store size={16} className="text-[#FC7701]" />
+            {produit.vendeur && (
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-2 uppercase font-semibold tracking-wide">Vendu par</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#FC7701]/10 flex items-center justify-center">
+                    <Store size={16} className="text-[#FC7701]" />
+                  </div>
+                  <span className="font-bold text-[#011023]">{produit.vendeur.nomEntreprise}</span>
                 </div>
-                <span className="font-bold text-[#011023]">{produit.vendeur.nomEntreprise}</span>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

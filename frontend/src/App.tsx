@@ -24,6 +24,10 @@ import ListeArticlesAdmin from './pages/admin/contenu/ListeArticlesAdmin';
 import EditeurArticleAdmin from './pages/admin/contenu/EditeurArticleAdmin';
 import ListeLivreursAdmin from './pages/admin/livreur/ListeLivreursAdmin';
 import ProfilLivreurAdmin from './pages/admin/livreur/ProfilLivreurAdmin';
+import TableauDeBordLivreurPage from './pages/livreur/TableauDeBordLivreurPage';
+import MesLivraisonsPage from './pages/livreur/MesLivraisonsPage';
+import HistoriqueLivraisonsPage from './pages/livreur/HistoriqueLivraisonsPage';
+import ProfilLivreurPage from './pages/livreur/ProfilLivreurPage';
 import GardeRouteAdmin from './components/admin/layout/GardeRouteAdmin';
 import GardeLivreur from './components/admin/livreurs/GardeLivreur';
 import ActivationPage from './pages/livreur/ActivationPage';
@@ -49,10 +53,11 @@ export default function App() {
         <Route path="/livreur/activation/:token/changer-mot-de-passe"    element={<ChangerMotDePassePage />} />
 
         {/* ── Livreur — pages protégées (JWT + rôle livreur) ─────────────── */}
-        <Route
-          path="/livreur/completer-profil"
-          element={<GardeLivreur><CompleterProfilPage /></GardeLivreur>}
-        />
+        <Route path="/livreur/completer-profil"       element={<GardeLivreur><CompleterProfilPage /></GardeLivreur>} />
+        <Route path="/livreur/tableau-de-bord"        element={<GardeLivreur><TableauDeBordLivreurPage /></GardeLivreur>} />
+        <Route path="/livreur/mes-livraisons"         element={<GardeLivreur><MesLivraisonsPage /></GardeLivreur>} />
+        <Route path="/livreur/historique"             element={<GardeLivreur><HistoriqueLivraisonsPage /></GardeLivreur>} />
+        <Route path="/livreur/profil"                 element={<GardeLivreur><ProfilLivreurPage /></GardeLivreur>} />
 
         {/* ── Admin ──────────────────────────────────────────────────────── */}
         <Route path="/admin" element={<GardeRouteAdmin><TableauDeBordAdmin /></GardeRouteAdmin>} />

@@ -48,6 +48,15 @@ export async function googleLoginUser(credential: string): Promise<AuthResponse>
   return data;
 }
 
+export async function logoutUser(): Promise<void> {
+  try {
+    await api.post('/auth/logout');
+  } finally {
+    // Supprime la session locale dans tous les cas (même si le réseau échoue)
+    supprimerSession();
+  }
+}
+
 export interface ApiServiceError extends Error {
   errors?: { field: string; message: string }[];
 }

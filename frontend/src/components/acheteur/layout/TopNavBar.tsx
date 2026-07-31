@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import logozandoo from '../../../assets/logozandoo.png';
+
 
 const NAV_LIENS = [
   { libelle: 'Électronique', slug: 'electronique' },
@@ -39,12 +41,12 @@ export default function TopNavBar() {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-10 flex items-center justify-between gap-4">
 
         {/* ── Logo ─────────────────────────────────────── */}
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-[#FC7701] flex items-center justify-center text-white font-black text-lg leading-none">
-            Z
+        <Link to="/" className="flex items-center shrink-0">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-black text-lg leading-none">
+            <img src={logozandoo} alt="ZanDoo" />
           </div>
           <span className="hidden sm:block font-black text-white text-xl tracking-tight">
-            ZAN<span className="text-[#FC7701]">DOO</span>
+            AN<span className="text-[#FC7701]">DOO</span>
           </span>
         </Link>
 

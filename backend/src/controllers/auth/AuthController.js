@@ -147,9 +147,17 @@ export const login = async (req, res) => {
 };
 
 /**
- * POST /api/auth/register
- * Crée un nouveau compte acheteur.
+ * POST /api/auth/logout
+ * Déconnecte l'utilisateur en vidant le cookie JWT httpOnly.
  */
+export const logout = async (_req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure:   env.server.nodeEnv === 'production',
+    sameSite: 'strict',
+  });
+  return res.status(200).json({ success: true, message: 'Déconnexion réussie.' });
+};
 export const register = async (req, res) => {
   try {
     const { fullName, email, phone, password } = req.body;

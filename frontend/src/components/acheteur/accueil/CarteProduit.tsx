@@ -11,7 +11,7 @@ function formatPrix(prix: number): string {
 }
 
 export default function CarteProduit({ produit }: Props) {
-  const photo       = produit.photos?.[0] ?? '';
+  const photo       = produit.photoCouverture ?? produit.variantesPhotos?.[0]?.photos?.[0] ?? '';
   const prixAffiche = produit.prixPromotionnel ?? produit.prix;
   const aPromotion  = !!produit.prixPromotionnel && produit.prixPromotionnel < produit.prix;
   const remise      = aPromotion
@@ -19,7 +19,10 @@ export default function CarteProduit({ produit }: Props) {
     : 0;
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/80 transition-all duration-300 flex flex-col">
+    <Link 
+      to={`/produit/${produit.slug}`}
+      className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/80 transition-all duration-300 flex flex-col cursor-pointer"
+    >
       {/* Image */}
       <div className="relative overflow-hidden bg-gray-50 aspect-square">
         {photo ? (
@@ -43,6 +46,11 @@ export default function CarteProduit({ produit }: Props) {
 
         {/* Bouton favori */}
         <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // TODO: Ajouter aux favoris
+          }}
           className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
           title="Ajouter aux favoris"
           aria-label="Ajouter aux favoris"
@@ -61,9 +69,11 @@ export default function CarteProduit({ produit }: Props) {
           {produit.nom}
         </h3>
 
-        <p className="text-xs text-gray-400 mb-3 truncate">
-          par {produit.vendeur?.nomEntreprise}
-        </p>
+        {produit.vendeur && (
+          <p className="text-xs text-gray-400 mb-3 truncate">
+            par {produit.vendeur.nomEntreprise}
+          </p>
+        )}
 
         {/* Prix + CTA */}
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
@@ -75,16 +85,15 @@ export default function CarteProduit({ produit }: Props) {
               </span>
             )}
           </div>
-          <Link
-            to={`/produit/${produit.slug}`}
-            className="w-9 h-9 bg-[#011023] hover:bg-[#FC7701] text-white rounded-xl flex items-center justify-center transition-all hover:scale-105"
+          <div
+            className="w-9 h-9 bg-[#011023] group-hover:bg-[#FC7701] text-white rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
             title="Voir le produit"
             aria-label="Voir le produit"
           >
             <ShoppingCart size={16} />
-          </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

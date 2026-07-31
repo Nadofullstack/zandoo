@@ -1,9 +1,10 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Store, LayoutDashboard, Package, Tag, Users,
-  ShoppingCart, MessageSquare, Megaphone, FileText, BookOpen, Truck,
+  ShoppingCart, MessageSquare, Megaphone, FileText, BookOpen, Truck, LogOut,
 } from 'lucide-react';
 import logo from '../../../assets/logo.jpg';
+import { lireSession, logoutUser, supprimerSession } from '../../../services/auth/authService';
 
 interface LienNav {
   vers: string;
@@ -30,6 +31,17 @@ const LIENS_NAV: LienNav[] = [
  * Barre latérale de navigation du panneau d'administration.
  */
 export default function SidebarAdmin() {
+  const navigate = useNavigate();
+  const session  = lireSession();
+
+  const seDeconnecter = () => {
+    // Supprime la session et redirige immédiatement — sans attendre le serveur
+    supprimerSession();
+    navigate('/connexion', { replace: true });
+    // Appel backend en arrière-plan pour vider le cookie httpOnly
+    logoutUser().catch(() => {});
+  };
+
   return (
     <aside className="w-60 shrink-0 min-h-screen bg-primary flex flex-col">
 
@@ -64,9 +76,31 @@ export default function SidebarAdmin() {
         ))}
       </nav>
 
-      {/* Pied de sidebar */}
-      <div className="px-5 py-4 border-t border-white/10">
-        <p className="text-white/30 text-xs">© {new Date().getFullYear()} ZANDOO</p>
+      {/* Pied de sidebar — utilisateur + déconnexion */}
+      <div className="px-3 py-4 border-t border-white/10 space-y-1">
+        {/* Info utilisateur */}
+        {session && (
+          <div className="flex items-center gap-3 px-3 py-2 mb-1">
+            <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-xs font-black text-accent flex-shrink-0">
+              {session.fullName?.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-white text-xs font-semibold truncate">{session.fullName}</p>
+              <p className="text-white/40 text-[10px] truncate">{session.email}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Bouton déconnexion */}
+        <button
+          onClick={seDeconnecter}
+          className="w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+        >
+          <LogOut size={16} aria-hidden="true" />
+          Se déconnecter
+        </button>
+
+        <p className="text-white/20 text-xs px-3 pt-1">© {new Date().getFullYear()} ZANDOO</p>
       </div>
     </aside>
   );

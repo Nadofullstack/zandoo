@@ -5,40 +5,28 @@ import {
   completerProfil,
   getMonProfil,
 } from '../controllers/livreur/LivreurAuthControleur.js';
+import {
+  getTableauDeBord,
+  getMesLivraisons,
+  getHistoriqueLivraisons,
+  marquerLivree,
+} from '../controllers/livreur/LivreurDashboardControleur.js';
 import { protect, requireRole } from '../middlewars/authentification.js';
 
 const routeur = Router();
 
 /* ── Routes publiques (pas de JWT requis) ────────────────────── */
-
-/* GET  /api/livreur/activation/:token/verifier */
-routeur.get(
-  '/activation/:token/verifier',
-  verifierTokenActivation
-);
-
-/* POST /api/livreur/activation/:token/changer-mot-de-passe */
-routeur.post(
-  '/activation/:token/changer-mot-de-passe',
-  changerMotDePasseInitial
-);
+routeur.get('/activation/:token/verifier',                    verifierTokenActivation);
+routeur.post('/activation/:token/changer-mot-de-passe',       changerMotDePasseInitial);
 
 /* ── Routes protégées (JWT + rôle livreur) ───────────────────── */
+const auth = [protect, requireRole('livreur')];
 
-/* GET  /api/livreur/profil */
-routeur.get(
-  '/profil',
-  protect,
-  requireRole('livreur'),
-  getMonProfil
-);
-
-/* PUT  /api/livreur/profil */
-routeur.put(
-  '/profil',
-  protect,
-  requireRole('livreur'),
-  completerProfil
-);
+routeur.get( '/profil',                          ...auth, getMonProfil);
+routeur.put( '/profil',                          ...auth, completerProfil);
+routeur.get( '/tableau-de-bord',                 ...auth, getTableauDeBord);
+routeur.get( '/commandes',                       ...auth, getMesLivraisons);
+routeur.get( '/commandes/historique',            ...auth, getHistoriqueLivraisons);
+routeur.patch('/commandes/:id/livree',           ...auth, marquerLivree);
 
 export default routeur;

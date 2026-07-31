@@ -20,7 +20,7 @@ export const getAccueil = async (_req, res) => {
 
       /* Nouveautés : produits en stock les plus récents */
       Produit.find({ statut: 'en_stock', enStock: true })
-        .select('nom slug photos prix prixPromotionnel categorie vendeur')
+        .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur')
         .populate('categorie', 'nom slug')
         .populate('vendeur', 'nomEntreprise')
         .sort({ createdAt: -1 })
@@ -29,7 +29,7 @@ export const getAccueil = async (_req, res) => {
 
       /* Best sellers : produits en stock (logique à enrichir avec les commandes) */
       Produit.find({ statut: 'en_stock', enStock: true })
-        .select('nom slug photos prix prixPromotionnel categorie vendeur')
+        .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur')
         .populate('categorie', 'nom slug')
         .populate('vendeur', 'nomEntreprise')
         .sort({ createdAt: 1 })

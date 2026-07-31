@@ -1,18 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Package, RefreshCw, ImagePlus, DollarSign, Layers } from 'lucide-react';
+import { X, Package, RefreshCw, ImagePlus, DollarSign, Layers, Pencil } from 'lucide-react';
 import Button from '../../ui/Button';
 import Alert from '../../ui/Alert';
 import OngletInformations from './OngletInformations';
 import OngletMedias, { type VariantePhotoLocal } from './OngletMedias';
 import OngletPrix from './OngletPrix';
 import OngletVariantes from './OngletVariantes';
-import { creerProduit } from '../../../services/admin/adminProduitService';
+import { creerProduit, getProduitParId, modifierProduit } from '../../../services/admin/adminProduitService';
 import { creerCategorie, getCategoriesPlates } from '../../../services/admin/adminCategorieService';
 import { uploadPhotos, uploadVideo } from '../../../services/admin/adminUploadService';
 import type { Categorie, StatutProduit, VarianteProduit } from '../../../types/admin';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
-interface Props { ouvert: boolean; onFermer: () => void; onSucces: () => void; }
+interface Props {
+  ouvert: boolean;
+  onFermer: () => void;
+  onSucces: () => void;
+  /** Si fourni → mode modification, sinon → mode création */
+  produitId?: string | null;
+}
 
 type Onglet = 'infos' | 'medias' | 'prix' | 'variantes';
 const ORDRE: Onglet[] = ['infos', 'medias', 'prix', 'variantes'];
@@ -51,7 +57,9 @@ function genRef() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Props) {
+export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produitId }: Props) {
+
+  const modeModif = !!produitId;
 
   /* ── État formulaire ─────────────────────────────────── */
   const [form, setForm]       = useState<EtatForm>(INIT);
@@ -62,6 +70,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   /* ── Données externes ────────────────────────────────── */
   const [categories, setCategories] = useState<Categorie[]>([]);
   const [chargCat,   setChargCat]   = useState(false);
+  const [chargProduit, setChargProduit] = useState(false);
 
   /* ── Catégorie inline ────────────────────────────────── */
   const [ajoutCat,      setAjoutCat]      = useState(false);
@@ -80,7 +89,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
   const [videoUrl,     setVideoUrl]     = useState<string | null>(null);
   const [videoFichier, setVideoFichier] = useState<File | null>(null);
 
-  /* ── Chargement catégories ───────────────────────────── */
+  /* ── Chargement catégories (+ produit en mode modif) ─── */
   useEffect(() => {
     if (!ouvert) return;
     setChargCat(true);
@@ -88,7 +97,39 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
       .then((r) => setCategories(r.data.categories))
       .catch(() => {})
       .finally(() => setChargCat(false));
-  }, [ouvert]);
+
+    if (produitId) {
+      setChargProduit(true);
+      setErreurs({});
+      getProduitParId(produitId)
+        .then((r) => {
+          const p = r.data.produit;
+          setForm({
+            nom:                p.nom,
+            reference:          p.reference,
+            description:        p.description,
+            categorieId:        typeof p.categorie === 'object' ? p.categorie._id : p.categorie,
+            prix:               String(p.prix),
+            prixPromotionnel:   p.prixPromotionnel ? String(p.prixPromotionnel) : '',
+            quantiteDisponible: String(p.quantiteDisponible),
+            statut:             p.statut,
+            variantes:          p.variantes ?? [],
+          });
+          if (p.photoCouverture) {
+            setCouverture({ fichier: null, preview: p.photoCouverture, uploadee: true });
+          }
+          setVariantesPhotos(
+            (p.variantesPhotos ?? []).map((v) => ({
+              nom: v.nom,
+              photos: v.photos.map((url) => ({ fichier: null, preview: url, uploadee: true })),
+            }))
+          );
+          if (p.video) { setVideoUrl(p.video); setVideoPreview(p.video); }
+        })
+        .catch((err) => setErreurs({ global: err instanceof Error ? err.message : 'Erreur de chargement.' }))
+        .finally(() => setChargProduit(false));
+    }
+  }, [ouvert, produitId]);
 
   /* ── Reset ───────────────────────────────────────────── */
   const reset = useCallback(() => {
@@ -267,33 +308,43 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
       const urlCouverture   = await uploaderCouverture();
       const urlsVariantes   = await uploaderVariantesPhotos();
 
-      let urlVideo: string | null = videoUrl;
+      let urlVideo: string | null | undefined = videoUrl;
       if (videoFichier && !videoUrl) {
         setUploadEnCours(true);
         urlVideo = await uploadVideo(videoFichier);
         setVideoUrl(urlVideo);
         setUploadEnCours(false);
       }
+      if (modeModif && !videoPreview) urlVideo = undefined;
 
-      await creerProduit({
-        nom:              form.nom.trim(),
-        reference:        form.reference.trim().toUpperCase(),
-        description:      form.description.trim(),
-        categorie:        form.categorieId,
-        prix:             form.prix,
-        prixPromotionnel: form.prixPromotionnel || undefined,
+      const payload = {
+        nom:                form.nom.trim(),
+        reference:          form.reference.trim().toUpperCase(),
+        description:        form.description.trim(),
+        categorie:          form.categorieId,
+        prix:               form.prix,
+        prixPromotionnel:   form.prixPromotionnel || undefined,
         quantiteDisponible: form.quantiteDisponible,
-        enStock:          Number(form.quantiteDisponible) > 0,
-        photoCouverture:  urlCouverture ?? undefined,
-        variantesPhotos:  urlsVariantes,
-        video:            urlVideo ?? undefined,
-        variantes:        form.variantes.filter((v) => v.nom.trim()),
-        statut:           form.statut,
-      } as never);
+        enStock:            Number(form.quantiteDisponible) > 0,
+        photoCouverture:    urlCouverture ?? undefined,
+        variantesPhotos:    urlsVariantes,
+        video:              urlVideo ?? undefined,
+        variantes:          form.variantes.filter((v) => v.nom.trim()),
+        statut:             form.statut,
+      } as never;
+
+      if (modeModif && produitId) {
+        await modifierProduit(produitId, payload);
+      } else {
+        await creerProduit(payload);
+      }
 
       onSucces(); handleFermer();
     } catch (err) {
-      setErreurs((p) => ({ ...p, global: err instanceof Error ? err.message : 'Erreur lors de la création.' }));
+      setErreurs((p) => ({
+        ...p,
+        global: err instanceof Error ? err.message : modeModif ? 'Erreur lors de la modification.' : 'Erreur lors de la création.',
+      }));
     } finally { setChargement(false); setUploadEnCours(false); }
   };
 
@@ -314,12 +365,19 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 rounded-xl">
-              <Package size={18} className="text-accent" aria-hidden />
+            <div className={`p-2 rounded-xl ${modeModif ? 'bg-blue-100' : 'bg-orange-100'}`}>
+              {modeModif
+                ? <Pencil size={18} className="text-blue-600" aria-hidden />
+                : <Package size={18} className="text-accent" aria-hidden />
+              }
             </div>
             <div>
-              <h2 id="modal-produit-titre" className="text-base font-bold text-primary">Nouveau produit</h2>
-              <p className="text-xs text-[#74777d]">Remplissez les informations du produit.</p>
+              <h2 id="modal-produit-titre" className="text-base font-bold text-primary">
+                {modeModif ? 'Modifier le produit' : 'Nouveau produit'}
+              </h2>
+              <p className="text-xs text-[#74777d]">
+                {modeModif ? 'Modifiez les informations et sauvegardez.' : 'Remplissez les informations du produit.'}
+              </p>
             </div>
           </div>
           <button onClick={handleFermer} aria-label="Fermer"
@@ -348,59 +406,68 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
             {erreurs.global && <Alert variant="error">{erreurs.global}</Alert>}
+            {chargProduit && (
+              <div className="flex items-center gap-2 text-xs text-primary bg-gray-50 border border-gray-200 rounded-xl p-3">
+                <RefreshCw size={13} className="animate-spin" aria-hidden /> Chargement du produit…
+              </div>
+            )}
             {uploadEnCours && (
               <div className="flex items-center gap-2 text-xs text-accent bg-orange-50 border border-orange-200 rounded-xl p-3">
-                <RefreshCw size={13} className="animate-spin" aria-hidden /> Upload en cours vers Cloudinary…
+                <RefreshCw size={13} className="animate-spin" aria-hidden /> En cours de création…
               </div>
             )}
 
-            {onglet === 'infos' && (
-              <OngletInformations
-                form={form} erreurs={erreurs}
-                categories={categories} chargCat={chargCat}
-                ajoutCat={ajoutCat} chargCreatCat={chargCreatCat} errCreatCat={errCreatCat}
-                onChange={handleChange}
-                onGenererRef={() => { setForm((p) => ({ ...p, reference: genRef() })); setErreurs((p) => ({ ...p, reference: undefined })); }}
-                onStatutChange={(s) => setForm((p) => ({ ...p, statut: s }))}
-                onToggleAjoutCat={() => setAjoutCat((p) => !p)}
-                onCreerCategorie={handleCreerCategorie}
-                onAnnulerAjoutCat={() => { setAjoutCat(false); setErrCreatCat(undefined); }}
-              />
-            )}
-            {onglet === 'medias' && (
-              <OngletMedias
-                couverture={couverture}
-                onSelectionCouverture={handleSelectionCouverture}
-                onSupprimerCouverture={supprimerCouverture}
-                variantesPhotos={variantesPhotos}
-                onAjouterVariante={ajouterVariantePhoto}
-                onSupprimerVariante={supprimerVariantePhoto}
-                onNomVarianteChange={nomVarianteChange}
-                onAjouterPhotosVariante={ajouterPhotosVariante}
-                onSupprimerPhotoVariante={supprimerPhotoVariante}
-                videoPreview={videoPreview}
-                videoUrl={videoUrl}
-                onSelectionVideo={handleSelectionVideo}
-                onSupprimerVideo={supprimerVideo}
-                erreurCouverture={erreurs.couverture}
-              />
-            )}
-            {onglet === 'prix' && (
-              <OngletPrix
-                form={{ prix: form.prix, prixPromotionnel: form.prixPromotionnel, quantiteDisponible: form.quantiteDisponible }}
-                erreurs={{ prix: erreurs.prix, prixPromotionnel: erreurs.prixPromotionnel, quantiteDisponible: erreurs.quantiteDisponible }}
-                onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
-              />
-            )}
-            {onglet === 'variantes' && (
-              <OngletVariantes
-                variantes={form.variantes}
-                onAjouter={ajouterVariante}
-                onNomChange={modifierNomVariante}
-                onAjouterValeur={ajouterValeurVariante}
-                onSupprimerValeur={supprimerValeurVariante}
-                onSupprimer={supprimerVariante}
-              />
+            {!chargProduit && (
+              <>
+                {onglet === 'infos' && (
+                  <OngletInformations
+                    form={form} erreurs={erreurs}
+                    categories={categories} chargCat={chargCat}
+                    ajoutCat={ajoutCat} chargCreatCat={chargCreatCat} errCreatCat={errCreatCat}
+                    onChange={handleChange}
+                    onGenererRef={modeModif ? () => {} : () => { setForm((p) => ({ ...p, reference: genRef() })); setErreurs((p) => ({ ...p, reference: undefined })); }}
+                    onStatutChange={(s) => setForm((p) => ({ ...p, statut: s }))}
+                    onToggleAjoutCat={() => setAjoutCat((p) => !p)}
+                    onCreerCategorie={handleCreerCategorie}
+                    onAnnulerAjoutCat={() => { setAjoutCat(false); setErrCreatCat(undefined); }}
+                  />
+                )}
+                {onglet === 'medias' && (
+                  <OngletMedias
+                    couverture={couverture}
+                    onSelectionCouverture={handleSelectionCouverture}
+                    onSupprimerCouverture={supprimerCouverture}
+                    variantesPhotos={variantesPhotos}
+                    onAjouterVariante={ajouterVariantePhoto}
+                    onSupprimerVariante={supprimerVariantePhoto}
+                    onNomVarianteChange={nomVarianteChange}
+                    onAjouterPhotosVariante={ajouterPhotosVariante}
+                    onSupprimerPhotoVariante={supprimerPhotoVariante}
+                    videoPreview={videoPreview}
+                    videoUrl={videoUrl}
+                    onSelectionVideo={handleSelectionVideo}
+                    onSupprimerVideo={supprimerVideo}
+                    erreurCouverture={erreurs.couverture}
+                  />
+                )}
+                {onglet === 'prix' && (
+                  <OngletPrix
+                    form={{ prix: form.prix, prixPromotionnel: form.prixPromotionnel, quantiteDisponible: form.quantiteDisponible }}
+                    erreurs={{ prix: erreurs.prix, prixPromotionnel: erreurs.prixPromotionnel, quantiteDisponible: erreurs.quantiteDisponible }}
+                    onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
+                  />
+                )}
+                {onglet === 'variantes' && (
+                  <OngletVariantes
+                    variantes={form.variantes}
+                    onAjouter={ajouterVariante}
+                    onNomChange={modifierNomVariante}
+                    onAjouterValeur={ajouterValeurVariante}
+                    onSupprimerValeur={supprimerValeurVariante}
+                    onSupprimer={supprimerVariante}
+                  />
+                )}
+              </>
             )}
           </div>
 
@@ -425,9 +492,9 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces }: Pro
                 </button>
               ) : (
                 <Button type="submit" isLoading={chargement || uploadEnCours}
-                  loadingText={uploadEnCours ? 'Upload…' : 'Création…'}
+                  loadingText={uploadEnCours ? 'Upload…' : modeModif ? 'Sauvegarde…' : 'Création…'}
                   className="!w-auto px-6 py-2.5 text-sm cursor-pointer">
-                  Créer le produit
+                  {modeModif ? 'Sauvegarder' : 'Créer le produit'}
                 </Button>
               )}
             </div>

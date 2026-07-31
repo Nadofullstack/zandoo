@@ -7,7 +7,6 @@ import FiltresProduits from '../../../components/admin/produits/FiltresProduits'
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
 import ModalCreationProduit from '../../../components/admin/produits/ModalCreationProduit';
-import ModalModificationProduit from '../../../components/admin/produits/ModalModificationProduit';
 import { useGestionProduits } from '../../../hooks/admin/useGestionProduits';
 import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
 import type { StatutProduit } from '../../../types/admin';
@@ -26,18 +25,12 @@ export default function ListeProduitsAdmin() {
   return (
     <DispositionAdmin>
 
-      {/* Modal création */}
+      {/* Modal création / modification */}
       <ModalCreationProduit
-        ouvert={modalCreation}
-        onFermer={() => setModalCreation(false)}
-        onSucces={() => { setModalCreation(false); recharger(); }}
-      />
-
-      {/* Modal modification */}
-      <ModalModificationProduit
+        ouvert={modalCreation || !!produitAModifier}
         produitId={produitAModifier}
-        onFermer={() => setProduitAModifier(null)}
-        onSucces={() => { setProduitAModifier(null); recharger(); }}
+        onFermer={() => { setModalCreation(false); setProduitAModifier(null); }}
+        onSucces={() => { setModalCreation(false); setProduitAModifier(null); recharger(); }}
       />
 
       {/* En-tête */}

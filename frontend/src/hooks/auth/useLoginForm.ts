@@ -53,6 +53,8 @@ export function useLoginForm() {
       setTimeout(() => {
         if (role === 'admin') {
           navigate('/admin');
+        } else if (role === 'livreur') {
+          navigate('/livreur/tableau-de-bord');
         } else {
           navigate('/');
         }

@@ -1,28 +1,6 @@
 import { Link } from 'react-router-dom';
-import {
-  Cpu, Shirt, Home, Sparkles, Brush,
-  Apple, Dumbbell, Car, LayoutGrid, ArrowRight,
-} from 'lucide-react';
+import { LayoutGrid, ArrowRight } from 'lucide-react';
 import type { CategorieResumee } from '../../../types/acheteur';
-
-type IconeConfig = { Icone: React.ElementType; couleur: string; bg: string };
-
-const CONFIG_CATEGORIES: Record<string, IconeConfig> = {
-  electronique: { Icone: Cpu,       couleur: '#3B82F6', bg: '#EFF6FF' },
-  mode:         { Icone: Shirt,     couleur: '#EC4899', bg: '#FDF2F8' },
-  maison:       { Icone: Home,      couleur: '#10B981', bg: '#ECFDF5' },
-  beaute:       { Icone: Sparkles,  couleur: '#F59E0B', bg: '#FFFBEB' },
-  artisanat:    { Icone: Brush,     couleur: '#FC7701', bg: '#FFF7ED' },
-  alimentaire:  { Icone: Apple,     couleur: '#22C55E', bg: '#F0FDF4' },
-  sport:        { Icone: Dumbbell,  couleur: '#6366F1', bg: '#EEF2FF' },
-  auto:         { Icone: Car,       couleur: '#64748B', bg: '#F8FAFC' },
-};
-
-const DEFAUT: IconeConfig = { Icone: LayoutGrid, couleur: '#011023', bg: '#F1F5F9' };
-
-function configParSlug(slug: string): IconeConfig {
-  return CONFIG_CATEGORIES[slug] ?? DEFAUT;
-}
 
 interface Props {
   categories: CategorieResumee[];
@@ -62,30 +40,24 @@ export default function SectionCategories({ categories, chargement }: Props) {
         {/* Catégories dynamiques */}
         {!chargement && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {categories.slice(0, 9).map((cat) => {
-              const { Icone, couleur, bg } = configParSlug(cat.slug);
-              return (
+            {categories.slice(0, 9).map((cat) => (
                 <Link
                   key={cat._id}
                   to={`/catalogue/categorie/${cat.slug}`}
                   className="group flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-lg hover:shadow-gray-200/80 transition-all bg-white"
                 >
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                    style={{ background: bg }}
-                  >
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F1F5F9] transition-transform group-hover:scale-110">
                     {cat.image ? (
                       <img src={cat.image} alt={cat.nom} className="w-8 h-8 object-cover rounded" />
                     ) : (
-                      <Icone size={26} style={{ color: couleur }} />
+                      <LayoutGrid size={26} style={{ color: '#011023' }} />
                     )}
                   </div>
                   <span className="text-sm font-semibold text-[#011023] text-center group-hover:text-[#FC7701] transition-colors">
                     {cat.nom}
                   </span>
                 </Link>
-              );
-            })}
+              ))}
 
             {/* Tuile "Tout voir" */}
             {categories.length > 0 && (
@@ -102,26 +74,6 @@ export default function SectionCategories({ categories, chargement }: Props) {
               </Link>
             )}
 
-            {/* Fallback statique si API vide */}
-            {categories.length === 0 &&
-              Object.entries(CONFIG_CATEGORIES).slice(0, 5).map(([slug, { Icone, couleur, bg }]) => (
-                <Link
-                  key={slug}
-                  to={`/catalogue?categorie=${slug}`}
-                  className="group flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-lg transition-all bg-white"
-                >
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                    style={{ background: bg }}
-                  >
-                    <Icone size={26} style={{ color: couleur }} />
-                  </div>
-                  <span className="text-sm font-semibold text-[#011023] capitalize text-center">
-                    {slug}
-                  </span>
-                </Link>
-              ))
-            }
           </div>
         )}
       </div>

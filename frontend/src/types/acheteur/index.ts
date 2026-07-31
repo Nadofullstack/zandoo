@@ -18,7 +18,8 @@ export interface ProduitResume {
   _id: string;
   nom: string;
   slug: string;
-  photos: string[];
+  photoCouverture?: string;
+  variantesPhotos?: { nom: string; photos: string[] }[];
   prix: number;
   prixPromotionnel?: number;
   categorie: { _id: string; nom: string; slug: string };
@@ -29,7 +30,8 @@ export interface ProduitResume {
 export interface ProduitDetail extends ProduitResume {
   description: string;
   reference?: string;
-  attributs?: Record<string, string>;
+  attributs?: { nom: string; valeur: string }[];
+  variantes?: { nom: string; valeurs: string[] }[];
   categorie: { _id: string; nom: string; slug: string; attributs?: unknown[] };
   vendeur: VendeurResume;
 }

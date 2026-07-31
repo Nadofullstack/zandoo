@@ -114,6 +114,13 @@ const commandeSchema = new mongoose.Schema(
     /* Paiement */
     paiement: { type: paiementSchema, required: true },
 
+    /* Livreur assigné */
+    livreur: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Livreur',
+      default: null,
+    },
+
     /* Statut de la commande */
     statut: {
       type: String,

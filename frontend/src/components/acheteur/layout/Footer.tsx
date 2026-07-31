@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Globe, Smartphone } from 'lucide-react';
+import logozandoo from '../../../assets/logozandoo.png';
 
 const LIENS_UTILES = [
   { libelle: 'Mes commandes',   href: '/commandes' },
@@ -49,12 +50,12 @@ export default function Footer() {
 
           {/* Colonne marque */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-5">
-              <div className="w-9 h-9 rounded-lg bg-[#FC7701] flex items-center justify-center text-white font-black text-lg">
-                Z
+            <Link to="/" className="flex items-center mb-5">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-black text-lg">
+                <img src={logozandoo} alt="ZanDoo" />
               </div>
               <span className="font-black text-white text-xl tracking-tight">
-                ZAN<span className="text-[#FC7701]">DOO</span>
+                AN<span className="text-[#FC7701]">DOO</span>
               </span>
             </Link>
             <p className="text-white/50 text-sm leading-relaxed mb-6">
