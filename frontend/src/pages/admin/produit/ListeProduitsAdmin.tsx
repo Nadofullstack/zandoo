@@ -41,7 +41,7 @@ export default function ListeProduitsAdmin() {
         </div>
         <button
           onClick={() => setModalCreation(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors">
+          className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors">
           <Plus size={16} aria-hidden /> Nouveau produit
         </button>
       </div>

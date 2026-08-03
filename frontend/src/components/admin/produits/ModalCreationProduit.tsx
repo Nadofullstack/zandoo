@@ -372,7 +372,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
               }
             </div>
             <div>
-              <h2 id="modal-produit-titre" className="text-base font-bold text-primary">
+              <h2 id="modal-produit-titre" className="cursor-pointer text-base font-bold text-primary">
                 {modeModif ? 'Modifier le produit' : 'Nouveau produit'}
               </h2>
               <p className="text-xs text-[#74777d]">
@@ -481,13 +481,13 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={handleFermer} disabled={chargement}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#74777d] hover:bg-gray-100 transition-colors disabled:opacity-50">
+                className="cursor-pointer px-4 py-2.5 rounded-xl text-sm font-semibold text-[#74777d] hover:bg-gray-100 transition-colors disabled:opacity-50">
                 Annuler
               </button>
               {onglet !== 'variantes' ? (
                 <button type="button"
                   onClick={() => setOnglet(ORDRE[ORDRE.indexOf(onglet) + 1])}
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors">
+                  className="cursor-pointer px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors">
                   Suivant →
                 </button>
               ) : (

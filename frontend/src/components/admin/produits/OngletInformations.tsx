@@ -85,7 +85,7 @@ export default function OngletInformations({
             aria-invalid={!!erreurs.reference} aria-describedby="prod-ref-err"
             className={champCls(erreurs.reference) + ' flex-1'} />
           <button type="button" onClick={onGenererRef} title="Générer automatiquement"
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#c4c6cd]
+            className="cursor-pointer flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#c4c6cd]
                        bg-white text-xs font-semibold text-primary hover:border-accent
                        hover:text-accent transition-colors whitespace-nowrap">
             <Wand2 size={13} aria-hidden /> Générer
@@ -143,9 +143,9 @@ export default function OngletInformations({
           {STATUTS.map(({ valeur, libelle, couleur }) => (
             <button key={valeur} type="button" onClick={() => onStatutChange(valeur)}
               className={[
-                'px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all',
+                'cursor-pointer px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all',
                 form.statut === valeur ? `${couleur} border-current`
-                  : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300',
+                  : 'cursor-pointer bg-white border-gray-200 text-gray-500 hover:border-gray-300',
               ].join(' ')}>
               {form.statut === valeur && <CheckCircle2 size={11} className="inline mr-1" aria-hidden />}
               {libelle}
