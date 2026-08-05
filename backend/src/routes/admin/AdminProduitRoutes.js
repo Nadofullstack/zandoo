@@ -3,8 +3,6 @@ import {
   getStatistiquesProduits,
   getProduits,
   getProduitParId,
-  creerProduit,
-  modifierProduit,
   modifierStatutProduit,
   supprimerProduit,
 } from '../../controllers/admin/AdminProduitControleur.js';
@@ -14,11 +12,12 @@ const routeur = Router();
 
 routeur.use(protect, requireRole('admin'));
 
+/* Lecture */
 routeur.get('/statistiques',    getStatistiquesProduits);
 routeur.get('/',                getProduits);
 routeur.get('/:id',             getProduitParId);
-routeur.post('/',               creerProduit);
-routeur.put('/:id',             modifierProduit);
+
+/* Modération */
 routeur.patch('/:id/statut',    modifierStatutProduit);
 routeur.delete('/:id',          supprimerProduit);
 

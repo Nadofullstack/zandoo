@@ -21,10 +21,19 @@ const setCookieToken = (res, token) => {
   });
 };
 
+/** Construit l'objet user à retourner dans les réponses auth */
+const buildUserPayload = (user) => ({
+  id:         user._id,
+  fullName:   user.fullName,
+  email:      user.email,
+  phone:      user.phone,
+  role:       user.role,
+  estVendeur: user.estVendeur ?? false,
+});
+
 /**
  * POST /api/auth/google
  * Authentifie ou crée un compte via Google OAuth.
- * Reçoit le credential (id_token) renvoyé par @react-oauth/google côté frontend.
  */
 export const googleLogin = async (req, res) => {
   try {
@@ -37,27 +46,24 @@ export const googleLogin = async (req, res) => {
       });
     }
 
-    /* Vérification du token auprès des serveurs Google */
     const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
+      idToken:  credential,
       audience: env.google.clientId,
     });
 
     const payload = ticket.getPayload();
     const { email, name, sub: googleId, picture } = payload;
 
-    /* Recherche d'un compte existant par e-mail */
     let user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      /* Création automatique d'un compte acheteur sans mot de passe */
       user = await User.create({
         fullName: name,
-        email: email.toLowerCase(),
-        phone: '',           // non fourni par Google
-        password: googleId,  // valeur factice — la connexion se fait via Google
+        email:    email.toLowerCase(),
+        phone:    '',
+        password: googleId,
         googleId,
-        avatar: picture,
+        avatar:   picture,
       });
     }
 
@@ -67,16 +73,7 @@ export const googleLogin = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Connexion Google réussie.',
-      data: {
-        token,
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-        },
-      },
+      data:    { token, user: buildUserPayload(user) },
     });
   } catch (error) {
     console.error('Erreur googleLogin:', error);
@@ -95,12 +92,10 @@ export const login = async (req, res) => {
   try {
     const { identifier, password } = req.body;
 
-    // Recherche par e-mail ou par téléphone selon le format de l'identifiant
     const query = identifier.includes('@')
       ? { email: identifier.toLowerCase() }
       : { phone: identifier };
 
-    // On sélectionne explicitement le mot de passe (champ caché par défaut)
     const user = await User.findOne(query).select('+password');
     if (!user) {
       return res.status(401).json({
@@ -110,7 +105,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Vérification du mot de passe via la méthode du modèle
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -126,16 +120,7 @@ export const login = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Connexion réussie.',
-      data: {
-        token,
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-        },
-      },
+      data:    { token, user: buildUserPayload(user) },
     });
   } catch (error) {
     console.error('Erreur login:', error);
@@ -158,11 +143,15 @@ export const logout = async (_req, res) => {
   });
   return res.status(200).json({ success: true, message: 'Déconnexion réussie.' });
 };
+
+/**
+ * POST /api/auth/register
+ * Crée un nouveau compte acheteur.
+ */
 export const register = async (req, res) => {
   try {
     const { fullName, email, phone, password } = req.body;
 
-    // Vérification qu'aucun compte n'existe déjà avec cet e-mail
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({
@@ -172,7 +161,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // Création de l'utilisateur (le mot de passe est haché dans le hook pre-save du modèle)
     const user = await User.create({ fullName, email, phone, password });
 
     const token = generateToken(user._id);
@@ -181,16 +169,7 @@ export const register = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: 'Compte créé avec succès.',
-      data: {
-        token,
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-        },
-      },
+      data:    { token, user: buildUserPayload(user) },
     });
   } catch (error) {
     console.error('Erreur register:', error);
@@ -198,5 +177,23 @@ export const register = async (req, res) => {
       success: false,
       message: 'Erreur serveur. Veuillez réessayer.',
     });
+  }
+};
+
+/**
+ * GET /api/auth/me
+ * Retourne le profil frais de l'utilisateur connecté depuis la base.
+ * Permet de rafraîchir la session localStorage sans se reconnecter
+ * (utile après approbation de boutique par l'admin).
+ */
+export const getMe = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      data:    { user: buildUserPayload(req.user) },
+    });
+  } catch (error) {
+    console.error('Erreur getMe:', error);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };

@@ -1,49 +1,31 @@
-import { useState } from 'react';
-import { Plus, Package, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Package, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
 import TableauProduits from '../../../components/admin/produits/TableauProduits';
 import FiltresProduits from '../../../components/admin/produits/FiltresProduits';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import ModalCreationProduit from '../../../components/admin/produits/ModalCreationProduit';
 import { useGestionProduits } from '../../../hooks/admin/useGestionProduits';
 import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
+import { useGestionVendeurs } from '../../../hooks/admin/useGestionVendeurs';
 import type { StatutProduit } from '../../../types/admin';
 
 export default function ListeProduitsAdmin() {
   const {
     produits, pagination, statistiques, chargement, chargementAction, erreur,
-    filtre, setFiltre, changerStatutProduit, supprimerProduit, recharger,
+    filtre, setFiltre, supprimerProduit,
   } = useGestionProduits();
 
   const { categories } = useGestionCategories();
-
-  const [modalCreation, setModalCreation]   = useState(false);
-  const [produitAModifier, setProduitAModifier] = useState<string | null>(null);
+  const { vendeurs } = useGestionVendeurs();
 
   return (
     <DispositionAdmin>
 
-      {/* Modal création / modification */}
-      <ModalCreationProduit
-        ouvert={modalCreation || !!produitAModifier}
-        produitId={produitAModifier}
-        onFermer={() => { setModalCreation(false); setProduitAModifier(null); }}
-        onSucces={() => { setModalCreation(false); setProduitAModifier(null); recharger(); }}
-      />
-
       {/* En-tête */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary">Gestion des produits</h1>
-          <p className="text-sm text-[#74777d] mt-1">Catalogue global — gestion du stock.</p>
-        </div>
-        <button
-          onClick={() => setModalCreation(true)}
-          className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors">
-          <Plus size={16} aria-hidden /> Nouveau produit
-        </button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-primary">Catalogue produits</h1>
+        <p className="text-sm text-[#74777d] mt-1">Vue globale — tous les produits de tous les vendeurs.</p>
       </div>
 
       {/* Statistiques */}
@@ -63,10 +45,13 @@ export default function ListeProduitsAdmin() {
             recherche={filtre.recherche}
             statut={filtre.statut as StatutProduit | ''}
             categorieId={filtre.categorie}
+            vendeurId={filtre.vendeur}
             categories={categories}
+            vendeurs={vendeurs}
             onRechercheChange={(v) => setFiltre({ recherche: v, page: 1 })}
             onStatutChange={(v)    => setFiltre({ statut: v,    page: 1 })}
             onCategorieChange={(v) => setFiltre({ categorie: v, page: 1 })}
+            onVendeurChange={(v)   => setFiltre({ vendeur: v,   page: 1 })}
           />
         </div>
 
@@ -81,9 +66,7 @@ export default function ListeProduitsAdmin() {
             <TableauProduits
               produits={produits}
               chargementAction={chargementAction}
-              onChangerStatut={changerStatutProduit}
               onSupprimer={supprimerProduit}
-              onModifier={(id) => setProduitAModifier(id)}
             />
           )}
 

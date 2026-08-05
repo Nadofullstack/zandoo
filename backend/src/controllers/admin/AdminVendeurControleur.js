@@ -141,10 +141,21 @@ export const modifierStatutVendeur = async (req, res) => {
 
     await vendeur.save();
 
-    /* Synchronise isActive sur l'utilisateur lié */
-    await User.findByIdAndUpdate(vendeur.utilisateur, {
-      isActive: statut !== 'suspendu',
-    });
+    /* Synchronise isActive sur l'utilisateur lié + gère le double rôle acheteur/vendeur */
+    const updateUser = { isActive: statut !== 'suspendu' };
+    if (statut === 'approuve') {
+      // L'utilisateur devient vendeur SANS perdre son rôle acheteur
+      updateUser.estVendeur = true;
+      // Si son rôle n'est pas admin/livreur, on ne touche pas au rôle principal
+    }
+    if (statut === 'suspendu') {
+      // Suspension : retire l'accès vendeur mais conserve le rôle acheteur
+      updateUser.estVendeur = false;
+    }
+    if (statut === 'en_attente') {
+      updateUser.estVendeur = false;
+    }
+    await User.findByIdAndUpdate(vendeur.utilisateur, updateUser);
 
     const miseAJour = await Vendeur.findById(vendeur._id)
       .populate('utilisateur', 'nomComplet email telephone isActive')

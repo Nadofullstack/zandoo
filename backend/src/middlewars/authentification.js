@@ -48,15 +48,34 @@ export const protect = async (req, res, next) => {
  * Middleware requireRole — vérifie que l'utilisateur a le rôle requis.
  * Doit être appelé après protect.
  * @param {...string} roles - Rôles autorisés
+ *
+ * Note : un utilisateur avec estVendeur = true est considéré comme ayant
+ * le rôle 'vendeur' en plus de son rôle principal (acheteur).
  */
 export const requireRole = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
       return res.status(403).json({
         success: false,
         message: 'Accès interdit. Privilèges insuffisants.',
       });
     }
+
+    // Un utilisateur avec estVendeur = true peut accéder aux routes vendeur
+    const roleEffectif = req.user.role;
+    const estVendeur   = req.user.estVendeur === true;
+
+    const aAcces =
+      roles.includes(roleEffectif) ||
+      (roles.includes('vendeur') && estVendeur);
+
+    if (!aAcces) {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès interdit. Privilèges insuffisants.',
+      });
+    }
+
     next();
   };
 };

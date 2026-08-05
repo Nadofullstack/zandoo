@@ -1,39 +1,26 @@
+import slugify from 'slugify';
 import Categorie from '../../models/Categorie.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GET /api/admin/categories
-   Liste toutes les catégories avec leurs sous-catégories imbriquées.
-   L'admin consulte uniquement — la gestion appartient aux vendeurs.
+   Helper slug unique
 ───────────────────────────────────────────────────────────────────────────── */
-export const getCategories = async (_req, res) => {
-  try {
-    const toutes = await Categorie.find()
-      .sort({ ordre: 1, nom: 1 })
-      .lean();
-
-    const racines = toutes.filter((c) => !c.parent);
-    const sousCategories = toutes.filter((c) => c.parent);
-
-    const arbre = racines.map((racine) => ({
-      ...racine,
-      sousCategories: sousCategories.filter(
-        (sc) => String(sc.parent) === String(racine._id)
-      ),
-    }));
-
-    return res.status(200).json({
-      success: true,
-      data: { categories: arbre },
-    });
-  } catch (erreur) {
-    console.error('Erreur getCategories:', erreur);
-    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+async function genererSlugUnique(nom, idExclure = null) {
+  const base = slugify(nom, { lower: true, strict: true, locale: 'fr' });
+  let slug = base;
+  let compteur = 1;
+  while (true) {
+    const filtre = { slug };
+    if (idExclure) filtre._id = { $ne: idExclure };
+    const existe = await Categorie.findOne(filtre).lean();
+    if (!existe) break;
+    slug = `${base}-${compteur++}`;
   }
-};
+  return slug;
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GET /api/admin/categories/liste-plate
-   Liste plate (sans imbrication) — pour les selects dans les vues admin.
+   GET /api/vendeur/categories
+   Liste plate des catégories actives — pour les selects dans le formulaire produit.
 ───────────────────────────────────────────────────────────────────────────── */
 export const getCategoriesPlates = async (_req, res) => {
   try {
@@ -44,27 +31,42 @@ export const getCategoriesPlates = async (_req, res) => {
 
     return res.status(200).json({ success: true, data: { categories } });
   } catch (erreur) {
-    console.error('Erreur getCategoriesPlates:', erreur);
+    console.error('Erreur getCategoriesPlates vendeur:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GET /api/admin/categories/:id
+   POST /api/vendeur/categories
+   Créer une nouvelle catégorie — accessible aux vendeurs approuvés.
 ───────────────────────────────────────────────────────────────────────────── */
-export const getCategorieParId = async (req, res) => {
+export const creerCategorie = async (req, res) => {
   try {
-    const categorie = await Categorie.findById(req.params.id)
-      .populate('parent', 'nom slug')
-      .lean();
+    const { nom, description, parent, image, attributs, ordre } = req.body;
 
-    if (!categorie) {
-      return res.status(404).json({ success: false, message: 'Catégorie introuvable.' });
+    if (!nom?.trim()) {
+      return res.status(422).json({ success: false, message: 'Le nom est requis.' });
     }
 
-    return res.status(200).json({ success: true, data: { categorie } });
+    const slug = await genererSlugUnique(nom);
+
+    const categorie = await Categorie.create({
+      nom:         nom.trim(),
+      slug,
+      description: description?.trim() ?? '',
+      parent:      parent || null,
+      image:       image || null,
+      attributs:   attributs ?? [],
+      ordre:       ordre ?? 0,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Catégorie créée avec succès.',
+      data: { categorie },
+    });
   } catch (erreur) {
-    console.error('Erreur getCategorieParId:', erreur);
+    console.error('Erreur creerCategorie vendeur:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };

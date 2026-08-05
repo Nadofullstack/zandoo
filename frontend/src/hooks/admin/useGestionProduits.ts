@@ -3,7 +3,6 @@ import type { Produit, StatutProduit, StatistiquesProduits, Pagination } from '.
 import {
   getProduits,
   getStatistiquesProduits,
-  modifierStatutProduit,
   supprimerProduit,
 } from '../../services/admin/adminProduitService';
 
@@ -28,7 +27,6 @@ interface EtatHook {
   erreur: string | null;
   filtre: EtatFiltre;
   setFiltre: (f: Partial<EtatFiltre>) => void;
-  changerStatutProduit: (id: string, statut: StatutProduit) => Promise<void>;
   supprimerProduit: (id: string) => Promise<void>;
   recharger: () => void;
 }
@@ -79,17 +77,6 @@ export function useGestionProduits(): EtatHook {
     return () => { annule = true; };
   }, [filtre.statut, filtre.categorie, filtre.vendeur, filtre.recherche, filtre.page, compteur]);
 
-  const changerStatutProduit = useCallback(async (id: string, statut: StatutProduit) => {
-    setChargementAction(id);
-    try {
-      const rep = await modifierStatutProduit(id, statut);
-      setProduits((prev) => prev.map((p) => (p._id === id ? rep.data.produit : p)));
-      recharger();
-    } catch (err) {
-      setErreur(err instanceof Error ? err.message : 'Erreur.');
-    } finally { setChargementAction(null); }
-  }, [recharger]);
-
   const supprimerProduitAction = useCallback(async (id: string) => {
     setChargementAction(id);
     try {
@@ -97,14 +84,13 @@ export function useGestionProduits(): EtatHook {
       setProduits((prev) => prev.filter((p) => p._id !== id));
       recharger();
     } catch (err) {
-      setErreur(err instanceof Error ? err.message : 'Erreur.');
+      setErreur(err instanceof Error ? err.message : 'Erreur lors de la suppression.');
     } finally { setChargementAction(null); }
   }, [recharger]);
 
   return {
     produits, pagination, statistiques, chargement, chargementAction, erreur,
     filtre, setFiltre,
-    changerStatutProduit,
     supprimerProduit: supprimerProduitAction,
     recharger,
   };

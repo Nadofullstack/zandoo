@@ -16,7 +16,7 @@ export interface Vendeur {
   _id: string;
   utilisateur: UtilisateurAdmin;
   nomEntreprise: string;
-  typeEntreprise: 'individuel' | 'sarl' | 'sa' | 'autre';
+  typeEntreprise: 'individuel'|'organisation'|'autre';
   secteurActivite?: string;
   adresse?: { rue?: string; ville?: string; pays?: string };
   emailContact?: string;

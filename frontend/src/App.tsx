@@ -2,13 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AccueilPage from './pages/acheteur/AccueilPage';
 import CataloguePage from './pages/acheteur/CataloguePage';
 import DetailProduitPage from './pages/acheteur/DetailProduitPage';
+import MonComptePage from './pages/acheteur/MonComptePage';
 import RegisterPage from './pages/auth/RegisterPage';
 import LoginPage from './pages/auth/LoginPage';
 import TableauDeBordAdmin from './pages/admin/vendeur/TableauDeBordAdmin';
 import ListeVendeursAdmin from './pages/admin/vendeur/ListeVendeursAdmin';
 import ProfilVendeurAdmin from './pages/admin/vendeur/ProfilVendeurAdmin';
 import ListeProduitsAdmin from './pages/admin/produit/ListeProduitsAdmin';
-import CreerProduitAdmin from './pages/admin/produit/CreerProduitAdmin';
 import DetailProduitAdmin from './pages/admin/produit/DetailProduitAdmin';
 import GestionCategoriesAdmin from './pages/admin/categorie/GestionCategoriesAdmin';
 import ListeUtilisateursAdmin from './pages/admin/utilisateur/ListeUtilisateursAdmin';
@@ -30,9 +30,16 @@ import HistoriqueLivraisonsPage from './pages/livreur/HistoriqueLivraisonsPage';
 import ProfilLivreurPage from './pages/livreur/ProfilLivreurPage';
 import GardeRouteAdmin from './components/admin/layout/GardeRouteAdmin';
 import GardeLivreur from './components/admin/livreurs/GardeLivreur';
+import GardeVendeur from './components/vendeur/GardeVendeur';
 import ActivationPage from './pages/livreur/ActivationPage';
 import ChangerMotDePassePage from './pages/livreur/ChangerMotDePassePage';
 import CompleterProfilPage from './pages/livreur/CompleterProfilPage';
+import DevenirVendeurPage from './pages/vendeur/DevenirVendeurPage';
+import TableauDeBordVendeurPage from './pages/vendeur/TableauDeBordVendeurPage';
+import BoutiquePage from './pages/vendeur/BoutiquePage';
+import MesProduitsPage from './pages/vendeur/MesProduitsPage';
+import MesCommandesPage from './pages/vendeur/MesCommandesPage';
+import PromotionsPage from './pages/vendeur/PromotionsPage';
 
 export default function App() {
   return (
@@ -47,6 +54,20 @@ export default function App() {
         {/* ── Auth ───────────────────────────────────────────────────────── */}
         <Route path="/inscription" element={<RegisterPage />} />
         <Route path="/connexion"   element={<LoginPage />} />
+
+        {/* ── Acheteur — pages protégées ─────────────────────────────────── */}
+        <Route path="/mon-compte"    element={<MonComptePage />} />
+        <Route path="/mes-commandes" element={<MonComptePage />} />
+
+        {/* ── Vendeur — inscription (public, utilisateur connecté) ───────── */}
+        <Route path="/devenir-vendeur" element={<DevenirVendeurPage />} />
+
+        {/* ── Vendeur — espace protégé (JWT + rôle vendeur) ──────────────── */}
+        <Route path="/vendeur/tableau-de-bord" element={<GardeVendeur><TableauDeBordVendeurPage /></GardeVendeur>} />
+        <Route path="/vendeur/boutique"         element={<GardeVendeur><BoutiquePage /></GardeVendeur>} />
+        <Route path="/vendeur/produits"         element={<GardeVendeur><MesProduitsPage /></GardeVendeur>} />
+        <Route path="/vendeur/commandes"        element={<GardeVendeur><MesCommandesPage /></GardeVendeur>} />
+        <Route path="/vendeur/promotions"       element={<GardeVendeur><PromotionsPage /></GardeVendeur>} />
 
         {/* ── Livreur — flux d'activation (public, token dans l'URL) ─────── */}
         <Route path="/livreur/activation/:token"                          element={<ActivationPage />} />
@@ -74,10 +95,9 @@ export default function App() {
         <Route path="/admin/livreurs"         element={<GardeRouteAdmin><ListeLivreursAdmin /></GardeRouteAdmin>} />
         <Route path="/admin/livreurs/:id"     element={<GardeRouteAdmin><ProfilLivreurAdmin /></GardeRouteAdmin>} />
 
-        {/* Produits */}
-        <Route path="/admin/produits"         element={<GardeRouteAdmin><ListeProduitsAdmin /></GardeRouteAdmin>} />
-        <Route path="/admin/produits/nouveau" element={<GardeRouteAdmin><CreerProduitAdmin /></GardeRouteAdmin>} />
-        <Route path="/admin/produits/:id"     element={<GardeRouteAdmin><DetailProduitAdmin /></GardeRouteAdmin>} />
+        {/* Produits — lecture + modération uniquement */}
+        <Route path="/admin/produits"     element={<GardeRouteAdmin><ListeProduitsAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/produits/:id" element={<GardeRouteAdmin><DetailProduitAdmin /></GardeRouteAdmin>} />
 
         {/* Catégories */}
         <Route path="/admin/categories" element={<GardeRouteAdmin><GestionCategoriesAdmin /></GardeRouteAdmin>} />

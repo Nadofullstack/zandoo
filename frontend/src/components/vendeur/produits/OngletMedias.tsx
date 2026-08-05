@@ -3,15 +3,14 @@ import {
   Upload, ImagePlus, Video, CheckCircle2, X,
   AlertCircle, Plus, Trash2,
 } from 'lucide-react';
-import type { VariantePhoto } from '../../../types/admin';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
 /** Photo couverture */
 interface PhotoCouv {
   fichier: File | null;
-  preview: string;   // blob: ou URL distante
-  uploadee: boolean; // déjà sur Cloudinary
+  preview: string;
+  uploadee: boolean;
 }
 
 /** Variante photo (état local) */
@@ -67,15 +66,12 @@ export default function OngletMedias({
 }: Props) {
   const inputCouv  = useRef<HTMLInputElement>(null);
   const inputVideo = useRef<HTMLInputElement>(null);
-  /* Refs dynamiques pour chaque variante */
   const inputsVariantes = useRef<(HTMLInputElement | null)[]>([]);
 
   return (
     <div className="space-y-6">
 
-      {/* ════════════════════════════════
-          1. PHOTO DE COUVERTURE
-          ════════════════════════════════ */}
+      {/* 1. PHOTO DE COUVERTURE */}
       <section>
         <label className="label-admin flex items-center gap-1 mb-2">
           <ImagePlus size={12} aria-hidden /> Photo de couverture *
@@ -83,11 +79,7 @@ export default function OngletMedias({
 
         {couverture ? (
           <div className="relative group w-full max-w-xs aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-            <img
-              src={couverture.preview}
-              alt="Couverture"
-              className="w-full h-full object-cover"
-            />
+            <img src={couverture.preview} alt="Couverture" className="w-full h-full object-cover" />
             {couverture.uploadee && (
               <div className="absolute top-2 left-2 bg-green-500 text-white rounded-full p-0.5" title="Uploadée">
                 <CheckCircle2 size={12} />
@@ -127,9 +119,7 @@ export default function OngletMedias({
         )}
       </section>
 
-      {/* ════════════════════════════════
-          2. VARIANTES PHOTOS
-          ════════════════════════════════ */}
+      {/* 2. VARIANTES PHOTOS */}
       <section>
         <div className="flex items-center justify-between mb-2">
           <label className="label-admin mb-0">
@@ -153,8 +143,6 @@ export default function OngletMedias({
         <div className="space-y-4">
           {variantesPhotos.map((variante, iv) => (
             <div key={iv} className="border border-gray-200 rounded-xl p-4 bg-gray-50/60">
-
-              {/* En-tête variante */}
               <div className="flex items-center gap-2 mb-3">
                 <input
                   type="text"
@@ -175,7 +163,6 @@ export default function OngletMedias({
                 </button>
               </div>
 
-              {/* Grille photos de la variante */}
               {variante.photos.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 mb-3">
                   {variante.photos.map((photo, ip) => (
@@ -201,7 +188,6 @@ export default function OngletMedias({
                 </div>
               )}
 
-              {/* Ajouter photos à cette variante */}
               {variante.photos.length < 10 && (
                 <>
                   <input
@@ -229,9 +215,7 @@ export default function OngletMedias({
         </div>
       </section>
 
-      {/* ════════════════════════════════
-          3. VIDÉO
-          ════════════════════════════════ */}
+      {/* 3. VIDÉO */}
       <section>
         <label className="label-admin flex items-center gap-1 mb-2">
           <Video size={12} aria-hidden /> Vidéo produit (optionnel)
@@ -276,5 +260,4 @@ export default function OngletMedias({
   );
 }
 
-/* ── Export du type local pour les parents ────────────────────────────────── */
 export type { VariantePhotoLocal };

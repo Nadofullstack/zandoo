@@ -13,6 +13,8 @@ export interface AuthUser {
   email: string;
   phone: string;
   role: RoleAuth;
+  /** True si l'utilisateur possède aussi une boutique approuvée (double rôle acheteur + vendeur) */
+  estVendeur?: boolean;
 }
 
 export interface AuthResponse {

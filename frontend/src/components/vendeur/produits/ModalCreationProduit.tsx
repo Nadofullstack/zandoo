@@ -6,9 +6,8 @@ import OngletInformations from './OngletInformations';
 import OngletMedias, { type VariantePhotoLocal } from './OngletMedias';
 import OngletPrix from './OngletPrix';
 import OngletVariantes from './OngletVariantes';
-import { creerProduit, getProduitParId, modifierProduit } from '../../../services/admin/adminProduitService';
-import { creerCategorie, getCategoriesPlates } from '../../../services/admin/adminCategorieService';
-import { uploadPhotos, uploadVideo } from '../../../services/admin/adminUploadService';
+import { getProduitParId } from '../../../services/admin/adminProduitService';
+import { getCategoriesPlates } from '../../../services/admin/adminCategorieService';
 import type { Categorie, StatutProduit, VarianteProduit } from '../../../types/admin';
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -18,6 +17,18 @@ interface Props {
   onSucces: () => void;
   /** Si fourni → mode modification, sinon → mode création */
   produitId?: string | null;
+  /** Fonction de création — obligatoire pour créer un produit */
+  fnCreer: (payload: object) => Promise<{ data: { produit: { _id: string } } }>;
+  /** Fonction de modification — obligatoire pour modifier un produit */
+  fnModifier: (id: string, payload: object) => Promise<unknown>;
+  /** Fonction de chargement des catégories — par défaut liste-plate admin (lecture) */
+  fnGetCategories?: () => Promise<{ data: { categories: Categorie[] } }>;
+  /** Fonction de création de catégorie — obligatoire si on veut permettre la création inline */
+  fnCreerCategorie: (donnees: object) => Promise<{ data: { categorie: Categorie } }>;
+  /** Upload photos */
+  fnUploadPhotos: (fichiers: File[]) => Promise<string[]>;
+  /** Upload vidéo */
+  fnUploadVideo: (fichier: File) => Promise<string>;
 }
 
 type Onglet = 'infos' | 'medias' | 'prix' | 'variantes';
@@ -57,43 +68,41 @@ function genRef() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produitId }: Props) {
+export default function ModalCreationProduit({
+  ouvert, onFermer, onSucces, produitId,
+  fnCreer, fnModifier, fnGetCategories, fnCreerCategorie,
+  fnUploadPhotos, fnUploadVideo,
+}: Props) {
 
   const modeModif = !!produitId;
 
-  /* ── État formulaire ─────────────────────────────────── */
   const [form, setForm]       = useState<EtatForm>(INIT);
   const [erreurs, setErreurs] = useState<EtatErreurs>({});
   const [onglet, setOnglet]   = useState<Onglet>('infos');
   const [chargement, setChargement] = useState(false);
 
-  /* ── Données externes ────────────────────────────────── */
   const [categories, setCategories] = useState<Categorie[]>([]);
   const [chargCat,   setChargCat]   = useState(false);
   const [chargProduit, setChargProduit] = useState(false);
 
-  /* ── Catégorie inline ────────────────────────────────── */
   const [ajoutCat,      setAjoutCat]      = useState(false);
   const [chargCreatCat, setChargCreatCat] = useState(false);
   const [errCreatCat,   setErrCreatCat]   = useState<string | undefined>();
 
-  /* ── Médias — couverture ─────────────────────────────── */
   const [couverture, setCouverture] = useState<PhotoCouv | null>(null);
   const [uploadEnCours, setUploadEnCours] = useState(false);
-
-  /* ── Médias — variantes photos ───────────────────────── */
   const [variantesPhotos, setVariantesPhotos] = useState<VariantePhotoLocal[]>([]);
 
-  /* ── Médias — vidéo ──────────────────────────────────── */
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoUrl,     setVideoUrl]     = useState<string | null>(null);
   const [videoFichier, setVideoFichier] = useState<File | null>(null);
 
-  /* ── Chargement catégories (+ produit en mode modif) ─── */
+  /* ── Chargement catégories + produit en mode modif ── */
   useEffect(() => {
     if (!ouvert) return;
     setChargCat(true);
-    getCategoriesPlates()
+    const chargerCats = fnGetCategories ?? getCategoriesPlates;
+    chargerCats()
       .then((r) => setCategories(r.data.categories))
       .catch(() => {})
       .finally(() => setChargCat(false));
@@ -131,7 +140,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     }
   }, [ouvert, produitId]);
 
-  /* ── Reset ───────────────────────────────────────────── */
+  /* ── Reset ── */
   const reset = useCallback(() => {
     setForm(INIT); setErreurs({}); setOnglet('infos');
     setAjoutCat(false); setErrCreatCat(undefined);
@@ -148,18 +157,17 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
   const handleFermer = () => { reset(); onFermer(); };
   if (!ouvert) return null;
 
-  /* ── Handlers champs ─────────────────────────────────── */
+  /* ── Handlers ── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
     setErreurs((p) => ({ ...p, [name as keyof EtatErreurs]: undefined, global: undefined }));
   };
 
-  /* ── Catégorie inline ────────────────────────────────── */
   const handleCreerCategorie = async (nom: string) => {
     setChargCreatCat(true); setErrCreatCat(undefined);
     try {
-      const rep = await creerCategorie({ nom });
+      const rep = await fnCreerCategorie({ nom });
       const nouv = rep.data.categorie;
       setCategories((p) => [...p, nouv]);
       setForm((p) => ({ ...p, categorieId: nouv._id }));
@@ -170,7 +178,6 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     } finally { setChargCreatCat(false); }
   };
 
-  /* ── Couverture ──────────────────────────────────────── */
   const handleSelectionCouverture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -185,7 +192,6 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     setCouverture(null);
   };
 
-  /* ── Variantes photos ────────────────────────────────── */
   const ajouterVariantePhoto = () =>
     setVariantesPhotos((p) => [...p, { nom: '', photos: [] }]);
 
@@ -198,8 +204,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     setVariantesPhotos((p) => { const v = [...p]; v[iv] = { ...v[iv], nom }; return v; });
 
   const ajouterPhotosVariante = (iv: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const fichiers = Array.from(e.target.files ?? [])
-      .slice(0, 10 - variantesPhotos[iv].photos.length);
+    const fichiers = Array.from(e.target.files ?? []).slice(0, 10 - variantesPhotos[iv].photos.length);
     if (!fichiers.length) return;
     setVariantesPhotos((prev) => {
       const v = [...prev];
@@ -222,7 +227,6 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     });
   };
 
-  /* ── Vidéo ───────────────────────────────────────────── */
   const handleSelectionVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -236,7 +240,6 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     setVideoFichier(null); setVideoPreview(null); setVideoUrl(null);
   };
 
-  /* ── Variantes (produit) ─────────────────────────────── */
   const ajouterVariante = () =>
     setForm((p) => ({ ...p, variantes: [...p.variantes, { nom: '', valeurs: [] }] }));
   const modifierNomVariante = (i: number, nom: string) =>
@@ -248,12 +251,12 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
   const supprimerVariante = (i: number) =>
     setForm((p) => ({ ...p, variantes: p.variantes.filter((_, k) => k !== i) }));
 
-  /* ── Upload helpers ──────────────────────────────────── */
+  /* ── Upload helpers ── */
   const uploaderCouverture = async (): Promise<string | null> => {
     if (!couverture?.fichier) return couverture?.uploadee ? couverture.preview : null;
     setUploadEnCours(true);
     try {
-      const [url] = await uploadPhotos([couverture.fichier]);
+      const [url] = await fnUploadPhotos([couverture.fichier]);
       setCouverture((c) => c ? { ...c, uploadee: true, preview: url } : c);
       return url;
     } finally { setUploadEnCours(false); }
@@ -267,7 +270,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
       let urlsNouvelles: string[] = [];
       if (nouvelles.length) {
         setUploadEnCours(true);
-        urlsNouvelles = await uploadPhotos(nouvelles.map((p) => p.fichier as File));
+        urlsNouvelles = await fnUploadPhotos(nouvelles.map((p) => p.fichier as File));
         setUploadEnCours(false);
       }
       resultat.push({ nom: variante.nom, photos: [...deja, ...urlsNouvelles] });
@@ -275,7 +278,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     return resultat;
   };
 
-  /* ── Validation ──────────────────────────────────────── */
+  /* ── Validation ── */
   const valider = (): boolean => {
     const e: EtatErreurs = {};
     if (!form.nom.trim())         e.nom         = 'Le nom est obligatoire.';
@@ -298,20 +301,20 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     return nbErr === 0;
   };
 
-  /* ── Soumission ──────────────────────────────────────── */
+  /* ── Soumission ── */
   const handleSoumettre = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valider()) return;
     setChargement(true);
     setErreurs((p) => ({ ...p, global: undefined }));
     try {
-      const urlCouverture   = await uploaderCouverture();
-      const urlsVariantes   = await uploaderVariantesPhotos();
+      const urlCouverture = await uploaderCouverture();
+      const urlsVariantes = await uploaderVariantesPhotos();
 
       let urlVideo: string | null | undefined = videoUrl;
       if (videoFichier && !videoUrl) {
         setUploadEnCours(true);
-        urlVideo = await uploadVideo(videoFichier);
+        urlVideo = await fnUploadVideo(videoFichier);
         setVideoUrl(urlVideo);
         setUploadEnCours(false);
       }
@@ -334,9 +337,9 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
       } as never;
 
       if (modeModif && produitId) {
-        await modifierProduit(produitId, payload);
+        await fnModifier(produitId, payload);
       } else {
-        await creerProduit(payload);
+        await fnCreer(payload);
       }
 
       onSucces(); handleFermer();
@@ -348,15 +351,12 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
     } finally { setChargement(false); setUploadEnCours(false); }
   };
 
-  /* ── Indicateurs d'erreur par onglet ─────────────────── */
   const aErreurOnglet = (id: Onglet) =>
     (id === 'infos'  && (erreurs.nom || erreurs.reference || erreurs.description || erreurs.categorieId)) ||
     (id === 'medias' && erreurs.couverture) ||
     (id === 'prix'   && (erreurs.prix || erreurs.prixPromotionnel || erreurs.quantiteDisponible));
 
-  /* ═══════════════════════════════════════════════════════
-     RENDU
-     ═══════════════════════════════════════════════════════ */
+  /* ── Rendu ── */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/60 backdrop-blur-sm px-4"
       role="dialog" aria-modal="true" aria-labelledby="modal-produit-titre">
@@ -372,7 +372,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
               }
             </div>
             <div>
-              <h2 id="modal-produit-titre" className="cursor-pointer text-base font-bold text-primary">
+              <h2 id="modal-produit-titre" className="text-base font-bold text-primary">
                 {modeModif ? 'Modifier le produit' : 'Nouveau produit'}
               </h2>
               <p className="text-xs text-[#74777d]">
@@ -401,7 +401,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
           ))}
         </div>
 
-        {/* Corps scrollable */}
+        {/* Corps */}
         <form onSubmit={handleSoumettre} noValidate className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
@@ -413,7 +413,7 @@ export default function ModalCreationProduit({ ouvert, onFermer, onSucces, produ
             )}
             {uploadEnCours && (
               <div className="flex items-center gap-2 text-xs text-accent bg-orange-50 border border-orange-200 rounded-xl p-3">
-                <RefreshCw size={13} className="animate-spin" aria-hidden /> En cours de création…
+                <RefreshCw size={13} className="animate-spin" aria-hidden /> Envoi en cours…
               </div>
             )}
 

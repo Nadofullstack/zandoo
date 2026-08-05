@@ -1,5 +1,4 @@
-import { Wand2, Plus, ChevronDown, Tag, BarChart2, CheckCircle2 } from 'lucide-react';
-import { AlertCircle } from 'lucide-react';
+import { Wand2, Plus, ChevronDown, Tag, BarChart2, CheckCircle2, AlertCircle } from 'lucide-react';
 import FormNouvelleCategorie from './FormNouvelleCategorie';
 import type { Categorie, StatutProduit } from '../../../types/admin';
 

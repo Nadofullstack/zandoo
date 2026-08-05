@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { register, login, logout, googleLogin } from '../controllers/auth/AuthController.js';
+import { register, login, logout, googleLogin, getMe } from '../controllers/auth/AuthController.js';
 import validate from '../middlewars/validate.js';
 import { registerValidators, loginValidators } from '../validators/authValidators.js';
+import { protect } from '../middlewars/authentification.js';
 
 const router = Router();
 
@@ -9,5 +10,6 @@ router.post('/register', registerValidators, validate, register);
 router.post('/login',    loginValidators,    validate, login);
 router.post('/logout',   logout);
 router.post('/google',   googleLogin);
+router.get('/me',        protect, getMe);
 
 export default router;

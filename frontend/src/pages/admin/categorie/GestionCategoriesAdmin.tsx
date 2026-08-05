@@ -1,61 +1,13 @@
-import { useState } from 'react';
-import { Plus, Tag, ImageOff, Pencil, Trash2, LayoutGrid } from 'lucide-react';
+import { Tag, ImageOff, LayoutGrid } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
-import ModalCategorie from '../../../components/admin/categories/ModalCategorie';
-import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
 import { useGestionCategories } from '../../../hooks/admin/useGestionCategories';
 import type { Categorie } from '../../../types/admin';
 
 export default function GestionCategoriesAdmin() {
-  const {
-    categories,
-    chargement,
-    chargementAction,
-    erreur,
-    messageSucces,
-    creer,
-    modifier,
-    supprimer,
-  } = useGestionCategories();
+  const { categories, chargement, erreur } = useGestionCategories();
 
-  const [modalOuvert, setModalOuvert]           = useState(false);
-  const [categorieEnEdition, setCategorieEnEdition] = useState<Categorie | null>(null);
-  const [modalSuppr, setModalSuppr]             = useState<{ ouvert: boolean; categorie: Categorie | null }>({
-    ouvert: false, categorie: null,
-  });
-
-  const ouvrirCreer = () => {
-    setCategorieEnEdition(null);
-    setModalOuvert(true);
-  };
-
-  const ouvrirEditer = (cat: Categorie) => {
-    setCategorieEnEdition(cat);
-    setModalOuvert(true);
-  };
-
-  const fermerModal = () => {
-    setModalOuvert(false);
-    setCategorieEnEdition(null);
-  };
-
-  const handleSoumettre = async (donnees: { nom: string; description: string; image: string | null }) => {
-    if (categorieEnEdition) {
-      await modifier(categorieEnEdition._id, donnees);
-    } else {
-      await creer(donnees);
-    }
-    fermerModal();
-  };
-
-  const handleConfirmerSuppr = async () => {
-    if (!modalSuppr.categorie) return;
-    await supprimer(modalSuppr.categorie._id);
-    setModalSuppr({ ouvert: false, categorie: null });
-  };
-
-  /* ── Aplatir toutes les catégories (racines + sous) pour la grille ── */
+  /* Aplatir toutes les catégories (racines + sous) pour la grille */
   const toutes: Categorie[] = categories.flatMap((c) => [
     c,
     ...(c.sousCategories ?? []),
@@ -64,46 +16,17 @@ export default function GestionCategoriesAdmin() {
   return (
     <DispositionAdmin>
 
-      {/* Modal création / modification */}
-      <ModalCategorie
-        ouvert={modalOuvert}
-        categorieInitiale={categorieEnEdition}
-        onFermer={fermerModal}
-        onSoumettre={handleSoumettre}
-        chargement={chargementAction}
-      />
-
-      {/* Modal suppression */}
-      <ModalConfirmation
-        ouvert={modalSuppr.ouvert}
-        titre="Supprimer cette catégorie ?"
-        description={`« ${modalSuppr.categorie?.nom} » sera supprimée. L'opération sera bloquée si des produits ou sous-catégories y sont rattachés.`}
-        labelConfirmer="Supprimer"
-        variante="danger"
-        chargement={chargementAction}
-        onConfirmer={handleConfirmerSuppr}
-        onAnnuler={() => setModalSuppr({ ouvert: false, categorie: null })}
-      />
-
       {/* En-tête */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary">Catégories</h1>
-          <p className="text-sm text-[#74777d] mt-1">
-            {toutes.length > 0 ? `${toutes.length} catégorie${toutes.length > 1 ? 's' : ''}` : 'Aucune catégorie'}
-          </p>
-        </div>
-        <button
-          onClick={ouvrirCreer}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-        >
-          <Plus size={16} /> Nouvelle catégorie
-        </button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-primary">Catégories</h1>
+        <p className="text-sm text-[#74777d] mt-1">
+          {toutes.length > 0
+            ? `${toutes.length} catégorie${toutes.length > 1 ? 's' : ''} — gérées par les vendeurs.`
+            : 'Aucune catégorie — elles sont créées par les vendeurs.'}
+        </p>
       </div>
 
-      {/* Alertes */}
-      {erreur        && <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>}
-      {messageSucces && <div className="mb-4"><Alert variant="success">{messageSucces}</Alert></div>}
+      {erreur && <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>}
 
       {/* Squelettes */}
       {chargement && (
@@ -118,25 +41,8 @@ export default function GestionCategoriesAdmin() {
       {!chargement && toutes.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {toutes.map((cat) => (
-            <CarteCategorie
-              key={cat._id}
-              categorie={cat}
-              onEditer={() => ouvrirEditer(cat)}
-              onSupprimer={() => setModalSuppr({ ouvert: true, categorie: cat })}
-              desactive={chargementAction}
-            />
+            <CarteCategorie key={cat._id} categorie={cat} />
           ))}
-
-          {/* Tuile "Ajouter" */}
-          <button
-            onClick={ouvrirCreer}
-            className="group flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed border-[#FC7701]/30 hover:border-accent hover:bg-orange-50/50 transition-all min-h-[12rem]"
-          >
-            <div className="w-14 h-14 rounded-xl bg-orange-50 group-hover:bg-accent/20 flex items-center justify-center transition-all">
-              <Plus size={28} className="text-accent" />
-            </div>
-            <span className="text-sm font-semibold text-accent text-center">Nouvelle catégorie</span>
-          </button>
         </div>
       )}
 
@@ -147,13 +53,9 @@ export default function GestionCategoriesAdmin() {
             <LayoutGrid size={36} className="text-gray-300" />
           </div>
           <p className="text-lg font-bold text-primary">Aucune catégorie</p>
-          <p className="text-sm text-[#74777d]">Créez votre première catégorie pour organiser vos produits.</p>
-          <button
-            onClick={ouvrirCreer}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors mt-2"
-          >
-            <Plus size={16} /> Créer une catégorie
-          </button>
+          <p className="text-sm text-[#74777d] text-center max-w-xs">
+            Les catégories sont créées et gérées par les vendeurs depuis leur espace.
+          </p>
         </div>
       )}
 
@@ -162,20 +64,13 @@ export default function GestionCategoriesAdmin() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Carte catégorie
+   Carte catégorie (lecture seule)
 ───────────────────────────────────────────────────────────────────────── */
-interface CarteProps {
-  categorie: Categorie;
-  onEditer: () => void;
-  onSupprimer: () => void;
-  desactive: boolean;
-}
-
-function CarteCategorie({ categorie, onEditer, onSupprimer, desactive }: CarteProps) {
+function CarteCategorie({ categorie }: { categorie: Categorie }) {
   const estSousCategorie = !!categorie.parent;
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/80 transition-all duration-300 overflow-hidden flex flex-col">
+    <div className="bg-white rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/80 transition-all duration-300 overflow-hidden flex flex-col">
 
       {/* Image ou placeholder */}
       <div className="relative aspect-video bg-gray-50 overflow-hidden">
@@ -183,7 +78,7 @@ function CarteCategorie({ categorie, onEditer, onSupprimer, desactive }: CartePr
           <img
             src={categorie.image}
             alt={categorie.nom}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -204,26 +99,6 @@ function CarteCategorie({ categorie, onEditer, onSupprimer, desactive }: CartePr
             Inactif
           </div>
         )}
-
-        {/* Actions (hover) */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-          <button
-            onClick={onEditer}
-            disabled={desactive}
-            className="p-2 bg-white rounded-xl shadow-md text-primary hover:bg-accent hover:text-white transition-all disabled:opacity-50"
-            title="Modifier"
-          >
-            <Pencil size={15} />
-          </button>
-          <button
-            onClick={onSupprimer}
-            disabled={desactive}
-            className="p-2 bg-white rounded-xl shadow-md text-red-500 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
-            title="Supprimer"
-          >
-            <Trash2 size={15} />
-          </button>
-        </div>
       </div>
 
       {/* Infos */}

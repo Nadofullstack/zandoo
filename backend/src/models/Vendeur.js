@@ -23,7 +23,7 @@ const vendeurSchema = new mongoose.Schema(
     },
     typeEntreprise: {
       type: String,
-      enum: ['individuel', 'sarl', 'sa', 'autre'],
+      enum: ['individuel','organisation', 'autre'],
       default: 'individuel',
     },
     secteurActivite: {
@@ -68,6 +68,41 @@ const vendeurSchema = new mongoose.Schema(
       type: String,
       maxlength: 500,
       default: '',
+    },
+
+    /* ── Boutique ───────────────────────────────────────────────────────── */
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true, // null autorisé avant création boutique
+      trim: true,
+      lowercase: true,
+    },
+    logo: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    banniere: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    descriptionBoutique: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'La description ne peut pas dépasser 1000 caractères'],
+      default: '',
+    },
+
+    /* Conditions d'utilisation acceptées */
+    conditionsAcceptees: {
+      type: Boolean,
+      default: false,
+    },
+    conditionsAccepteesAt: {
+      type: Date,
+      default: null,
     },
 
     /* Historique des changements de statut */

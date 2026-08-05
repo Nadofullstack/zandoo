@@ -57,6 +57,24 @@ export async function logoutUser(): Promise<void> {
   }
 }
 
+/**
+ * Rafraîchit la session localStorage depuis l'API.
+ * À appeler après des événements qui changent le profil (ex : approbation boutique).
+ * Retourne l'utilisateur mis à jour, ou null si non connecté.
+ */
+export async function rafraichirSession(): Promise<AuthResponse['data']['user'] | null> {
+  try {
+    const { data } = await api.get<AuthResponse>('/auth/me');
+    if (data.data?.user) {
+      sauvegarderSession(data.data.user);
+      return data.data.user;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export interface ApiServiceError extends Error {
   errors?: { field: string; message: string }[];
 }

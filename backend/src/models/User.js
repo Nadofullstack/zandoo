@@ -36,6 +36,17 @@ const userSchema = new mongoose.Schema(
       enum: ['acheteur', 'vendeur', 'livreur', 'admin'],
       default: 'acheteur',
     },
+
+    /**
+     * Indique qu'un acheteur possède aussi une boutique approuvée.
+     * Un user peut être à la fois acheteur et vendeur.
+     * role reste 'acheteur' ; estVendeur = true donne accès à l'espace vendeur.
+     */
+    estVendeur: {
+      type: Boolean,
+      default: false,
+    },
+
     isVerified: {
       type: Boolean,
       default: false,

@@ -10,7 +10,7 @@ const STATS = [
 
 export default function SectionHero() {
   return (
-    <section className="relative bg-[#011023] overflow-hidden">
+    <section className="relative bg-white overflow-hidden">
       {/* Arrière-plan décoratif */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-[#FC7701]/10 blur-[120px]" />
@@ -38,7 +38,7 @@ export default function SectionHero() {
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black text-white leading-[1.1] tracking-tight mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black text-primary leading-[1.1] tracking-tight mb-6">
               Achetez local.{' '}
               <span className="relative inline-block">
                 <span className="text-[#FC7701]">Vendez</span>
@@ -48,10 +48,10 @@ export default function SectionHero() {
               </span>{' '}
               global.
               <br />
-              <span className="text-white/90">Progressez ensemble.</span>
+              <span className="text-primary">Progressez ensemble.</span>
             </h1>
 
-            <p className="text-white/60 text-base lg:text-lg leading-relaxed mb-10 max-w-[480px]">
+            <p className="text-primary text-base lg:text-lg leading-relaxed mb-10 max-w-[480px]">
               Découvrez des milliers de produits africains authentiques.
               Connectez vendeurs locaux et acheteurs du monde entier sur une
               plateforme sécurisée et innovante.
@@ -68,7 +68,7 @@ export default function SectionHero() {
               </Link>
               <Link
                 to="/inscription"
-                className="flex items-center gap-2 border border-white/20 text-white/80 hover:text-white hover:border-white/40 hover:bg-white/5 font-semibold px-6 py-3.5 rounded-xl transition-all text-sm"
+                className="flex items-center gap-2 border border-accent text-white bg-primary hover:text-white hover:border-primary/40 hover:bg-primary font-semibold px-6 py-3.5 rounded-xl transition-all text-sm"
               >
                 Devenir vendeur
                 <ArrowRight size={18} />
@@ -76,11 +76,11 @@ export default function SectionHero() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 pt-8 border-t border-white/10">
+            <div className="grid grid-cols-4 gap-4 pt-8 border-t border-accent">
               {STATS.map((s) => (
                 <div key={s.libelle}>
-                  <div className="text-xl font-black text-white">{s.valeur}</div>
-                  <div className="text-xs text-white/40 mt-0.5">{s.libelle}</div>
+                  <div className="text-xl font-black text-accent">{s.valeur}</div>
+                  <div className="text-xs text-primary mt-0.5">{s.libelle}</div>
                 </div>
               ))}
             </div>

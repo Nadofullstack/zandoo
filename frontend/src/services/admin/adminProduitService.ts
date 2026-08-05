@@ -4,7 +4,6 @@ import type {
   ReponseProduit,
   ReponseStatistiquesProduits,
   StatutProduit,
-  FormulaireProduiit,
 } from '../../types/admin';
 
 export async function getStatistiquesProduits(): Promise<ReponseStatistiquesProduits> {
@@ -26,19 +25,6 @@ export async function getProduits(params?: {
 
 export async function getProduitParId(id: string): Promise<ReponseProduit> {
   const { data } = await api.get(`/admin/produits/${id}`);
-  return data;
-}
-
-export async function creerProduit(donnees: Partial<FormulaireProduiit>): Promise<ReponseProduit> {
-  const { data } = await api.post('/admin/produits', donnees);
-  return data;
-}
-
-export async function modifierProduit(
-  id: string,
-  donnees: Partial<FormulaireProduiit>
-): Promise<ReponseProduit> {
-  const { data } = await api.put(`/admin/produits/${id}`, donnees);
   return data;
 }
 
