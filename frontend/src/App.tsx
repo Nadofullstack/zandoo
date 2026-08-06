@@ -9,7 +9,6 @@ import TableauDeBordAdmin from './pages/admin/vendeur/TableauDeBordAdmin';
 import ListeVendeursAdmin from './pages/admin/vendeur/ListeVendeursAdmin';
 import ProfilVendeurAdmin from './pages/admin/vendeur/ProfilVendeurAdmin';
 import ListeProduitsAdmin from './pages/admin/produit/ListeProduitsAdmin';
-import DetailProduitAdmin from './pages/admin/produit/DetailProduitAdmin';
 import GestionCategoriesAdmin from './pages/admin/categorie/GestionCategoriesAdmin';
 import ListeUtilisateursAdmin from './pages/admin/utilisateur/ListeUtilisateursAdmin';
 import ProfilUtilisateurAdmin from './pages/admin/utilisateur/ProfilUtilisateurAdmin';
@@ -96,8 +95,7 @@ export default function App() {
         <Route path="/admin/livreurs/:id"     element={<GardeRouteAdmin><ProfilLivreurAdmin /></GardeRouteAdmin>} />
 
         {/* Produits — lecture + modération uniquement */}
-        <Route path="/admin/produits"     element={<GardeRouteAdmin><ListeProduitsAdmin /></GardeRouteAdmin>} />
-        <Route path="/admin/produits/:id" element={<GardeRouteAdmin><DetailProduitAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/produits" element={<GardeRouteAdmin><ListeProduitsAdmin /></GardeRouteAdmin>} />
 
         {/* Catégories */}
         <Route path="/admin/categories" element={<GardeRouteAdmin><GestionCategoriesAdmin /></GardeRouteAdmin>} />

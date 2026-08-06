@@ -173,14 +173,14 @@ export default function DetailProduitPage() {
             {/* Actions */}
             <div className="flex gap-3">
               <button
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm"
+                className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm"
                 style={{ background: 'linear-gradient(to right, #FC8900, #FC7700)' }}
               >
                 <ShoppingCart size={18} />
                 Ajouter au panier
               </button>
               <button
-                className="w-14 h-14 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-red-300 hover:text-red-400 transition-all"
+                className=" cursor-pointer w-14 h-14 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-red-300 hover:text-red-400 transition-all"
                 aria-label="Ajouter aux favoris"
               >
                 <Heart size={20} className="text-gray-400" />

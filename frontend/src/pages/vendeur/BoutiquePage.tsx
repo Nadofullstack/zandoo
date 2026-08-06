@@ -108,8 +108,8 @@ export default function BoutiquePage() {
 
   return (
     <DispositionVendeur>
-      <header className="mb-8">
-        <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
+      <header className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-primary flex items-center gap-2">
           <Store size={22} className="text-accent" aria-hidden />
           Ma boutique
         </h1>
@@ -233,7 +233,7 @@ export default function BoutiquePage() {
         {/* Bouton */}
         <div className="flex justify-end">
           <Button type="submit" isLoading={chargementSave || uploadEnCours}
-            loadingText="Sauvegarde…" className="!w-auto px-8 py-2.5">
+            loadingText="Sauvegarde…" className="!w-full sm:!w-auto px-8 py-2.5">
             Sauvegarder
           </Button>
         </div>

@@ -54,12 +54,12 @@ export default function MesProduitsPage() {
     <DispositionVendeur>
       <header className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-primary">Mes produits</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-primary">Mes produits</h1>
           <p className="text-sm text-[#74777d] mt-1">Gérez votre catalogue de produits.</p>
         </div>
         <button
           onClick={() => ouvrir()}
-          className="cursor-pointer flex items-center gap-2 bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-accent/90 transition-colors shadow"
+          className="cursor-pointer flex items-center gap-2 bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-accent/90 transition-colors shadow w-full sm:w-auto justify-center sm:justify-start"
         >
           <Plus size={16} aria-hidden /> Ajouter un produit
         </button>
