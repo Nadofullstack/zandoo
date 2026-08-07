@@ -197,3 +197,37 @@ export const getMe = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };
+
+/**
+ * PUT /api/auth/me
+ * Met à jour le profil de l'utilisateur connecté (fullName, phone).
+ * L'email et le rôle ne sont pas modifiables ici.
+ */
+export const updateMe = async (req, res) => {
+  try {
+    const { fullName, phone } = req.body;
+
+    if (!fullName || fullName.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Le nom complet doit contenir au moins 2 caractères.',
+        errors: [{ field: 'fullName', message: 'Nom trop court.' }],
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { fullName: fullName.trim(), phone: phone?.trim() ?? '' },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil mis à jour avec succès.',
+      data:    { user: buildUserPayload(user) },
+    });
+  } catch (error) {
+    console.error('Erreur updateMe:', error);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};

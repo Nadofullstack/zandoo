@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { validationResult } from 'express-validator';
 import {
   soumettreInscription,
   getStatutInscription,
@@ -21,6 +22,8 @@ import {
   getMesCommandes,
   getCommandeParId,
   marquerCommande,
+  getStatistiquesCommandes,
+  annulerCommande,
 } from '../controllers/vendeur/VendeurCommandeControleur.js';
 import {
   getMesPromotions,
@@ -30,16 +33,28 @@ import {
   getTableauDeBord,
   getStatistiquesVentes,
 } from '../controllers/vendeur/VendeurTableauDeBordControleur.js';
+import { getCategoriesPlates, creerCategorie } from '../controllers/vendeur/VendeurCategorieControleur.js';
 import { protect, requireRole } from '../middlewars/authentification.js';
 import { uploadPhotos as multerPhotos, uploadVideo as multerVideo } from '../config/cloudinary.js';
 import { uploadPhotos as uploadPhotosCtrl, uploadVideo as uploadVideoCtrl } from '../controllers/admin/AdminCloudinaryControleur.js';
-import { getCategoriesPlates, creerCategorie } from '../controllers/vendeur/VendeurCategorieControleur.js';
-
+import {
+  validerFiltresCommandesVendeur,
+  validerChangementStatutVendeur,
+  validerIdCommande,
+} from '../validators/commandeValidators.js';
 
 const routeur = Router();
 
+/* ── Middleware de gestion des erreurs de validation ─────────────────────── */
+const gererErreurs = (req, res, next) => {
+  const erreurs = validationResult(req);
+  if (!erreurs.isEmpty()) {
+    return res.status(422).json({ success: false, errors: erreurs.array() });
+  }
+  next();
+};
+
 /* ── Routes accessibles à tout utilisateur connecté ─────────────────────── */
-/* (acheteur qui veut s'inscrire en tant que vendeur) */
 routeur.post('/inscription',       protect, soumettreInscription);
 routeur.get('/statut-inscription', protect, getStatutInscription);
 
@@ -47,33 +62,58 @@ routeur.get('/statut-inscription', protect, getStatutInscription);
 const auth = [protect, requireRole('vendeur')];
 
 /* Tableau de bord */
-routeur.get('/tableau-de-bord',                       ...auth, getTableauDeBord);
-routeur.get('/tableau-de-bord/statistiques-ventes',   ...auth, getStatistiquesVentes);
+routeur.get('/tableau-de-bord',                     ...auth, getTableauDeBord);
+routeur.get('/tableau-de-bord/statistiques-ventes', ...auth, getStatistiquesVentes);
 
 /* Boutique */
 routeur.get('/boutique',   ...auth, getBoutique);
 routeur.patch('/boutique', ...auth, mettreAJourBoutique);
 
 /* Produits */
-routeur.get('/produits/statistiques', ...auth, getStatistiquesProduits);
-routeur.get('/produits',              ...auth, getMesProduits);
-routeur.post('/produits',             ...auth, creerProduit);
-routeur.get('/produits/:id',          ...auth, getProduitParId);
-routeur.put('/produits/:id',          ...auth, modifierProduit);
-routeur.delete('/produits/:id',       ...auth, supprimerProduit);
+routeur.get('/produits/statistiques',  ...auth, getStatistiquesProduits);
+routeur.get('/produits',               ...auth, getMesProduits);
+routeur.post('/produits',              ...auth, creerProduit);
+routeur.get('/produits/:id',           ...auth, getProduitParId);
+routeur.put('/produits/:id',           ...auth, modifierProduit);
+routeur.delete('/produits/:id',        ...auth, supprimerProduit);
 routeur.patch('/produits/:id/stock',   ...auth, mettreAJourStock);
 routeur.patch('/produits/:id/statut',  ...auth, modifierStatutProduit);
 
-/* Commandes */
-routeur.get('/commandes',         ...auth, getMesCommandes);
-routeur.get('/commandes/:id',     ...auth, getCommandeParId);
-routeur.patch('/commandes/:id/statut', ...auth, marquerCommande);
+/* Commandes — statistiques doit être AVANT /:id pour éviter le conflit de route */
+routeur.get('/commandes/statistiques',
+  ...auth,
+  getStatistiquesCommandes
+);
+routeur.get('/commandes',
+  ...auth,
+  validerFiltresCommandesVendeur,
+  gererErreurs,
+  getMesCommandes
+);
+routeur.get('/commandes/:id',
+  ...auth,
+  validerIdCommande,
+  gererErreurs,
+  getCommandeParId
+);
+routeur.patch('/commandes/:id/statut',
+  ...auth,
+  validerChangementStatutVendeur,
+  gererErreurs,
+  marquerCommande
+);
+routeur.patch('/commandes/:id/annuler',
+  ...auth,
+  validerIdCommande,
+  gererErreurs,
+  annulerCommande
+);
 
 /* Promotions */
-routeur.get('/promotions',                    ...auth, getMesPromotions);
-routeur.patch('/promotions/:produitId',       ...auth, gererPromotion);
+routeur.get('/promotions',             ...auth, getMesPromotions);
+routeur.patch('/promotions/:produitId',...auth, gererPromotion);
 
-/* Upload médias (logo, bannière, photos produit) */
+/* Upload photos */
 routeur.post(
   '/upload/photos',
   ...auth,
@@ -86,7 +126,7 @@ routeur.post(
   uploadPhotosCtrl
 );
 
-/* Upload vidéo produit */
+/* Upload vidéo */
 routeur.post(
   '/upload/video',
   ...auth,
@@ -99,8 +139,8 @@ routeur.post(
   uploadVideoCtrl
 );
 
-/* Catégories — lecture + création (pour les vendeurs) */
-routeur.get('/categories',            ...auth, getCategoriesPlates);
-routeur.post('/categories',           ...auth, creerCategorie);
+/* Catégories */
+routeur.get('/categories',  ...auth, getCategoriesPlates);
+routeur.post('/categories', ...auth, creerCategorie);
 
 export default routeur;

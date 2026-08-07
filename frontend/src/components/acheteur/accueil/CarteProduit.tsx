@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, ImageOff } from 'lucide-react';
 import type { ProduitResume } from '../../../types/acheteur';
+import { usePanier } from '../../../context/PanierContext';
 
 interface Props {
   produit: ProduitResume;
@@ -11,12 +12,20 @@ function formatPrix(prix: number): string {
 }
 
 export default function CarteProduit({ produit }: Props) {
+  const { ajouterAuPanier } = usePanier();
+
   const photo       = produit.photoCouverture ?? produit.variantesPhotos?.[0]?.photos?.[0] ?? '';
   const prixAffiche = produit.prixPromotionnel ?? produit.prix;
   const aPromotion  = !!produit.prixPromotionnel && produit.prixPromotionnel < produit.prix;
   const remise      = aPromotion
     ? Math.round(((produit.prix - prixAffiche) / produit.prix) * 100)
     : 0;
+
+  const handleAjouterAuPanier = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await ajouterAuPanier(produit._id);
+  };
 
   return (
     <Link 
@@ -85,13 +94,15 @@ export default function CarteProduit({ produit }: Props) {
               </span>
             )}
           </div>
-          <div
-            className="w-9 h-9 bg-[#011023] group-hover:bg-[#FC7701] text-white rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
-            title="Voir le produit"
-            aria-label="Voir le produit"
+          <button
+            onClick={handleAjouterAuPanier}
+            disabled={produit.enStock === false}
+            className="cursor-pointer w-9 h-9 bg-[#011023] group-hover:bg-[#FC7701] text-white rounded-xl flex items-center justify-center transition-all group-hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={produit.enStock === false ? 'Produit indisponible' : 'Ajouter au panier'}
+            aria-label={produit.enStock === false ? 'Produit indisponible' : 'Ajouter au panier'}
           >
             <ShoppingCart size={16} />
-          </div>
+          </button>
         </div>
       </div>
     </Link>

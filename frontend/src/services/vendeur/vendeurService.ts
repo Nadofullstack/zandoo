@@ -11,6 +11,7 @@ import type {
   ReponseStatistiquesProduits,
   ReponseCommandes,
   ReponseCommande,
+  ReponseStatistiquesCommandesVendeur,
   ReponsePromotions,
   StatutCommande,
 } from '../../types/vendeur';
@@ -118,6 +119,11 @@ export async function getMesCommandes(params?: {
   return data;
 }
 
+export async function getStatistiquesCommandesVendeur(): Promise<ReponseStatistiquesCommandesVendeur> {
+  const { data } = await api.get('/vendeur/commandes/statistiques');
+  return data;
+}
+
 export async function getCommandeParId(id: string): Promise<ReponseCommande> {
   const { data } = await api.get(`/vendeur/commandes/${id}`);
   return data;
@@ -125,6 +131,11 @@ export async function getCommandeParId(id: string): Promise<ReponseCommande> {
 
 export async function marquerCommande(id: string, statut: StatutCommande): Promise<ReponseCommande> {
   const { data } = await api.patch(`/vendeur/commandes/${id}/statut`, { statut });
+  return data;
+}
+
+export async function annulerCommande(id: string, raison?: string): Promise<ReponseCommande> {
+  const { data } = await api.patch(`/vendeur/commandes/${id}/annuler`, { raison: raison ?? '' });
   return data;
 }
 

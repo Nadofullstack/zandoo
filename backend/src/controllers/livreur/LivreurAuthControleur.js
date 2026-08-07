@@ -192,7 +192,7 @@ export const completerProfil = async (req, res) => {
         statut:        'actif',
         profilComplete: true,
       },
-      { new: true, runValidators: true }
+      {  returnDocument: "after", runValidators: true }
     ).populate('utilisateur', 'fullName email phone').lean();
 
     if (!livreur) {

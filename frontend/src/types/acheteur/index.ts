@@ -43,6 +43,41 @@ export interface Pagination {
   totalPages: number;
 }
 
+/* ── Panier ───────────────────────────────────────────────────────────────── */
+
+export interface ProduitPanier {
+  _id: string;
+  nom: string;
+  slug: string;
+  photoCouverture?: string;
+  prix: number;
+  prixPromotionnel?: number;
+  quantiteDisponible: number;
+  enStock: boolean;
+  categorie: { _id: string; nom: string; slug: string };
+}
+
+export interface LignePanier {
+  _id: string;
+  produit: ProduitPanier;
+  vendeur: { _id: string; nomEntreprise: string; logoUrl?: string };
+  quantite: number;
+  variante: string;
+}
+
+export interface Panier {
+  _id: string;
+  lignes: LignePanier[];
+  total: number;
+  nombreArticles: number;
+}
+
+export interface ReponsePanier {
+  success: boolean;
+  message?: string;
+  data: { panier: Panier };
+}
+
 /* ── Réponses API ─────────────────────────────────────────────────────────── */
 
 export interface ReponseAccueil {

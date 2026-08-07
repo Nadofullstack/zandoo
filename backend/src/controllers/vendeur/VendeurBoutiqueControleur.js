@@ -43,7 +43,7 @@ export const mettreAJourBoutique = async (req, res) => {
     const vendeur = await Vendeur.findOneAndUpdate(
       { utilisateur: req.user._id },
       miseAJour,
-      { new: true, runValidators: true }
+      {  returnDocument: "after", runValidators: true }
     ).lean();
 
     if (!vendeur) {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, logout, googleLogin, getMe } from '../controllers/auth/AuthController.js';
+import { register, login, logout, googleLogin, getMe, updateMe } from '../controllers/auth/AuthController.js';
 import validate from '../middlewars/validate.js';
 import { registerValidators, loginValidators } from '../validators/authValidators.js';
 import { protect } from '../middlewars/authentification.js';
@@ -11,5 +11,6 @@ router.post('/login',    loginValidators,    validate, login);
 router.post('/logout',   logout);
 router.post('/google',   googleLogin);
 router.get('/me',        protect, getMe);
+router.put('/me',        protect, updateMe);
 
 export default router;

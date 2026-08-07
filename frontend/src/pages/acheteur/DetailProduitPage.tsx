@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ChevronRight, Heart, ShoppingCart, ImageOff,
-  SearchX, Store, ArrowLeft,
+  SearchX, Store, ArrowLeft, Minus, Plus, Loader2,
 } from 'lucide-react';
 import AcheteurLayout from '../../components/acheteur/layout/AcheteurLayout';
 import CarteProduit from '../../components/acheteur/accueil/CarteProduit';
 import { useDetailProduit } from '../../hooks/acheteur/useDetailProduit';
+import { usePanier } from '../../context/PanierContext';
 
 function formatPrix(prix: number): string {
   return new Intl.NumberFormat('fr-FR').format(prix) + ' FCFA';
@@ -14,6 +16,11 @@ function formatPrix(prix: number): string {
 export default function DetailProduitPage() {
   const { slug = '' } = useParams<{ slug: string }>();
   const { produit, similaires, chargement, erreur } = useDetailProduit(slug);
+  const { ajouterAuPanier } = usePanier();
+
+  const [quantite, setQuantite] = useState(1);
+  const [variantesSelectionnees, setVariantesSelectionnees] = useState<Record<string, string>>({});
+  const [ajoutEnCours, setAjoutEnCours] = useState(false);
 
   /* ── Squelette ──────────────────────────────────── */
   if (chargement) {
@@ -58,6 +65,17 @@ export default function DetailProduitPage() {
   const remise      = aPromotion
     ? Math.round(((produit.prix - prixAffiche) / produit.prix) * 100)
     : 0;
+
+  /* Construit la chaîne variante ex: "Taille: M, Couleur: Rouge" */
+  const varianteChaine = Object.entries(variantesSelectionnees)
+    .map(([nom, valeur]) => `${nom}: ${valeur}`)
+    .join(', ');
+
+  const handleAjouter = async () => {
+    setAjoutEnCours(true);
+    await ajouterAuPanier(produit._id, quantite, varianteChaine);
+    setAjoutEnCours(false);
+  };
 
   return (
     <AcheteurLayout>
@@ -142,12 +160,19 @@ export default function DetailProduitPage() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{v.nom}</p>
                     <div className="flex flex-wrap gap-2">
                       {v.valeurs.map((val, j) => (
-                        <span
+                        <button
                           key={j}
-                          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-[#011023] font-medium hover:border-[#FC7701] cursor-pointer transition-colors"
+                          onClick={() =>
+                            setVariantesSelectionnees((prev) => ({ ...prev, [v.nom]: val }))
+                          }
+                          className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
+                            variantesSelectionnees[v.nom] === val
+                              ? 'border-[#FC7701] bg-[#FC7701]/10 text-[#FC7701]'
+                              : 'border-gray-200 text-[#011023] hover:border-[#FC7701]'
+                          }`}
                         >
                           {val}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -170,14 +195,54 @@ export default function DetailProduitPage() {
               </div>
             )}
 
+            {/* Sélecteur de quantité */}
+            <div className="flex items-center gap-3 mb-5">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Quantité</span>
+              <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 border border-gray-200">
+                <button
+                  onClick={() => setQuantite((q) => Math.max(1, q - 1))}
+                  disabled={quantite <= 1}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-white hover:shadow-sm transition-all disabled:opacity-30"
+                  aria-label="Diminuer la quantité"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="w-10 text-center font-bold text-[#011023]">{quantite}</span>
+                <button
+                  onClick={() => setQuantite((q) => Math.min(99, q + 1))}
+                  disabled={quantite >= (produit as { quantiteDisponible?: number }).quantiteDisponible ?? 99}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-white hover:shadow-sm transition-all disabled:opacity-30"
+                  aria-label="Augmenter la quantité"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            </div>
+
             {/* Actions */}
             <div className="flex gap-3">
               <button
-                className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm"
+                onClick={handleAjouter}
+                disabled={ajoutEnCours || !produit.enStock}
+                className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-4 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ background: 'linear-gradient(to right, #FC8900, #FC7700)' }}
               >
-                <ShoppingCart size={18} />
-                Ajouter au panier
+                {ajoutEnCours ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Ajout en cours…
+                  </>
+                ) : !produit.enStock ? (
+                  <>
+                    <ShoppingCart size={18} />
+                    Indisponible
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={18} />
+                    Ajouter au panier
+                  </>
+                )}
               </button>
               <button
                 className=" cursor-pointer w-14 h-14 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-red-300 hover:text-red-400 transition-all"

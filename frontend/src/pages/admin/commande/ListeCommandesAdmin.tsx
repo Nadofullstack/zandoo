@@ -1,5 +1,5 @@
 import {
-  ShoppingCart, Clock, CreditCard, Truck, CheckCircle2, XCircle,
+  ShoppingCart, Clock, CheckCircle2, XCircle,
 } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
@@ -12,8 +12,8 @@ import type { StatutCommande } from '../../../types/admin';
 
 export default function ListeCommandesAdmin() {
   const {
-    commandes, pagination, statistiques, chargement, chargementStatut, erreur,
-    filtre, setFiltre, changerStatut,
+    commandes, pagination, statistiques, chargement, erreur,
+    filtre, setFiltre,
   } = useGestionCommandes();
 
   return (
@@ -28,11 +28,11 @@ export default function ListeCommandesAdmin() {
       </header>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CarteStatistique titre="Total"       valeur={statistiques?.total      ?? 0} icone={ShoppingCart}  couleur="primary" />
         <CarteStatistique titre="En attente"  valeur={statistiques?.enAttente  ?? 0} icone={Clock}         couleur="warning" />
-        <CarteStatistique titre="Payées"      valeur={statistiques?.payees     ?? 0} icone={CreditCard}    couleur="accent"  />
-        <CarteStatistique titre="Expédiées"   valeur={statistiques?.expediees  ?? 0} icone={Truck}         couleur="primary" />
+        {/* <CarteStatistique titre="Payées"      valeur={statistiques?.payees     ?? 0} icone={CreditCard}    couleur="accent"  /> */}
+        {/* <CarteStatistique titre="Expédiées"   valeur={statistiques?.expediees  ?? 0} icone={Truck}         couleur="primary" /> */}
         <CarteStatistique titre="Livrées"     valeur={statistiques?.livrees    ?? 0} icone={CheckCircle2}  couleur="success" />
         <CarteStatistique titre="Annulées"    valeur={statistiques?.annulees   ?? 0} icone={XCircle}       couleur="danger"  />
       </div>
@@ -74,8 +74,6 @@ export default function ListeCommandesAdmin() {
           ) : (
             <TableauCommandes
               commandes={commandes}
-              chargementStatut={chargementStatut}
-              onChangerStatut={changerStatut}
             />
           )}
 

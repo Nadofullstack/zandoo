@@ -75,6 +75,18 @@ export async function rafraichirSession(): Promise<AuthResponse['data']['user'] 
   }
 }
 
+/**
+ * Met à jour le profil de l'utilisateur connecté.
+ * Retourne l'utilisateur mis à jour et rafraîchit la session localStorage.
+ */
+export async function mettreAJourProfil(
+  payload: { fullName: string; phone: string }
+): Promise<AuthResponse['data']['user']> {
+  const { data } = await api.put<AuthResponse>('/auth/me', payload);
+  if (data.data?.user) sauvegarderSession(data.data.user);
+  return data.data.user;
+}
+
 export interface ApiServiceError extends Error {
   errors?: { field: string; message: string }[];
 }

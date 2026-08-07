@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { PanierProvider } from './context/PanierContext';
 import AccueilPage from './pages/acheteur/AccueilPage';
 import CataloguePage from './pages/acheteur/CataloguePage';
 import DetailProduitPage from './pages/acheteur/DetailProduitPage';
 import MonComptePage from './pages/acheteur/MonComptePage';
+import PanierPage from './pages/acheteur/PanierPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import LoginPage from './pages/auth/LoginPage';
 import TableauDeBordAdmin from './pages/admin/vendeur/TableauDeBordAdmin';
@@ -43,7 +45,8 @@ import PromotionsPage from './pages/vendeur/PromotionsPage';
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <PanierProvider>
+        <Routes>
         {/* ── Acheteur ───────────────────────────────────────────────────────── */}
         <Route path="/"                             element={<AccueilPage />} />
         <Route path="/catalogue"                    element={<CataloguePage />} />
@@ -57,6 +60,7 @@ export default function App() {
         {/* ── Acheteur — pages protégées ─────────────────────────────────── */}
         <Route path="/mon-compte"    element={<MonComptePage />} />
         <Route path="/mes-commandes" element={<MonComptePage />} />
+        <Route path="/panier"        element={<PanierPage />} />
 
         {/* ── Vendeur — inscription (public, utilisateur connecté) ───────── */}
         <Route path="/devenir-vendeur" element={<DevenirVendeurPage />} />
@@ -123,7 +127,8 @@ export default function App() {
 
         {/* ── Défaut ─────────────────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </PanierProvider>
     </BrowserRouter>
   );
 }

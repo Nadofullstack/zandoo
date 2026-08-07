@@ -28,16 +28,7 @@ export default function AccueilPage() {
 
       {/* 4 — Bannière vendeur */}
       <SectionBanniereVendeur />
-
-      {/* 5 — Best Sellers */}
-      <SectionProduitsMis
-        titre="Best Sellers"
-        sousTitre="Les plus appréciés"
-        produits={bestSellers}
-        chargement={chargement}
-        lienVoirPlus="/catalogue"
-      />
-
+      
       {/* 6 — Valeurs */}
       <SectionValeursMarque />
     </AcheteurLayout>

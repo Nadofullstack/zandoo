@@ -5,11 +5,12 @@ interface BadgeStatutCommandeProps {
 }
 
 const CONFIG: Record<StatutCommande, { libelle: string; classes: string }> = {
-  en_attente: { libelle: 'En attente', classes: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
-  payee:      { libelle: 'Payée',      classes: 'bg-blue-100   text-blue-800   border border-blue-200'   },
-  expediee:   { libelle: 'Expédiée',   classes: 'bg-purple-100 text-purple-800 border border-purple-200' },
-  livree:     { libelle: 'Livrée',     classes: 'bg-green-100  text-green-800  border border-green-200'  },
-  annulee:    { libelle: 'Annulée',    classes: 'bg-red-100    text-red-800    border border-red-200'    },
+  en_attente:     { libelle: 'En attente',     classes: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
+  payee:          { libelle: 'Payée',          classes: 'bg-blue-100   text-blue-800   border border-blue-200'   },
+  en_preparation: { libelle: 'En préparation', classes: 'bg-orange-100 text-orange-800 border border-orange-200' },
+  expediee:       { libelle: 'Expédiée',       classes: 'bg-purple-100 text-purple-800 border border-purple-200' },
+  livree:         { libelle: 'Livrée',         classes: 'bg-green-100  text-green-800  border border-green-200'  },
+  annulee:        { libelle: 'Annulée',        classes: 'bg-red-100    text-red-800    border border-red-200'    },
 };
 
 /**

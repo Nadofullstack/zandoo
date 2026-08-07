@@ -19,6 +19,8 @@ import routesVendeur          from './src/routes/VendeurRoutes.js';
 import routesLivreur          from './src/routes/LivreurRoutes.js';
 import routesAcheteurAccueil  from './src/routes/acheteur/AcheteurAccueilRoutes.js';
 import routesAcheteurCatalogue from './src/routes/acheteur/AcheteurCatalogueRoutes.js';
+import routesAcheteurCommande from './src/routes/acheteur/AcheteurCommandeRoutes.js';
+import routesAcheteurPanier   from './src/routes/acheteur/AcheteurPanierRoutes.js';
 
 dotenv.config();
 
@@ -56,6 +58,8 @@ app.use('/api/vendeur',              routesVendeur);
 app.use('/api/livreur',              routesLivreur);
 app.use('/api/acheteur/accueil',    routesAcheteurAccueil);
 app.use('/api/acheteur/produits',   routesAcheteurCatalogue);
+app.use('/api/acheteur/panier',     routesAcheteurPanier);
+app.use('/api/acheteur',            routesAcheteurCommande);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -2,7 +2,7 @@ import type { Pagination, HistoriqueStatut } from './common';
 
 /* ─── Commandes ──────────────────────────────────────────────────────────── */
 
-export type StatutCommande  = 'en_attente' | 'payee' | 'expediee' | 'livree' | 'annulee';
+export type StatutCommande  = 'en_attente' | 'payee' | 'en_preparation' | 'expediee' | 'livree' | 'annulee';
 export type StatutPaiement  = 'en_attente' | 'paye' | 'echoue' | 'rembourse';
 export type MethodePaiement = 'mobile_money' | 'carte_bancaire' | 'virement' | 'especes' | 'autre';
 

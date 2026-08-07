@@ -268,7 +268,7 @@ export const modifierStatutProduit = async (req, res) => {
     const produit = await Produit.findOneAndUpdate(
       { _id: req.params.id, vendeur: vendeurId },
       { statut, enStock: statut === 'en_stock' },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     ).populate('categorie', 'nom slug').lean();
 
     if (!produit) {
@@ -308,7 +308,7 @@ export const mettreAJourStock = async (req, res) => {
     const produit = await Produit.findOneAndUpdate(
       { _id: req.params.id, vendeur: vendeurId },
       { quantiteDisponible: qte, enStock: qte > 0, statut },
-      { new: true, runValidators: true }
+      {  returnDocument: "after", runValidators: true }
     ).lean();
 
     if (!produit) {

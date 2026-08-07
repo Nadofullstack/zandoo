@@ -1,12 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getMesCommandes, marquerCommande } from '../../services/vendeur/vendeurService';
-import type { CommandeVendeur, StatutCommande } from '../../types/vendeur';
+import {
+  getMesCommandes,
+  marquerCommande,
+  annulerCommande,
+  getStatistiquesCommandesVendeur,
+} from '../../services/vendeur/vendeurService';
+import type {
+  CommandeVendeur,
+  StatutCommande,
+  StatistiquesCommandesVendeur,
+} from '../../types/vendeur';
 
 interface Filtre { statut: string; page: number; }
 
 export function useCommandesVendeur() {
   const [commandes, setCommandes]   = useState<CommandeVendeur[]>([]);
   const [pagination, setPagination] = useState<{ total: number; page: number; totalPages: number; limite: number } | null>(null);
+  const [statistiques, setStatistiques] = useState<StatistiquesCommandesVendeur | null>(null);
   const [filtre, setFiltreState]    = useState<Filtre>({ statut: '', page: 1 });
   const [chargement, setChargement] = useState(true);
   const [chargementAction, setChargementAction] = useState<string | null>(null);
@@ -17,9 +27,13 @@ export function useCommandesVendeur() {
     setChargement(true);
     setErreur(null);
     try {
-      const rep = await getMesCommandes({ page: f.page, limite: 20, statut: f.statut || undefined });
-      setCommandes(rep.data.commandes);
-      setPagination(rep.data.pagination);
+      const [repCommandes, repStats] = await Promise.all([
+        getMesCommandes({ page: f.page, limite: 20, statut: f.statut || undefined }),
+        getStatistiquesCommandesVendeur(),
+      ]);
+      setCommandes(repCommandes.data.commandes);
+      setPagination(repCommandes.data.pagination);
+      setStatistiques(repStats.data.statistiques);
     } catch (err) {
       setErreur(err instanceof Error ? err.message : 'Erreur de chargement.');
     } finally {
@@ -32,13 +46,21 @@ export function useCommandesVendeur() {
   const setFiltre = (partiel: Partial<Filtre>) =>
     setFiltreState((prev) => ({ ...prev, ...partiel }));
 
-  const expedier = async (commandeId: string) => {
+  const afficherSucces = (msg: string) => {
+    setMessageSucces(msg);
+    setTimeout(() => setMessageSucces(null), 3500);
+  };
+
+  const changerStatut = async (commandeId: string, statut: StatutCommande) => {
     setChargementAction(commandeId);
     setErreur(null);
-    setMessageSucces(null);
     try {
-      await marquerCommande(commandeId, 'expediee' as StatutCommande);
-      setMessageSucces('Commande marquée comme expédiée.');
+      await marquerCommande(commandeId, statut);
+      const libelles: Record<string, string> = {
+        en_preparation: 'en préparation',
+        expediee: 'expédiée',
+      };
+      afficherSucces(`Commande marquée comme ${libelles[statut] ?? statut}.`);
       charger(filtre);
     } catch (err) {
       setErreur(err instanceof Error ? err.message : 'Erreur lors de la mise à jour.');
@@ -47,5 +69,26 @@ export function useCommandesVendeur() {
     }
   };
 
-  return { commandes, pagination, filtre, chargement, chargementAction, erreur, messageSucces, setFiltre, expedier };
+  const annuler = async (commandeId: string, raison?: string) => {
+    setChargementAction(commandeId);
+    setErreur(null);
+    try {
+      await annulerCommande(commandeId, raison);
+      afficherSucces('Commande annulée avec succès.');
+      charger(filtre);
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : "Erreur lors de l'annulation.");
+    } finally {
+      setChargementAction(null);
+    }
+  };
+
+  // Raccourcis
+  const expedier       = (id: string) => changerStatut(id, 'expediee' as StatutCommande);
+  const mettreEnPrep   = (id: string) => changerStatut(id, 'en_preparation' as StatutCommande);
+
+  return {
+    commandes, pagination, statistiques, filtre, chargement, chargementAction,
+    erreur, messageSucces, setFiltre, changerStatut, expedier, mettreEnPrep, annuler,
+  };
 }

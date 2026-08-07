@@ -115,10 +115,16 @@ export interface StatistiquesProduits {
 
 /* ── Commandes vendeur ────────────────────────────────────────────────── */
 
-export type StatutCommande = 'en_attente' | 'payee' | 'expediee' | 'livree' | 'annulee';
+export type StatutCommande = 'en_attente' | 'payee' | 'en_preparation' | 'expediee' | 'livree' | 'annulee';
 
 export interface LigneCommande {
-  produit: { _id: string; nom: string; photoCouverture?: string | null };
+  produit: { _id: string; nom: string; photoCouverture?: string | null } | null;
+  /** Snapshot du nom au moment de la commande */
+  nomProduit: string;
+  /** Snapshot de la photo au moment de la commande */
+  photoProduit?: string | null;
+  reference?: string;
+  variante?: string;
   quantite: number;
   prixUnitaire: number;
   sousTotal: number;
@@ -196,6 +202,21 @@ export interface ReponseCommande {
   success: boolean;
   data: { commande: CommandeVendeur };
   message?: string;
+}
+
+export interface StatistiquesCommandesVendeur {
+  enAttente: number;
+  enPreparation: number;
+  expediees: number;
+  livrees: number;
+  annulees: number;
+  total: number;
+  chiffreAffaires: number;
+}
+
+export interface ReponseStatistiquesCommandesVendeur {
+  success: boolean;
+  data: { statistiques: StatistiquesCommandesVendeur };
 }
 
 export interface ReponsePromotions {
