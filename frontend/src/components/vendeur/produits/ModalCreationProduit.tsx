@@ -6,7 +6,7 @@ import OngletInformations from './OngletInformations';
 import OngletMedias, { type VariantePhotoLocal } from './OngletMedias';
 import OngletPrix from './OngletPrix';
 import OngletVariantes from './OngletVariantes';
-import { getProduitParId } from '../../../services/admin/adminProduitService';
+import { getProduitParId as getProduitParIdAdmin } from '../../../services/admin/adminProduitService';
 import { getCategoriesPlates } from '../../../services/admin/adminCategorieService';
 import type { Categorie, StatutProduit, VarianteProduit } from '../../../types/admin';
 
@@ -21,6 +21,8 @@ interface Props {
   fnCreer: (payload: object) => Promise<{ data: { produit: { _id: string } } }>;
   /** Fonction de modification — obligatoire pour modifier un produit */
   fnModifier: (id: string, payload: object) => Promise<unknown>;
+  /** Fonction de chargement d'un produit par ID — par défaut route admin (lecture) */
+  fnGetProduit?: (id: string) => Promise<{ data: { produit: ReturnType<any> } }>;
   /** Fonction de chargement des catégories — par défaut liste-plate admin (lecture) */
   fnGetCategories?: () => Promise<{ data: { categories: Categorie[] } }>;
   /** Fonction de création de catégorie — obligatoire si on veut permettre la création inline */
@@ -60,17 +62,12 @@ const ONGLETS: { id: Onglet; libelle: string; icone: React.ElementType }[] = [
   { id: 'variantes', libelle: 'Variantes',     icone: Layers     },
 ];
 
-function genRef() {
-  const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let r = 'REF-';
-  for (let i = 0; i < 8; i++) r += c[Math.floor(Math.random() * c.length)];
-  return r;
-}
+
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 export default function ModalCreationProduit({
   ouvert, onFermer, onSucces, produitId,
-  fnCreer, fnModifier, fnGetCategories, fnCreerCategorie,
+  fnCreer, fnModifier, fnGetProduit, fnGetCategories, fnCreerCategorie,
   fnUploadPhotos, fnUploadVideo,
 }: Props) {
 
@@ -110,7 +107,8 @@ export default function ModalCreationProduit({
     if (produitId) {
       setChargProduit(true);
       setErreurs({});
-      getProduitParId(produitId)
+      const chargerProduit = fnGetProduit ?? getProduitParIdAdmin;
+      chargerProduit(produitId)
         .then((r) => {
           const p = r.data.produit;
           setForm({
@@ -128,9 +126,8 @@ export default function ModalCreationProduit({
             setCouverture({ fichier: null, preview: p.photoCouverture, uploadee: true });
           }
           setVariantesPhotos(
-            (p.variantesPhotos ?? []).map((v) => ({
-              nom: v.nom,
-              photos: v.photos.map((url) => ({ fichier: null, preview: url, uploadee: true })),
+            (p.variantesPhotos ?? []).map((v: { photos: string[] }) => ({
+              photos: v.photos.map((url: string) => ({ fichier: null, preview: url, uploadee: true })),
             }))
           );
           if (p.video) { setVideoUrl(p.video); setVideoPreview(p.video); }
@@ -138,7 +135,7 @@ export default function ModalCreationProduit({
         .catch((err) => setErreurs({ global: err instanceof Error ? err.message : 'Erreur de chargement.' }))
         .finally(() => setChargProduit(false));
     }
-  }, [ouvert, produitId]);
+  }, [ouvert, produitId, fnGetProduit]);
 
   /* ── Reset ── */
   const reset = useCallback(() => {
@@ -193,15 +190,12 @@ export default function ModalCreationProduit({
   };
 
   const ajouterVariantePhoto = () =>
-    setVariantesPhotos((p) => [...p, { nom: '', photos: [] }]);
+    setVariantesPhotos((p) => [...p, { photos: [] }]);
 
   const supprimerVariantePhoto = (iv: number) => {
     variantesPhotos[iv].photos.forEach((p) => { if (p.preview.startsWith('blob:')) URL.revokeObjectURL(p.preview); });
     setVariantesPhotos((p) => p.filter((_, k) => k !== iv));
   };
-
-  const nomVarianteChange = (iv: number, nom: string) =>
-    setVariantesPhotos((p) => { const v = [...p]; v[iv] = { ...v[iv], nom }; return v; });
 
   const ajouterPhotosVariante = (iv: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const fichiers = Array.from(e.target.files ?? []).slice(0, 10 - variantesPhotos[iv].photos.length);
@@ -263,7 +257,7 @@ export default function ModalCreationProduit({
   };
 
   const uploaderVariantesPhotos = async () => {
-    const resultat: { nom: string; photos: string[] }[] = [];
+    const resultat: { photos: string[] }[] = [];
     for (const variante of variantesPhotos) {
       const nouvelles = variante.photos.filter((p) => !p.uploadee && p.fichier);
       const deja      = variante.photos.filter((p) => p.uploadee).map((p) => p.preview);
@@ -273,7 +267,7 @@ export default function ModalCreationProduit({
         urlsNouvelles = await fnUploadPhotos(nouvelles.map((p) => p.fichier as File));
         setUploadEnCours(false);
       }
-      resultat.push({ nom: variante.nom, photos: [...deja, ...urlsNouvelles] });
+      resultat.push({ photos: [...deja, ...urlsNouvelles] });
     }
     return resultat;
   };
@@ -282,7 +276,9 @@ export default function ModalCreationProduit({
   const valider = (): boolean => {
     const e: EtatErreurs = {};
     if (!form.nom.trim())         e.nom         = 'Le nom est obligatoire.';
-    if (!form.reference.trim())   e.reference   = 'La référence est obligatoire.';
+    // En mode modification, la référence doit être renseignée (elle existe déjà)
+    // En mode création, elle est générée par le backend — pas de validation côté client
+    if (modeModif && !form.reference.trim()) e.reference = 'La référence est obligatoire.';
     if (!form.description.trim()) e.description = 'La description est obligatoire.';
     if (!form.categorieId)        e.categorieId = 'Sélectionnez une catégorie.';
     if (!form.prix || isNaN(Number(form.prix)) || Number(form.prix) < 0)
@@ -322,7 +318,9 @@ export default function ModalCreationProduit({
 
       const payload = {
         nom:                form.nom.trim(),
-        reference:          form.reference.trim().toUpperCase(),
+        // En mode modification, on envoie la référence existante (non modifiable)
+        // En mode création, la référence est générée par le backend
+        ...(modeModif && { reference: form.reference.trim().toUpperCase() }),
         description:        form.description.trim(),
         categorie:          form.categorieId,
         prix:               form.prix,
@@ -424,8 +422,8 @@ export default function ModalCreationProduit({
                     form={form} erreurs={erreurs}
                     categories={categories} chargCat={chargCat}
                     ajoutCat={ajoutCat} chargCreatCat={chargCreatCat} errCreatCat={errCreatCat}
+                    modeModif={modeModif}
                     onChange={handleChange}
-                    onGenererRef={modeModif ? () => {} : () => { setForm((p) => ({ ...p, reference: genRef() })); setErreurs((p) => ({ ...p, reference: undefined })); }}
                     onStatutChange={(s) => setForm((p) => ({ ...p, statut: s }))}
                     onToggleAjoutCat={() => setAjoutCat((p) => !p)}
                     onCreerCategorie={handleCreerCategorie}
@@ -440,7 +438,6 @@ export default function ModalCreationProduit({
                     variantesPhotos={variantesPhotos}
                     onAjouterVariante={ajouterVariantePhoto}
                     onSupprimerVariante={supprimerVariantePhoto}
-                    onNomVarianteChange={nomVarianteChange}
                     onAjouterPhotosVariante={ajouterPhotosVariante}
                     onSupprimerPhotoVariante={supprimerPhotoVariante}
                     videoPreview={videoPreview}

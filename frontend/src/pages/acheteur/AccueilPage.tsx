@@ -14,22 +14,40 @@ export default function AccueilPage() {
       {/* 1 — Héro */}
       <SectionHero />
 
-      {/* 2 — Catégories */}
-      <SectionCategories categories={categories} chargement={chargement} />
+      {/* 2 — Disposition : catégories sidebar gauche + produits */}
+      <div className="bg-[#F8F9FF]">
+        <div className=" mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="flex gap-8 items-start py-10 sm:py-14">
 
-      {/* 3 — Nouveautés */}
-      <SectionProduitsMis
-        titre="Nouveautés"
-        sousTitre="Arrivages récents"
-        produits={nouveautes}
-        chargement={chargement}
-        lienVoirPlus="/catalogue?tri=recent"
-      />
+            {/* Sidebar catégories — masquée sur mobile */}
+            <div className="hidden lg:block w-64 shrink-0">
+              <SectionCategories categories={categories} chargement={chargement} />
+            </div>
 
-      {/* 4 — Bannière vendeur */}
+            {/* Produits */}
+            <div className="flex-1 min-w-0">
+              <SectionProduitsMis
+                titre="Nouveautés"
+                sousTitre="Arrivages récents"
+                produits={nouveautes}
+                chargement={chargement}
+                lienVoirPlus="/catalogue?tri=recent"
+                mode="inline"
+              />
+            </div>
+          </div>
+
+          {/* Catégories visible sur mobile — en dessous des produits */}
+          <div className="lg:hidden pb-8">
+            <SectionCategories categories={categories} chargement={chargement} />
+          </div>
+        </div>
+      </div>
+
+      {/* 3 — Bannière vendeur */}
       <SectionBanniereVendeur />
-      
-      {/* 6 — Valeurs */}
+
+      {/* 4 — Valeurs */}
       <SectionValeursMarque />
     </AcheteurLayout>
   );

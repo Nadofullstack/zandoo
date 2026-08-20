@@ -13,9 +13,8 @@ interface PhotoCouv {
   uploadee: boolean;
 }
 
-/** Variante photo (état local) */
+/** Variante photo (état local) — sans nom */
 interface VariantePhotoLocal {
-  nom: string;
   photos: { fichier: File | null; preview: string; uploadee: boolean }[];
 }
 
@@ -29,7 +28,6 @@ interface Props {
   variantesPhotos: VariantePhotoLocal[];
   onAjouterVariante: () => void;
   onSupprimerVariante: (iv: number) => void;
-  onNomVarianteChange: (iv: number, nom: string) => void;
   onAjouterPhotosVariante: (iv: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onSupprimerPhotoVariante: (iv: number, ip: number) => void;
 
@@ -60,7 +58,7 @@ function ZoneUpload({ onClick, label, sub }: { onClick: () => void; label: strin
 export default function OngletMedias({
   couverture, onSelectionCouverture, onSupprimerCouverture,
   variantesPhotos, onAjouterVariante, onSupprimerVariante,
-  onNomVarianteChange, onAjouterPhotosVariante, onSupprimerPhotoVariante,
+  onAjouterPhotosVariante, onSupprimerPhotoVariante,
   videoPreview, videoUrl, onSelectionVideo, onSupprimerVideo,
   erreurCouverture,
 }: Props) {
@@ -123,52 +121,51 @@ export default function OngletMedias({
       <section>
         <div className="flex items-center justify-between mb-2">
           <label className="label-admin mb-0">
-            Variantes de photos
-            <span className="ml-1 text-xs text-[#74777d] font-normal">(ex : Rouge, Bleu…)</span>
+            Photos supplémentaires
+            <span className="ml-1 text-xs text-[#74777d] font-normal">(variantes, angles…)</span>
           </label>
           <button
             type="button"
             onClick={onAjouterVariante}
             className="flex items-center gap-1 text-xs font-semibold text-accent hover:underline">
-            <Plus size={13} /> Ajouter une variante
+            <Plus size={13} /> Ajouter un groupe
           </button>
         </div>
 
         {variantesPhotos.length === 0 && (
           <p className="text-xs text-[#74777d] bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-            Aucune variante. Ajoutez-en une si votre produit existe en plusieurs couleurs ou versions.
+            Aucun groupe. Ajoutez-en un si votre produit a plusieurs vues ou variantes de photos.
           </p>
         )}
 
         <div className="space-y-4">
           {variantesPhotos.map((variante, iv) => (
             <div key={iv} className="border border-gray-200 rounded-xl p-4 bg-gray-50/60">
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  type="text"
-                  value={variante.nom}
-                  onChange={(e) => onNomVarianteChange(iv, e.target.value)}
-                  placeholder="Nom de la variante (ex : Rouge)"
-                  maxLength={100}
-                  className="flex-1 px-3 py-2 bg-white border border-[#c4c6cd] rounded-lg text-sm
-                             text-primary placeholder:text-gray-400 outline-none
-                             focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
-                />
+
+              {/* Header du groupe */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-primary">
+                  Groupe {iv + 1}
+                  <span className="ml-1.5 text-[#74777d] font-normal">
+                    ({variante.photos.length}/10 photos)
+                  </span>
+                </span>
                 <button
                   type="button"
                   onClick={() => onSupprimerVariante(iv)}
-                  title="Supprimer cette variante"
-                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors shrink-0">
+                  title="Supprimer ce groupe"
+                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
                   <Trash2 size={15} />
                 </button>
               </div>
 
+              {/* Grille photos */}
               {variante.photos.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 mb-3">
                   {variante.photos.map((photo, ip) => (
                     <div key={ip}
                       className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
-                      <img src={photo.preview} alt={`${variante.nom} photo ${ip + 1}`}
+                      <img src={photo.preview} alt={`Groupe ${iv + 1} — photo ${ip + 1}`}
                         className="w-full h-full object-cover" />
                       {photo.uploadee && (
                         <div className="absolute top-1 left-1 bg-green-500 text-white rounded-full p-0.5">
@@ -178,7 +175,7 @@ export default function OngletMedias({
                       <button
                         type="button"
                         onClick={() => onSupprimerPhotoVariante(iv, ip)}
-                        aria-label="Supprimer"
+                        aria-label="Supprimer cette photo"
                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5
                                    opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
                         <X size={9} />
@@ -197,7 +194,7 @@ export default function OngletMedias({
                     accept="image/jpeg,image/jpg,image/png,image/webp"
                     onChange={(e) => onAjouterPhotosVariante(iv, e)}
                     className="hidden"
-                    aria-label={`Ajouter des photos à la variante ${variante.nom || iv + 1}`}
+                    aria-label={`Ajouter des photos au groupe ${iv + 1}`}
                   />
                   <button
                     type="button"

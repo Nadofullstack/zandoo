@@ -22,8 +22,8 @@ export default function GrilleProduits({ produits, chargement, erreur }: Props) 
 
   if (chargement) {
     return (
-      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {Array.from({ length: 8 }).map((_, i) => (
+      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+        {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="rounded-2xl overflow-hidden border border-gray-100">
             <div className="aspect-square bg-gray-100 animate-pulse" />
             <div className="p-4 space-y-2">
@@ -50,7 +50,7 @@ export default function GrilleProduits({ produits, chargement, erreur }: Props) 
   }
 
   return (
-    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
       {produits.map((produit) => (
         <CarteProduit key={produit._id} produit={produit} />
       ))}

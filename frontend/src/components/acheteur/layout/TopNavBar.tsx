@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, LogOut, Store } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
 import logozandoo from '../../../assets/logozandoo.png';
-import { lireSession, logoutUser, rafraichirSession } from '../../../services/auth/authService';
+import { lireSession, rafraichirSession } from '../../../services/auth/authService';
 import { useNombreArticlesPanier } from '../../../context/PanierContext';
-
 
 export default function TopNavBar() {
   const [recherche, setRecherche]   = useState('');
@@ -14,7 +13,6 @@ export default function TopNavBar() {
 
   const [utilisateur, setUtilisateur] = useState(lireSession);
   const estConnecte = !!utilisateur;
-  const estVendeur  = utilisateur?.estVendeur === true || utilisateur?.role === 'vendeur';
   const nombreArticles = useNombreArticlesPanier();
 
   /* Rafraîchir la session au montage */
@@ -35,11 +33,6 @@ export default function TopNavBar() {
     e.preventDefault();
     const terme = recherche.trim();
     if (terme) navigate(`/catalogue?q=${encodeURIComponent(terme)}`);
-  };
-
-  const handleDeconnexion = async () => {
-    await logoutUser();
-    navigate('/connexion');
   };
 
   return (
@@ -139,7 +132,9 @@ export default function TopNavBar() {
       {menuOuvert && (
         <div className="lg:hidden border-t border-white/10 bg-[#011023]">
           <div className="max-w-[1280px] mx-auto px-6 py-4 flex flex-col gap-1">
-            <form onSubmit={soumettreRecherche} className="flex items-center bg-white/10 border border-white/20 rounded-full px-4 py-2 gap-2 mb-3">
+
+            {/* Barre de recherche mobile */}
+            <form onSubmit={soumettreRecherche} className="flex items-center bg-white/10 border border-white/20 rounded-full px-4 py-2 gap-2 mb-2">
               <Search size={16} className="text-white/50 shrink-0" />
               <input
                 type="text"
@@ -150,44 +145,21 @@ export default function TopNavBar() {
               />
             </form>
 
+            {/* Lien profil ou connexion */}
             {estConnecte ? (
-              <div className="border-t border-white/10 mt-2 pt-2">
-                <p className="px-3 py-1 text-xs text-white/40 font-medium">
-                  Bonjour, {utilisateur.fullName}
-                </p>
-                <Link
-                  to="/mon-compte"
-                  onClick={() => setMenuOuvert(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
-                >
-                  <User size={15} />
-                  Mon compte
-                </Link>
-
-                {estVendeur && (
-                  <Link
-                    to="/vendeur/tableau-de-bord"
-                    onClick={() => setMenuOuvert(false)}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-[#FC7701] hover:bg-white/10 transition-all"
-                  >
-                    <Store size={15} />
-                    Gérer ma boutique
-                  </Link>
-                )}
-
-                <button
-                  onClick={handleDeconnexion}
-                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-white/10 transition-all"
-                >
-                  <LogOut size={15} />
-                  Se déconnecter
-                </button>
-              </div>
+              <Link
+                to="/mon-compte"
+                onClick={() => setMenuOuvert(false)}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <User size={15} />
+                Mon profil
+              </Link>
             ) : (
               <Link
                 to="/connexion"
                 onClick={() => setMenuOuvert(false)}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all mt-2 border-t border-white/10 pt-3"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
               >
                 <User size={15} />
                 Connexion

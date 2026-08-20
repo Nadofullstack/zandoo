@@ -4,6 +4,7 @@ export interface CategorieResumee {
   _id: string;
   nom: string;
   slug: string;
+  icone?: string;
   image?: string;
   sousCategories?: CategorieResumee[];
 }

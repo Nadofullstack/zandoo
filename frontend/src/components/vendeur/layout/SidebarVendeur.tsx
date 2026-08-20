@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Tag,
   LogOut,
+  ShoppingCart,
 } from 'lucide-react';
 import { logoutUser, lireSession, supprimerSession } from '../../../services/auth/authService';
 import logo from '../../../assets/logo.jpg';
@@ -121,6 +122,18 @@ export default function SidebarVendeur({ ouvert = false, fermer }: SidebarVendeu
               </div>
             </div>
           )}
+
+          {/* Bouton switch vers espace acheteur — visible uniquement si l'utilisateur est aussi acheteur */}
+          {session?.estVendeur && (
+            <button
+              onClick={() => { if (fermer) fermer(); navigate('/'); }}
+              className="w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
+            >
+              <ShoppingCart size={17} aria-hidden="true" />
+              Espace acheteur
+            </button>
+          )}
+
           <button
             onClick={seDeconnecter}
             className="w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"

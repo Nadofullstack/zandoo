@@ -23,7 +23,7 @@ export const getProduits = async (req, res) => {
       prixMin,
       prixMax,
       page  = 1,
-      limite = 20,
+      limite = 100,
     } = req.query;
 
     /* Seuls les produits en stock sont visibles */
@@ -133,7 +133,7 @@ export const getProduitParSlug = async (req, res) => {
 export const getCategories = async (_req, res) => {
   try {
     const toutes = await Categorie.find({ active: true })
-      .select('nom slug image parent ordre')
+      .select('nom slug icone image parent ordre')
       .sort({ ordre: 1, nom: 1 })
       .lean();
 
@@ -152,6 +152,42 @@ export const getCategories = async (_req, res) => {
     console.error('Erreur getCategories (acheteur):', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
+};
+
+/* helper interne — icônes emoji par mot-clé */
+const ICONES_CATEGORIES = [
+  { mots: ['vêtement', 'vetement', 'habit', 'mode', 'tissu', 'robe', 'chemise', 'pantalon'], icone: '👗' },
+  { mots: ['chaussure', 'sandale', 'botte', 'sneaker', 'basket'], icone: '👟' },
+  { mots: ['électronique', 'electronique', 'téléphone', 'telephone', 'smartphone', 'mobile'], icone: '📱' },
+  { mots: ['ordinateur', 'laptop', 'pc', 'informatique', 'tablette'], icone: '💻' },
+  { mots: ['télévision', 'television', 'tv', 'écran', 'ecran'], icone: '📺' },
+  { mots: ['alimentation', 'nourriture', 'repas', 'cuisine', 'épicerie', 'epicerie', 'boisson'], icone: '🍎' },
+  { mots: ['beauté', 'beaute', 'cosmétique', 'cosmetique', 'parfum', 'maquillage', 'soin'], icone: '💄' },
+  { mots: ['bijou', 'bijouterie', 'montre', 'collier', 'bague', 'bracelet'], icone: '💍' },
+  { mots: ['meuble', 'décoration', 'decoration', 'maison', 'intérieur', 'interieur'], icone: '🛋️' },
+  { mots: ['sport', 'fitness', 'gym', 'athletisme', 'athlétisme'], icone: '⚽' },
+  { mots: ['jouet', 'jeux', 'enfant', 'bébé', 'bebe'], icone: '🧸' },
+  { mots: ['livre', 'papeterie', 'bureau', 'scolaire', 'fourniture'], icone: '📚' },
+  { mots: ['sac', 'sacoche', 'valise', 'bagage', 'cartable'], icone: '👜' },
+  { mots: ['auto', 'voiture', 'moto', 'véhicule', 'vehicule', 'pièce', 'piece'], icone: '🚗' },
+  { mots: ['santé', 'sante', 'pharmacie', 'médecine', 'medecine', 'hygiène', 'hygiene'], icone: '💊' },
+  { mots: ['jardinage', 'plante', 'fleur', 'agriculture', 'jardin'], icone: '🌱' },
+  { mots: ['musique', 'instrument', 'audio', 'casque', 'enceinte'], icone: '🎵' },
+  { mots: ['photo', 'appareil', 'caméra', 'camera', 'photographie'], icone: '📷' },
+  { mots: ['électroménager', 'electromenager', 'réfrigérateur', 'refrigerateur', 'lave', 'four', 'micro-onde'], icone: '🏠' },
+  { mots: ['animal', 'animaux', 'pet', 'chien', 'chat', 'veterinaire'], icone: '🐾' },
+];
+
+/**
+ * Génère un emoji icône à partir du nom d'une catégorie.
+ * Retourne un emoji générique si aucun mot-clé ne correspond.
+ */
+export const genererIconeCategorie = (nomCategorie) => {
+  const nomNormalise = nomCategorie.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (const { mots, icone } of ICONES_CATEGORIES) {
+    if (mots.some((mot) => nomNormalise.includes(mot))) return icone;
+  }
+  return '🛒'; // icône générique par défaut
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────

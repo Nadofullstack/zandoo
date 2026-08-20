@@ -25,20 +25,20 @@ export default function SectionHero() {
         </svg>
       </div>
 
-      <div className="relative max-w-[1280px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-12 sm:py-16 lg:py-28">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
 
           {/* ── Colonne texte ──────────────────────────── */}
           <div>
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-[#FC7701]/15 border border-[#FC7701]/30 rounded-full px-4 py-1.5 mb-6">
+            <div className="inline-flex items-center gap-2 bg-[#FC7701]/15 border border-[#FC7701]/30 rounded-full px-4 py-1.5 mb-4 sm:mb-6">
               <span className="w-2 h-2 rounded-full bg-[#FC7701] animate-pulse" />
               <span className="text-[#FC7701] text-xs font-semibold tracking-wide uppercase">
                 Marketplace panafricaine
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black text-primary leading-[1.1] tracking-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-[3.5rem] font-black text-primary leading-[1.1] tracking-tight mb-4 sm:mb-6">
               Achetez local.{' '}
               <span className="relative inline-block">
                 <span className="text-[#FC7701]">Vendez</span>
@@ -51,24 +51,24 @@ export default function SectionHero() {
               <span className="text-primary">Progressez ensemble.</span>
             </h1>
 
-            <p className="text-primary text-base lg:text-lg leading-relaxed mb-10 max-w-[480px]">
+            <p className="text-primary text-sm sm:text-base lg:text-lg leading-relaxed mb-6 sm:mb-10 max-w-[480px]">
               Découvrez des milliers de produits africains authentiques.
               Connectez vendeurs locaux et acheteurs du monde entier sur une
               plateforme sécurisée et innovante.
             </p>
 
             {/* CTA */}
-            <div className="flex flex-wrap gap-3 mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 mb-8 sm:mb-12">
               <Link
                 to="/catalogue"
-                className="flex items-center gap-2 bg-[#FC7701] hover:bg-[#e06900] text-white font-semibold px-6 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm"
+                className="flex items-center justify-center gap-2 bg-[#FC7701] hover:bg-[#e06900] text-white font-semibold px-6 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm"
               >
                 <ShoppingBag size={18} />
                 Explorer le catalogue
               </Link>
               <Link
                 to="/inscription"
-                className="flex items-center gap-2 border border-accent text-white bg-primary hover:text-white hover:border-primary/40 hover:bg-primary font-semibold px-6 py-3.5 rounded-xl transition-all text-sm"
+                className="flex items-center justify-center gap-2 border border-accent text-white bg-primary hover:text-white hover:border-primary/40 hover:bg-primary font-semibold px-6 py-3.5 rounded-xl transition-all text-sm"
               >
                 Devenir vendeur
                 <ArrowRight size={18} />
@@ -76,11 +76,11 @@ export default function SectionHero() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 pt-8 border-t border-accent">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 pt-6 sm:pt-8 border-t border-accent">
               {STATS.map((s) => (
                 <div key={s.libelle}>
-                  <div className="text-xl font-black text-accent">{s.valeur}</div>
-                  <div className="text-xs text-primary mt-0.5">{s.libelle}</div>
+                  <div className="text-base sm:text-xl font-black text-accent">{s.valeur}</div>
+                  <div className="text-[10px] sm:text-xs text-primary mt-0.5">{s.libelle}</div>
                 </div>
               ))}
             </div>

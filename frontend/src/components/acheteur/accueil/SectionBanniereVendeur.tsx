@@ -10,9 +10,9 @@ const AVANTAGES = [
 
 export default function SectionBanniereVendeur() {
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
-        <div className="relative bg-[#011023] rounded-3xl overflow-hidden p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10">
+    <section className="py-12 sm:py-16 bg-white">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="relative bg-[#011023] rounded-3xl overflow-hidden p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-8 lg:gap-10">
 
           {/* Déco */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#FC7701]/10 rounded-full blur-[100px] pointer-events-none" />
@@ -28,17 +28,17 @@ export default function SectionBanniereVendeur() {
 
           {/* Texte */}
           <div className="relative flex-1 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 bg-[#FC7701]/15 border border-[#FC7701]/30 rounded-full px-4 py-1.5 mb-5">
+            <div className="inline-flex items-center gap-2 bg-[#FC7701]/15 border border-[#FC7701]/30 rounded-full px-4 py-1.5 mb-4 sm:mb-5">
               <Store size={14} className="text-[#FC7701]" />
               <span className="text-[#FC7701] text-xs font-bold uppercase tracking-wide">
                 Devenez vendeur
               </span>
             </div>
-            <h2 className="text-3xl lg:text-4xl font-black text-white leading-tight mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight mb-3 sm:mb-4">
               Votre boutique, <br />
               <span className="text-[#FC7701]">votre succès.</span>
             </h2>
-            <p className="text-white/60 text-base leading-relaxed max-w-lg">
+            <p className="text-white/60 text-sm sm:text-base leading-relaxed max-w-lg mx-auto lg:mx-0">
               Rejoignez +12 000 vendeurs africains qui développent leur activité sur ZANDOO.
               Inscription gratuite, commission transparente.
             </p>
@@ -46,20 +46,20 @@ export default function SectionBanniereVendeur() {
 
           {/* Avantages + CTA */}
           <div className="relative shrink-0 w-full lg:w-auto">
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
               {AVANTAGES.map(({ Icone, texte }) => (
                 <div
                   key={texte}
-                  className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+                  className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3"
                 >
-                  <Icone size={16} className="text-[#FC7701] shrink-0" />
-                  <span className="text-white/80 text-sm font-medium">{texte}</span>
+                  <Icone size={15} className="text-[#FC7701] shrink-0" />
+                  <span className="text-white/80 text-xs sm:text-sm font-medium">{texte}</span>
                 </div>
               ))}
             </div>
             <Link
               to="/inscription"
-              className="flex items-center justify-center gap-2 w-full bg-[#FC7701] hover:bg-[#e06900] text-white font-bold px-8 py-4 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30"
+              className="flex items-center justify-center gap-2 w-full bg-[#FC7701] hover:bg-[#e06900] text-white font-bold px-8 py-3.5 sm:py-4 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30"
             >
               Ouvrir ma boutique
               <ArrowRight size={18} />

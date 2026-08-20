@@ -36,7 +36,17 @@ const categorieSchema = new mongoose.Schema(
       default: null,
     },
 
-    /* URL de l'icône ou image représentant la catégorie */
+    /**
+     * Icône emoji ou identifiant d'icône généré automatiquement lors
+     * de la création d'un produit dans cette catégorie.
+     * Exemples : "👗", "📱", "🛒", "🍎"
+     */
+    icone: {
+      type: String,
+      default: null,
+    },
+
+    /* @deprecated — conservé pour compatibilité, utiliser icone */
     image: {
       type: String,
       default: null,

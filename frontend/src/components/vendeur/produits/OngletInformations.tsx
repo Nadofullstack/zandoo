@@ -1,4 +1,4 @@
-import { Wand2, Plus, ChevronDown, Tag, BarChart2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, ChevronDown, Tag, CheckCircle2, AlertCircle } from 'lucide-react';
 import FormNouvelleCategorie from './FormNouvelleCategorie';
 import type { Categorie, StatutProduit } from '../../../types/admin';
 
@@ -12,11 +12,6 @@ interface EtatErreurs {
   categorieId?: string;
 }
 
-const STATUTS: { valeur: StatutProduit; libelle: string; couleur: string }[] = [
-  { valeur: 'en_stock',   libelle: 'En stock',    couleur: 'bg-green-100 text-green-700'  },
-  { valeur: 'faible',     libelle: 'Faible',      couleur: 'bg-yellow-100 text-yellow-700' },
-  { valeur: 'en_rupture', libelle: 'En rupture',  couleur: 'bg-red-100 text-red-700'      },
-];
 
 function champCls(err?: string) {
   return [
@@ -45,8 +40,9 @@ interface Props {
   ajoutCat: boolean;
   chargCreatCat: boolean;
   errCreatCat?: string;
+  /** true = mode modification, la référence est affichée en lecture seule */
+  modeModif?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  onGenererRef: () => void;
   onStatutChange: (s: StatutProduit) => void;
   onToggleAjoutCat: () => void;
   onCreerCategorie: (nom: string) => void;
@@ -56,7 +52,8 @@ interface Props {
 export default function OngletInformations({
   form, erreurs, categories,
   chargCat, ajoutCat, chargCreatCat, errCreatCat,
-  onChange, onGenererRef, onStatutChange,
+  modeModif = false,
+  onChange,
   onToggleAjoutCat, onCreerCategorie, onAnnulerAjoutCat,
 }: Props) {
   return (
@@ -74,24 +71,30 @@ export default function OngletInformations({
         <ErrChamp msg={erreurs.nom} id="prod-nom-err" />
       </div>
 
-      {/* Référence */}
-      <div>
-        <label htmlFor="prod-ref" className="label-admin">Référence (SKU) *</label>
-        <div className="flex gap-2">
-          <input id="prod-ref" name="reference" type="text"
-            value={form.reference} onChange={onChange}
-            placeholder="Ex : REF-CHAUSSURES-001" maxLength={50}
-            aria-invalid={!!erreurs.reference} aria-describedby="prod-ref-err"
-            className={champCls(erreurs.reference) + ' flex-1'} />
-          <button type="button" onClick={onGenererRef} title="Générer automatiquement"
-            className="cursor-pointer flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#c4c6cd]
-                       bg-white text-xs font-semibold text-primary hover:border-accent
-                       hover:text-accent transition-colors whitespace-nowrap">
-            <Wand2 size={13} aria-hidden /> Générer
-          </button>
+      {/* Référence — lecture seule en modification, masqué en création (générée par le backend) */}
+      {modeModif ? (
+        <div>
+          <label htmlFor="prod-ref" className="label-admin">Référence (SKU)</label>
+          <div className="flex items-center gap-2">
+            <input
+              id="prod-ref" name="reference" type="text"
+              value={form.reference} readOnly
+              className="flex-1 px-4 py-2.5 bg-gray-50 border border-[#c4c6cd] rounded-xl text-sm text-[#74777d] font-mono cursor-not-allowed"
+            />
+            <span className="text-xs text-[#74777d] whitespace-nowrap">Non modifiable</span>
+          </div>
         </div>
-        <ErrChamp msg={erreurs.reference} id="prod-ref-err" />
-      </div>
+      ) : (
+        <div>
+          <label className="label-admin">Référence (SKU)</label>
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-dashed border-[#c4c6cd] rounded-xl">
+            <CheckCircle2 size={14} className="text-green-500 flex-shrink-0" aria-hidden />
+            <span className="text-xs text-[#74777d]">
+              Générée automatiquement à la création au format <span className="font-mono font-semibold">AAAA-MM-JJ-NNNN</span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Description */}
       <div>
@@ -133,25 +136,7 @@ export default function OngletInformations({
         )}
       </div>
 
-      {/* Statut */}
-      <div>
-        <label className="label-admin">
-          <BarChart2 size={11} className="inline mr-1" aria-hidden /> Statut
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {STATUTS.map(({ valeur, libelle, couleur }) => (
-            <button key={valeur} type="button" onClick={() => onStatutChange(valeur)}
-              className={[
-                'cursor-pointer px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all',
-                form.statut === valeur ? `${couleur} border-current`
-                  : 'cursor-pointer bg-white border-gray-200 text-gray-500 hover:border-gray-300',
-              ].join(' ')}>
-              {form.statut === valeur && <CheckCircle2 size={11} className="inline mr-1" aria-hidden />}
-              {libelle}
-            </button>
-          ))}
-        </div>
-      </div>
+  
     </div>
   );
 }

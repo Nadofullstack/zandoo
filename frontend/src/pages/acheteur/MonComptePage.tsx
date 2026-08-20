@@ -159,27 +159,50 @@ export default function MonComptePage() {
                 </div>
               </div>
 
-              {/* Devenir vendeur */}
-              <div className="bg-gradient-to-r from-[#FC7701] to-[#e96b00] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
-                <div className="relative z-10 flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
-                    <Store size={24} className="text-white" />
+              {/* Devenir vendeur OU Gérer ma boutique selon le statut */}
+              {utilisateur.estVendeur ? (
+                <div className="bg-gradient-to-r from-[#011023] to-[#0a2540] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12" />
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-[#FC7701]/20 flex items-center justify-center shrink-0">
+                      <Store size={24} className="text-[#FC7701]" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold mb-1">Ma boutique</h3>
+                      <p className="text-sm text-white/70 leading-relaxed">Accédez à votre espace vendeur et gérez vos produits</p>
+                    </div>
+                    <Link
+                      to="/vendeur/tableau-de-bord"
+                      className="shrink-0 bg-[#FC7701] hover:bg-[#e06900] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-2"
+                    >
+                      Gérer ma boutique
+                      <ChevronRight size={16} />
+                    </Link>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold mb-1">Devenez vendeur</h3>
-                    <p className="text-sm text-white/90 leading-relaxed">Lancez votre boutique en ligne et rejoignez la communauté ZanDoo</p>
-                  </div>
-                  <Link
-                    to="/devenir-vendeur"
-                    className="shrink-0 bg-white text-[#FC7701] font-semibold text-sm px-6 py-2.5 rounded-xl hover:bg-orange-50 transition-colors shadow-sm flex items-center gap-2"
-                  >
-                    Commencer
-                    <ChevronRight size={16} />
-                  </Link>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-gradient-to-r from-[#FC7701] to-[#e96b00] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
+                      <Store size={24} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold mb-1">Devenez vendeur</h3>
+                      <p className="text-sm text-white/90 leading-relaxed">Lancez votre boutique en ligne et rejoignez la communauté ZanDoo</p>
+                    </div>
+                    <Link
+                      to="/devenir-vendeur"
+                      className="shrink-0 bg-white text-[#FC7701] font-semibold text-sm px-6 py-2.5 rounded-xl hover:bg-orange-50 transition-colors shadow-sm flex items-center gap-2"
+                    >
+                      Commencer
+                      <ChevronRight size={16} />
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* Déconnexion */}
               <button

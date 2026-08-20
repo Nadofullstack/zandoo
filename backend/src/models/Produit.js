@@ -47,10 +47,9 @@ const produitSchema = new mongoose.Schema(
       trim: true,
     },
 
-    /* Variantes photos : [{ nom: "Rouge", photos: ["url1","url2"] }] */
+    /* Variantes photos : [{ photos: ["url1","url2"] }] */
     variantesPhotos: [
       {
-        nom: { type: String, required: true, trim: true, maxlength: 100 },
         photos: {
           type: [String],
           validate: {

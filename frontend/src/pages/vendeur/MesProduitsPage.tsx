@@ -5,7 +5,7 @@ import Alert from '../../components/ui/Alert';
 import ModalCreationProduit from '../../components/vendeur/produits/ModalCreationProduit';
 import CarteStatistique from '../../components/admin/modal/CarteStatistique';
 import { useProduitsVendeur } from '../../hooks/vendeur/useProduitsVendeur';
-import { creerProduitVendeur, modifierProduitVendeur } from '../../services/vendeur/vendeurService';
+import { creerProduitVendeur, modifierProduitVendeur, getProduitVendeurParId } from '../../services/vendeur/vendeurService';
 import { uploadPhotos as vendeurUploadPhotos, uploadVideo as vendeurUploadVideo } from '../../services/vendeur/vendeurUploadService';
 import type { ProduitVendeur } from '../../types/vendeur';
 import { getCategoriesPlates as getCategoriesVendeur, creerCategorie as creerCategorieVendeur } from '../../services/vendeur/vendeurCategorieService';
@@ -226,6 +226,7 @@ export default function MesProduitsPage() {
         produitId={produitId}
         fnCreer={creerProduitVendeur}
         fnModifier={modifierProduitVendeur}
+        fnGetProduit={getProduitVendeurParId}
         fnGetCategories={getCategoriesVendeur}
         fnCreerCategorie={creerCategorieVendeur}
         fnUploadPhotos={vendeurUploadPhotos}

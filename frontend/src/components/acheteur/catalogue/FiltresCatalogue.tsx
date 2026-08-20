@@ -1,12 +1,16 @@
-import { SlidersHorizontal } from 'lucide-react';
-import type { TriCatalogue } from '../../../types/acheteur';
+import { useEffect, useState } from 'react';
+import { SlidersHorizontal, LayoutGrid } from 'lucide-react';
+import type { TriCatalogue, CategorieResumee } from '../../../types/acheteur';
+import { getCategories } from '../../../services/acheteur/acheteurCatalogueService';
 
 interface Props {
   tri: TriCatalogue;
   prixMin: string;
   prixMax: string;
+  categorieActive?: string;
   onChangeTri: (tri: TriCatalogue) => void;
   onChangePrix: (min: string, max: string) => void;
+  onChangeCategorie: (slug: string) => void;
 }
 
 const OPTIONS_TRI: { valeur: TriCatalogue; libelle: string }[] = [
@@ -16,7 +20,20 @@ const OPTIONS_TRI: { valeur: TriCatalogue; libelle: string }[] = [
   { valeur: 'nom_asc',   libelle: 'Nom A → Z' },
 ];
 
-export default function FiltresCatalogue({ tri, prixMin, prixMax, onChangeTri, onChangePrix }: Props) {
+export default function FiltresCatalogue({
+  tri, prixMin, prixMax, categorieActive = '',
+  onChangeTri, onChangePrix, onChangeCategorie,
+}: Props) {
+  const [categories, setCategories] = useState<CategorieResumee[]>([]);
+  const [chargCat, setChargCat] = useState(true);
+
+  useEffect(() => {
+    getCategories()
+      .then((r) => setCategories(r.data.categories ?? []))
+      .catch(() => {})
+      .finally(() => setChargCat(false));
+  }, []);
+
   return (
     <aside className="w-full lg:w-64 shrink-0 space-y-4">
 
@@ -24,6 +41,55 @@ export default function FiltresCatalogue({ tri, prixMin, prixMax, onChangeTri, o
       <div className="flex items-center gap-2 px-1">
         <SlidersHorizontal size={16} className="text-[#011023]" />
         <span className="font-bold text-[#011023] text-sm">Filtres</span>
+      </div>
+
+      {/* Catégories */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <h3 className="font-semibold text-[#011023] text-sm mb-3">Catégories</h3>
+
+        {chargCat ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-8 bg-gray-100 animate-pulse rounded-lg" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {/* Option "Toutes" */}
+            <button
+              type="button"
+              onClick={() => onChangeCategorie('')}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left w-full ${
+                !categorieActive
+                  ? 'bg-[#011023] text-white'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-[#011023]'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 text-base leading-none">
+                <LayoutGrid size={14} />
+              </span>
+              Toutes
+            </button>
+
+            {categories.map((cat) => (
+              <button
+                key={cat._id}
+                type="button"
+                onClick={() => onChangeCategorie(cat._id)}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left w-full ${
+                  categorieActive === cat._id
+                    ? 'bg-[#FC7701] text-white'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-[#011023]'
+                }`}
+              >
+                <span className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 text-base leading-none">
+                  {cat.icone ?? <LayoutGrid size={14} />}
+                </span>
+                <span className="truncate">{cat.nom}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tri */}

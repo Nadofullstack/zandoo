@@ -23,7 +23,7 @@ export default function CataloguePage() {
   return (
     <AcheteurLayout>
       <div className="bg-[#F8F9FF] min-h-screen">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-10">
+        <div className="mx-auto px-6 lg:px-10 py-10">
 
           {/* En-tête */}
           <div className="mb-8">
@@ -49,8 +49,10 @@ export default function CataloguePage() {
               tri={filtre.tri}
               prixMin={filtre.prixMin}
               prixMax={filtre.prixMax}
+              categorieActive={filtre.categorie}
               onChangeTri={(tri: TriCatalogue) => setFiltre({ tri, page: 1 })}
               onChangePrix={(min, max) => setFiltre({ prixMin: min, prixMax: max, page: 1 })}
+              onChangeCategorie={(id) => setFiltre({ categorie: id, page: 1 })}
             />
 
             <div className="flex-1">

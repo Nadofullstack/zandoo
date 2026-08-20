@@ -33,33 +33,33 @@ const VALEURS = [
 
 export default function SectionValeursMarque() {
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+    <section className="py-12 sm:py-16 bg-white">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
 
         {/* En-tête */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 sm:mb-12">
           <p className="text-[#FC7701] text-xs font-bold uppercase tracking-widest mb-2">
             Pourquoi ZANDOO
           </p>
-          <h2 className="text-3xl font-black text-[#011023]">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#011023]">
             Conçu pour l'Afrique qui avance
           </h2>
         </div>
 
         {/* Cartes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {VALEURS.map(({ Icone, couleur, bg, titre, description }) => (
             <div
               key={titre}
-              className="group p-6 rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-100 transition-all bg-white"
+              className="group p-5 sm:p-6 rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-100 transition-all bg-white"
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-4 sm:mb-5 transition-transform group-hover:scale-110"
                 style={{ background: bg }}
               >
-                <Icone size={24} style={{ color: couleur }} />
+                <Icone size={22} style={{ color: couleur }} />
               </div>
-              <h3 className="font-bold text-[#011023] text-base mb-2">{titre}</h3>
+              <h3 className="font-bold text-[#011023] text-sm sm:text-base mb-2">{titre}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
             </div>
           ))}

@@ -1,8 +1,27 @@
 import Produit from '../../models/Produit.js';
 import Vendeur from '../../models/Vendeur.js';
+import Categorie from '../../models/Categorie.js';
 import slugify from 'slugify';
+import { genererIconeCategorie } from '../acheteur/CatalogueControleur.js';
 
-/* ── Helper slug unique ─────────────────────────────────────────────────── */
+/* ── Helper génération référence : AAAA-MM-JJ-NNNN ──────────────────────── */
+const genererReference = async () => {
+  const maintenant = new Date();
+  const annee = maintenant.getFullYear();
+  const mois  = String(maintenant.getMonth() + 1).padStart(2, '0');
+  const jour  = String(maintenant.getDate()).padStart(2, '0');
+  const prefixe = `${annee}-${mois}-${jour}`;
+
+  // Compte les produits créés aujourd'hui pour obtenir le prochain numéro
+  const debutJour = new Date(annee, maintenant.getMonth(), maintenant.getDate(), 0, 0, 0);
+  const finJour   = new Date(annee, maintenant.getMonth(), maintenant.getDate(), 23, 59, 59, 999);
+  const compte = await Produit.countDocuments({
+    createdAt: { $gte: debutJour, $lte: finJour },
+  });
+  const numero = String(compte + 1).padStart(4, '0');
+  return `${prefixe}-${numero}`;
+};
+
 const genererSlugUnique = async (nom) => {
   const base = slugify(nom, { lower: true, strict: true });
   let slug = base;
@@ -14,13 +33,19 @@ const genererSlugUnique = async (nom) => {
 };
 
 /* ── Helper vendeur depuis userId ───────────────────────────────────────── */
+/**
+ * Retourne l'_id Mongoose du vendeur si approuvé.
+ * En cas d'erreur retourne { erreur: string }.
+ */
 const getVendeurId = async (userId) => {
-  // Cherche d'abord un vendeur approuvé, puis tout vendeur lié à cet utilisateur
   const v = await Vendeur.findOne({ utilisateur: userId }).select('_id statut');
-  if (!v) return null;
-  if (v.statut !== 'approuve') return null;
+  if (!v) return { erreur: 'Aucune boutique trouvée pour ce compte.' };
+  if (v.statut !== 'approuve') return { erreur: `Boutique non approuvée (statut : ${v.statut}).` };
   return v._id;
 };
+
+/** Vérifie si le résultat de getVendeurId est une erreur */
+const estErreurVendeur = (val) => val && typeof val === 'object' && 'erreur' in val;
 
 /**
  * GET /api/vendeur/produits
@@ -29,8 +54,8 @@ const getVendeurId = async (userId) => {
 export const getMesProduits = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const { page = 1, limite = 20, statut, recherche = '' } = req.query;
@@ -77,8 +102,8 @@ export const getMesProduits = async (req, res) => {
 export const getStatistiquesProduits = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const [enStock, enRupture, faible, total] = await Promise.all([
@@ -101,28 +126,40 @@ export const getStatistiquesProduits = async (req, res) => {
 /**
  * POST /api/vendeur/produits
  * Crée un nouveau produit pour la boutique du vendeur.
+ * La référence est générée automatiquement : AAAA-MM-JJ-NNNN
  */
 export const creerProduit = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const {
-      nom, description, reference, categorie,
+      nom, description, categorie,
       prix, prixPromotionnel, quantiteDisponible,
       photoCouverture, variantesPhotos, video,
       variantes, attributs, statut,
     } = req.body;
 
-    const slug = await genererSlugUnique(nom);
+    const slug      = await genererSlugUnique(nom);
+    const reference = await genererReference();
+
+    /* Auto-génère l'icône de la catégorie si elle n'en a pas encore */
+    try {
+      const cat = await Categorie.findById(categorie).select('nom icone').lean();
+      if (cat && !cat.icone) {
+        await Categorie.findByIdAndUpdate(categorie, {
+          icone: genererIconeCategorie(cat.nom),
+        });
+      }
+    } catch (_) { /* Non bloquant */ }
 
     const produit = await Produit.create({
       nom: nom.trim(),
       slug,
       description: description.trim(),
-      reference: reference.trim().toUpperCase(),
+      reference,
       categorie,
       vendeur: vendeurId,
       prix: Number(prix),
@@ -158,8 +195,8 @@ export const creerProduit = async (req, res) => {
 export const getProduitParId = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const produit = await Produit.findOne({ _id: req.params.id, vendeur: vendeurId })
@@ -180,12 +217,13 @@ export const getProduitParId = async (req, res) => {
 /**
  * PUT /api/vendeur/produits/:id
  * Modifie un produit appartenant au vendeur.
+ * La référence ne peut pas être modifiée (générée à la création).
  */
 export const modifierProduit = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const produit = await Produit.findOne({ _id: req.params.id, vendeur: vendeurId });
@@ -209,6 +247,11 @@ export const modifierProduit = async (req, res) => {
       produit.enStock = Number(req.body.quantiteDisponible) > 0;
     }
 
+    // Regénérer le slug si le nom a changé
+    if (req.body.nom && req.body.nom.trim() !== produit.nom) {
+      produit.slug = await genererSlugUnique(req.body.nom.trim());
+    }
+
     await produit.save();
 
     return res.status(200).json({
@@ -229,8 +272,8 @@ export const modifierProduit = async (req, res) => {
 export const supprimerProduit = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const produit = await Produit.findOneAndDelete({ _id: req.params.id, vendeur: vendeurId });
@@ -252,8 +295,8 @@ export const supprimerProduit = async (req, res) => {
 export const modifierStatutProduit = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const { statut } = req.body;
@@ -268,7 +311,7 @@ export const modifierStatutProduit = async (req, res) => {
     const produit = await Produit.findOneAndUpdate(
       { _id: req.params.id, vendeur: vendeurId },
       { statut, enStock: statut === 'en_stock' },
-      { returnDocument: "after", runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).populate('categorie', 'nom slug').lean();
 
     if (!produit) {
@@ -293,8 +336,8 @@ export const modifierStatutProduit = async (req, res) => {
 export const mettreAJourStock = async (req, res) => {
   try {
     const vendeurId = await getVendeurId(req.user._id);
-    if (!vendeurId) {
-      return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
+    if (estErreurVendeur(vendeurId)) {
+      return res.status(403).json({ success: false, message: vendeurId.erreur });
     }
 
     const { quantiteDisponible } = req.body;
@@ -308,7 +351,7 @@ export const mettreAJourStock = async (req, res) => {
     const produit = await Produit.findOneAndUpdate(
       { _id: req.params.id, vendeur: vendeurId },
       { quantiteDisponible: qte, enStock: qte > 0, statut },
-      {  returnDocument: "after", runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).lean();
 
     if (!produit) {
