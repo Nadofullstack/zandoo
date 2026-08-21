@@ -26,6 +26,7 @@ export interface ProduitResume {
   categorie: { _id: string; nom: string; slug: string };
   vendeur: { _id: string; nomEntreprise: string };
   enStock?: boolean;
+  statut?: 'en_stock' | 'faible' | 'en_rupture';
 }
 
 export interface ProduitDetail extends ProduitResume {

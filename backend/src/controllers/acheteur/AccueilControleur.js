@@ -18,18 +18,18 @@ export const getAccueil = async (_req, res) => {
         .limit(50)
         .lean(),
 
-      /* Nouveautés : produits en stock les plus récents */
-      Produit.find({ statut: 'en_stock', enStock: true })
-        .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur enStock')
+      /* Nouveautés : produits en stock et faible stock, les plus récents */
+      Produit.find({ statut: { $in: ['en_stock', 'faible'] } })
+        .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur enStock statut')
         .populate('categorie', 'nom slug')
         .populate('vendeur', 'nomEntreprise')
         .sort({ createdAt: -1 })
         .limit(100)
         .lean(),
 
-      /* Best sellers : produits en stock (logique à enrichir avec les commandes) */
-      Produit.find({ statut: 'en_stock', enStock: true })
-        .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur enStock')
+      /* Best sellers : produits en stock et faible stock */
+      Produit.find({ statut: { $in: ['en_stock', 'faible'] } })
+        .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur enStock statut')
         .populate('categorie', 'nom slug')
         .populate('vendeur', 'nomEntreprise')
         .sort({ createdAt: 1 })

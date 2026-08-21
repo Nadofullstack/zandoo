@@ -136,7 +136,9 @@ export const modifierStatutProduit = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Produit introuvable.' });
     }
 
-    produit.statut = statut;
+    produit.statut  = statut;
+    /* Synchronise le booléen enStock avec le statut */
+    produit.enStock = statut !== 'en_rupture';
 
     produit.historiqueStatut.push({
       statut,

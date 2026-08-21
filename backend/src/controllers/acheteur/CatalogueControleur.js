@@ -3,7 +3,6 @@ import Categorie from '../../models/Categorie.js';
 
 /** Projection publique — on n'expose pas les champs internes admin */
 const PROJECTION_PUBLIQUE = {
-  statut: 0,
   motifRejet: 0,
   notesAdmin: 0,
   historiqueStatut: 0,
@@ -26,8 +25,8 @@ export const getProduits = async (req, res) => {
       limite = 100,
     } = req.query;
 
-    /* Seuls les produits en stock sont visibles */
-    const filtre = { statut: 'en_stock' };
+    /* Les produits en stock et à stock faible sont visibles */
+    const filtre = { statut: { $in: ['en_stock', 'faible'] } };
 
     if (categorie) {
       /* Cherche aussi les produits des sous-catégories */
@@ -94,7 +93,7 @@ export const getProduits = async (req, res) => {
 export const getProduitParSlug = async (req, res) => {
   try {
     const produit = await Produit.findOne(
-      { slug: req.params.slug, statut: 'en_stock' },
+      { slug: req.params.slug, statut: { $in: ['en_stock', 'faible'] } },
       PROJECTION_PUBLIQUE
     )
       .populate('categorie', 'nom slug attributs')
@@ -107,7 +106,7 @@ export const getProduitParSlug = async (req, res) => {
 
     /* Produits similaires (même catégorie, jusqu'à 4) */
     const similaires = await Produit.find(
-      { statut: 'en_stock', enStock: true, categorie: produit.categorie._id, _id: { $ne: produit._id } },
+      { statut: { $in: ['en_stock', 'faible'] }, enStock: true, categorie: produit.categorie._id, _id: { $ne: produit._id } },
       PROJECTION_PUBLIQUE
     )
       .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur')
@@ -207,7 +206,7 @@ export const getProduitsParCategorie = async (req, res) => {
 
     const { tri = 'recent', prixMin, prixMax, page = 1, limite = 20 } = req.query;
 
-    const filtre = { statut: 'en_stock', categorie: { $in: ids } };
+    const filtre = { statut: { $in: ['en_stock', 'faible'] }, categorie: { $in: ids } };
     if (prixMin || prixMax) {
       filtre.prix = {};
       if (prixMin) filtre.prix.$gte = Number(prixMin);
@@ -259,7 +258,7 @@ export const rechercherProduits = async (req, res) => {
       return res.status(422).json({ success: false, message: 'Terme de recherche requis.' });
     }
 
-    const filtre = { statut: 'en_stock', $text: { $search: q.trim() } };
+    const filtre = { statut: { $in: ['en_stock', 'faible'] }, $text: { $search: q.trim() } };
     const saut = (Number(page) - 1) * Number(limite);
 
     const [produits, total] = await Promise.all([

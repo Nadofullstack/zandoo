@@ -155,6 +155,10 @@ export const creerProduit = async (req, res) => {
       }
     } catch (_) { /* Non bloquant */ }
 
+    /* Calcul automatique du statut selon la quantité */
+    const qte = Number(quantiteDisponible);
+    const statutCalcule = qte === 0 ? 'en_rupture' : qte <= 4 ? 'faible' : 'en_stock';
+
     const produit = await Produit.create({
       nom: nom.trim(),
       slug,
@@ -164,14 +168,14 @@ export const creerProduit = async (req, res) => {
       vendeur: vendeurId,
       prix: Number(prix),
       prixPromotionnel: prixPromotionnel ? Number(prixPromotionnel) : null,
-      quantiteDisponible: Number(quantiteDisponible),
-      enStock: Number(quantiteDisponible) > 0,
+      quantiteDisponible: qte,
+      enStock: qte > 0,
       photoCouverture: photoCouverture || null,
       variantesPhotos: variantesPhotos || [],
       video: video || null,
       variantes: variantes || [],
       attributs: attributs || [],
-      statut: statut || 'en_stock',
+      statut: statutCalcule,
     });
 
     return res.status(201).json({
@@ -244,7 +248,13 @@ export const modifierProduit = async (req, res) => {
     }
 
     if (req.body.quantiteDisponible !== undefined) {
-      produit.enStock = Number(req.body.quantiteDisponible) > 0;
+      const qteModif = Number(req.body.quantiteDisponible);
+      produit.enStock = qteModif > 0;
+      /* Recalcul automatique du statut si la quantité change,
+         sauf si le vendeur a explicitement fourni un statut dans la même requête */
+      if (req.body.statut === undefined) {
+        produit.statut = qteModif === 0 ? 'en_rupture' : qteModif <= 4 ? 'faible' : 'en_stock';
+      }
     }
 
     // Regénérer le slug si le nom a changé
@@ -310,7 +320,7 @@ export const modifierStatutProduit = async (req, res) => {
 
     const produit = await Produit.findOneAndUpdate(
       { _id: req.params.id, vendeur: vendeurId },
-      { statut, enStock: statut === 'en_stock' },
+      { statut, enStock: statut !== 'en_rupture' },
       { returnDocument: 'after', runValidators: true }
     ).populate('categorie', 'nom slug').lean();
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart, ImageOff } from 'lucide-react';
+import { Heart, ShoppingCart, ImageOff, AlertTriangle } from 'lucide-react';
 import type { ProduitResume } from '../../../types/acheteur';
 import { usePanier } from '../../../context/PanierContext';
 
@@ -21,6 +21,11 @@ export default function CarteProduit({ produit }: Props) {
     ? Math.round(((produit.prix - prixAffiche) / produit.prix) * 100)
     : 0;
 
+  /* Stock faible = disponible mais limité ; en_rupture = indisponible */
+  const estFaible    = produit.statut === 'faible';
+  const estRupture   = produit.statut === 'en_rupture';
+  const indisponible = estRupture;
+
   const handleAjouterAuPanier = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -30,7 +35,12 @@ export default function CarteProduit({ produit }: Props) {
   return (
     <Link 
       to={`/produit/${produit.slug}`}
-      className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/80 transition-all duration-300 flex flex-col cursor-pointer"
+      className={[
+        'group bg-white rounded-2xl overflow-hidden border transition-all duration-300 flex flex-col cursor-pointer',
+        indisponible
+          ? 'border-gray-200 opacity-60 grayscale'
+          : 'border-gray-100 hover:border-transparent hover:shadow-xl hover:shadow-gray-200/80',
+      ].join(' ')}
     >
       {/* Image */}
       <div className="relative overflow-hidden bg-gray-50 aspect-square">
@@ -38,7 +48,10 @@ export default function CarteProduit({ produit }: Props) {
           <img
             src={photo}
             alt={produit.nom}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={[
+              'w-full h-full object-cover transition-transform duration-500',
+              !indisponible && 'group-hover:scale-105',
+            ].join(' ')}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -46,26 +59,52 @@ export default function CarteProduit({ produit }: Props) {
           </div>
         )}
 
-        {/* Badge promo */}
-        {aPromotion && (
+        {/* Badge rupture */}
+        {indisponible && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <span className="bg-white text-gray-700 text-xs font-bold px-3 py-1 rounded-lg shadow">
+              Rupture de stock
+            </span>
+          </div>
+        )}
+
+        {/* Badge stock faible */}
+        {estFaible && !indisponible && (
+          <div className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+            <AlertTriangle size={10} aria-hidden />
+            Stock limité
+          </div>
+        )}
+
+        {/* Badge promo (ne s'affiche pas si rupture) */}
+        {aPromotion && !indisponible && !estFaible && (
           <div className="absolute top-3 left-3 bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
             -{remise}%
           </div>
         )}
 
+        {/* Badge promo sur stock faible (en bas pour ne pas chevaucher) */}
+        {aPromotion && estFaible && (
+          <div className="absolute top-10 left-3 bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+            -{remise}%
+          </div>
+        )}
+
         {/* Bouton favori */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            // TODO: Ajouter aux favoris
-          }}
-          className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-          title="Ajouter aux favoris"
-          aria-label="Ajouter aux favoris"
-        >
-          <Heart size={16} className="text-gray-400" />
-        </button>
+        {!indisponible && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // TODO: Ajouter aux favoris
+            }}
+            className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+            title="Ajouter aux favoris"
+            aria-label="Ajouter aux favoris"
+          >
+            <Heart size={16} className="text-gray-400" />
+          </button>
+        )}
       </div>
 
       {/* Contenu */}
@@ -96,10 +135,15 @@ export default function CarteProduit({ produit }: Props) {
           </div>
           <button
             onClick={handleAjouterAuPanier}
-            disabled={produit.enStock === false}
-            className="cursor-pointer w-9 h-9 bg-[#011023] group-hover:bg-[#FC7701] text-white rounded-xl flex items-center justify-center transition-all group-hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={produit.enStock === false ? 'Produit indisponible' : 'Ajouter au panier'}
-            aria-label={produit.enStock === false ? 'Produit indisponible' : 'Ajouter au panier'}
+            disabled={indisponible}
+            className={[
+              'cursor-pointer w-9 h-9 text-white rounded-xl flex items-center justify-center transition-all',
+              indisponible
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-[#011023] group-hover:bg-[#FC7701] group-hover:scale-105',
+            ].join(' ')}
+            title={indisponible ? 'Produit indisponible' : estFaible ? 'Ajouter au panier (stock limité)' : 'Ajouter au panier'}
+            aria-label={indisponible ? 'Produit indisponible' : 'Ajouter au panier'}
           >
             <ShoppingCart size={16} />
           </button>
