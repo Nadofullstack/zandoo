@@ -15,6 +15,7 @@ import routesAdminPageStatique from './src/routes/admin/AdminPageStatiqueRoutes.
 import routesAdminArticle     from './src/routes/admin/AdminArticleRoutes.js';
 import routesAdminLivreur     from './src/routes/admin/AdminLivreurRoutes.js';
 import routesAdminUpload      from './src/routes/admin/AdminCloudinaryRoutes.js';
+import routesAdminDashboard   from './src/routes/admin/AdminDashboardRoutes.js';
 import routesVendeur          from './src/routes/VendeurRoutes.js';
 import routesLivreur          from './src/routes/LivreurRoutes.js';
 import routesAcheteurAccueil  from './src/routes/acheteur/AcheteurAccueilRoutes.js';
@@ -54,6 +55,7 @@ app.use('/api/admin/pages-statiques',routesAdminPageStatique);
 app.use('/api/admin/articles',       routesAdminArticle);
 app.use('/api/admin/livreurs',       routesAdminLivreur);
 app.use('/api/admin/upload',         routesAdminUpload);
+app.use('/api/admin/dashboard',      routesAdminDashboard);
 app.use('/api/vendeur',              routesVendeur);
 app.use('/api/livreur',              routesLivreur);
 app.use('/api/acheteur/accueil',    routesAcheteurAccueil);

@@ -25,6 +25,7 @@ import ListeArticlesAdmin from './pages/admin/contenu/ListeArticlesAdmin';
 import EditeurArticleAdmin from './pages/admin/contenu/EditeurArticleAdmin';
 import ListeLivreursAdmin from './pages/admin/livreur/ListeLivreursAdmin';
 import ProfilLivreurAdmin from './pages/admin/livreur/ProfilLivreurAdmin';
+import PageDashboard from './pages/admin/PageDashboard';
 import TableauDeBordLivreurPage from './pages/livreur/TableauDeBordLivreurPage';
 import MesLivraisonsPage from './pages/livreur/MesLivraisonsPage';
 import HistoriqueLivraisonsPage from './pages/livreur/HistoriqueLivraisonsPage';
@@ -85,6 +86,7 @@ export default function App() {
 
         {/* ── Admin ──────────────────────────────────────────────────────── */}
         <Route path="/admin" element={<GardeRouteAdmin><TableauDeBordAdmin /></GardeRouteAdmin>} />
+        <Route path="/admin/dashboard" element={<GardeRouteAdmin><PageDashboard /></GardeRouteAdmin>} />
 
         {/* Utilisateurs */}
         <Route path="/admin/utilisateurs"     element={<GardeRouteAdmin><ListeUtilisateursAdmin /></GardeRouteAdmin>} />

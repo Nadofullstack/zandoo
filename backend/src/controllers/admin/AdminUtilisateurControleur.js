@@ -1,4 +1,9 @@
 import User from '../../models/User.js';
+import {
+  getEvolutionUtilisateurs,
+  getStatistiquesByRole,
+  getComparaisonPeriodes,
+} from '../../services/dashboardStatsService.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Helpers
@@ -245,3 +250,153 @@ export const supprimerUtilisateur = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GET /api/admin/dashboard/graphiques-temporels?periode=mois
+   Récupère l'évolution temporelle des utilisateurs pour les graphiques
+───────────────────────────────────────────────────────────────────────────── */
+export const getGraphiquesTemporelles = async (req, res) => {
+  try {
+    const { periode = 'mois' } = req.query;
+    const perioden = ['jour', 'semaine', 'mois', 'annee'];
+
+    if (!perioden.includes(periode)) {
+      return res.status(422).json({
+        success: false,
+        message: `Période invalide. Valeurs acceptées : ${perioden.join(', ')}.`,
+      });
+    }
+
+    const donnees = await getEvolutionUtilisateurs(periode);
+
+    /* Formater les données pour Chart.js */
+    const labels = donnees.map((d) => d._id);
+    const datasets = [
+      {
+        label: 'Acheteurs',
+        data: donnees.map((d) => {
+          const role = d.roles.find((r) => r.role === 'acheteur');
+          return role ? role.count : 0;
+        }),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Vendeurs',
+        data: donnees.map((d) => {
+          const role = d.roles.find((r) => r.role === 'vendeur');
+          return role ? role.count : 0;
+        }),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Livreurs',
+        data: donnees.map((d) => {
+          const role = d.roles.find((r) => r.role === 'livreur');
+          return role ? role.count : 0;
+        }),
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+    ];
+
+    return res.status(200).json({
+      success: true,
+      periode,
+      data: { labels, datasets },
+    });
+  } catch (erreur) {
+    console.error('Erreur getGraphiquesTemporelles:', erreur);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GET /api/admin/dashboard/stats-par-role?periode=mois
+   Récupère les statistiques par rôle pour un graphique en camembert
+───────────────────────────────────────────────────────────────────────────── */
+export const getStatistiquesParRoleCtrl = async (req, res) => {
+  try {
+    const { periode = 'mois' } = req.query;
+    const perioden = ['jour', 'semaine', 'mois', 'annee'];
+
+    if (!perioden.includes(periode)) {
+      return res.status(422).json({
+        success: false,
+        message: `Période invalide. Valeurs acceptées : ${perioden.join(', ')}.`,
+      });
+    }
+
+    const stats = await getStatistiquesByRole(periode);
+
+    /* Formater les données pour un graphique en camembert */
+    const labels = stats.map((s) => {
+      const roleMap = {
+        acheteur: 'Acheteurs',
+        vendeur: 'Vendeurs',
+        livreur: 'Livreurs',
+        admin: 'Administrateurs',
+      };
+      return roleMap[s._id] || s._id;
+    });
+
+    const data = stats.map((s) => s.count);
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+
+    return res.status(200).json({
+      success: true,
+      periode,
+      data: {
+        labels,
+        datasets: [
+          {
+            data,
+            backgroundColor: colors.slice(0, stats.length),
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          },
+        ],
+      },
+    });
+  } catch (erreur) {
+    console.error('Erreur getStatistiquesParRoleCtrl:', erreur);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GET /api/admin/dashboard/comparaison?periode=mois
+   Récupère la comparaison entre la période actuelle et la précédente
+───────────────────────────────────────────────────────────────────────────── */
+export const getComparaisonPeriodeCtrl = async (req, res) => {
+  try {
+    const { periode = 'mois' } = req.query;
+    const perioden = ['jour', 'semaine', 'mois', 'annee'];
+
+    if (!perioden.includes(periode)) {
+      return res.status(422).json({
+        success: false,
+        message: `Période invalide. Valeurs acceptées : ${perioden.join(', ')}.`,
+      });
+    }
+
+    const comparaison = await getComparaisonPeriodes(periode);
+
+    return res.status(200).json({
+      success: true,
+      periode,
+      data: comparaison,
+    });
+  } catch (erreur) {
+    console.error('Erreur getComparaisonPeriodeCtrl:', erreur);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
