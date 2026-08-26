@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Store, LayoutDashboard, Package, Tag, Users,
-  ShoppingCart, MessageSquare, Megaphone, FileText, BookOpen, Truck, LogOut, BarChart2,
+  ShoppingCart, MessageSquare, Megaphone, FileText, BookOpen, Truck, LogOut,
 } from 'lucide-react';
 import logo from '../../../assets/logo.jpg';
 import { lireSession, logoutUser, supprimerSession } from '../../../services/auth/authService';
@@ -20,7 +20,6 @@ interface SidebarAdminProps {
 
 const LIENS_NAV: LienNav[] = [
   { vers: '/admin',                 libelle: 'Tableau de bord', icone: LayoutDashboard, exact: true },
-  { vers: '/admin/dashboard',       libelle: 'Statistiques',    icone: BarChart2        },
   { vers: '/admin/utilisateurs',    libelle: 'Utilisateurs',    icone: Users            },
   { vers: '/admin/vendeurs',        libelle: 'Vendeurs',        icone: Store            },
   { vers: '/admin/livreurs',        libelle: 'Livreurs',        icone: Truck            },

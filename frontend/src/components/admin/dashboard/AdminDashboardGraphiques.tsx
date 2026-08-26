@@ -29,78 +29,53 @@ const AdminDashboardGraphiques: React.FC = () => {
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-      {/* Header avec titre et sélecteur de période */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-              📊 Dashboard Utilisateurs
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Suivi en temps réel des inscriptions et de la répartition des utilisateurs
-            </p>
-          </div>
+    <div className="w-full">
+      {/* En-tête de section avec sélecteur de période */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <h2 className="text-xs font-semibold text-[#74777d] uppercase tracking-wider">
+            Utilisateurs
+          </h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Inscriptions et répartition par rôle
+          </p>
+        </div>
 
-          {/* Sélecteur de période */}
-          <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-            <Calendar className="w-5 h-5 text-gray-600 ml-3" />
-            <select
-              value={periode}
-              onChange={(e) => setPeriode(e.target.value as Periode)}
-              className="px-4 py-2 bg-transparent text-gray-700 font-semibold focus:outline-none cursor-pointer"
-            >
-              {periodes.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Sélecteur de période */}
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-sm self-start sm:self-auto">
+          <Calendar className="w-4 h-4 text-gray-400 ml-3" />
+          <select
+            value={periode}
+            onChange={(e) => setPeriode(e.target.value as Periode)}
+            className="pr-3 py-2 bg-transparent text-sm text-gray-700 font-medium focus:outline-none cursor-pointer"
+            aria-label="Sélectionner la période"
+          >
+            {periodes.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Statistiques en cartes */}
-      <section className="mb-8">
+      {/* Cartes statistiques */}
+      <div className="mb-6">
         <StatistiquesCards periode={periode} />
-      </section>
+      </div>
 
-      {/* Section des graphiques */}
-      <section className="space-y-8 mb-8">
-        {/* Graphique en courbe */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Graphiques */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Courbe d'évolution (occupe 2/3 en xl) */}
+        <div className="xl:col-span-2">
           <LineChartUtilisateurs periode={periode} />
         </div>
 
-        {/* Graphique en camembert */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Camembert répartition (1/3 en xl) */}
+        <div className="xl:col-span-1">
           <PieChartRoles periode={periode} />
         </div>
-      </section>
-
-      {/* Footer avec informations */}
-      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 md:p-8">
-        <div className="grid md:grid-cols-3 gap-6">
-          <div>
-            <h3 className="font-bold text-gray-900 mb-2">🔒 Sécurité</h3>
-            <p className="text-sm text-gray-600">
-              Toutes les données sont chiffrées et accessibles uniquement aux administrateurs authentifiés.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 mb-2">📈 Analyse</h3>
-            <p className="text-sm text-gray-600">
-              Visualisez les tendances d'inscription et analysez la répartition des utilisateurs par rôle.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 mb-2">⚡ Performance</h3>
-            <p className="text-sm text-gray-600">
-              Graphiques optimisés et données actualisées automatiquement pour une gestion en temps réel.
-            </p>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 };
