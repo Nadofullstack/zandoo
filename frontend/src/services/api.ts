@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { supprimerSession } from './auth/authService';
+import { NavigationService } from './navigationService';
 
 /**
  * Instance axios partagée par tous les services.
@@ -12,10 +14,22 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-/* Intercepteur de réponse — normalise le message d'erreur */
+/* Intercepteur de réponse
+ * - 401 : token expiré ou invalide → déconnexion immédiate + redirect /connexion
+ * - autres erreurs : normalise le message
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      // Supprime la session locale (le cookie httpOnly sera vidé par le serveur
+      // lors du prochain appel à /auth/logout, ou expiration naturelle).
+      supprimerSession();
+      // Redirige vers la page de connexion sans laisser l'utilisateur sur la
+      // page protégée. On utilise replace pour ne pas polluer l'historique.
+      NavigationService.navigate('/connexion', { replace: true });
+    }
+
     const message =
       error.response?.data?.message ||
       error.message ||

@@ -1,15 +1,29 @@
 import { useState } from 'react';
-import { Eye, Trash2, Loader2, CheckCircle2 } from 'lucide-react';
-import type { Livreur } from '../../../types/admin';
+import { Eye, UserCheck, Ban, Trash2, Loader2, Mail, CheckCircle2 } from 'lucide-react';
+import type { LivreurVendeur } from '../../../types/vendeur/livreur';
 import BadgeStatutLivreur from './BadgeStatutLivreur';
-import ModalConfirmation from '../modal/ModalConfirmation';
+import ModalConfirmation from '../../admin/modal/ModalConfirmation';
 import ModalDetailLivreur from './ModalDetailLivreur';
 
 interface Props {
-  livreurs: Livreur[];
+  livreurs: LivreurVendeur[];
   chargementAction: string | null;
+  onActiver: (id: string, raison?: string) => void;
+  onSuspendre: (id: string, raison?: string) => void;
   onSupprimer: (id: string) => void;
+  onRenvoyerInvitation: (id: string) => void;
 }
+
+type TypeModal = 'activer' | 'suspendre' | 'supprimer' | 'renvoi';
+
+interface EtatModal {
+  ouvert: boolean;
+  type: TypeModal;
+  id: string;
+  nom: string;
+}
+
+const MODAL_INIT: EtatModal = { ouvert: false, type: 'activer', id: '', nom: '' };
 
 const LIBELLE_VEHICULE: Record<string, string> = {
   moto:        'Moto',
@@ -19,7 +33,7 @@ const LIBELLE_VEHICULE: Record<string, string> = {
   autre:       'Autre',
 };
 
-function AvatarLivreur({ livreur }: { livreur: Livreur }) {
+function AvatarLivreur({ livreur }: { livreur: LivreurVendeur }) {
   if (livreur.utilisateur?.avatar) {
     return (
       <img
@@ -45,10 +59,25 @@ function AvatarLivreur({ livreur }: { livreur: Livreur }) {
 export default function TableauLivreurs({
   livreurs,
   chargementAction,
+  onActiver,
+  onSuspendre,
   onSupprimer,
+  onRenvoyerInvitation,
 }: Props) {
-  const [suppressionId, setSuppressionId] = useState<{ id: string; nom: string } | null>(null);
+  const [modal, setModal]               = useState<EtatModal>(MODAL_INIT);
   const [livreurDetailId, setLivreurDetailId] = useState<string | null>(null);
+
+  const ouvrir = (type: TypeModal, l: LivreurVendeur) =>
+    setModal({ ouvert: true, type, id: l._id, nom: l.utilisateur?.fullName ?? '—' });
+  const fermer = () => setModal(MODAL_INIT);
+
+  const handleConfirmer = (raison?: string) => {
+    if (modal.type === 'activer')   onActiver(modal.id, raison);
+    if (modal.type === 'suspendre') onSuspendre(modal.id, raison);
+    if (modal.type === 'supprimer') onSupprimer(modal.id);
+    if (modal.type === 'renvoi')    onRenvoyerInvitation(modal.id);
+    fermer();
+  };
 
   if (livreurs.length === 0) {
     return (
@@ -61,10 +90,10 @@ export default function TableauLivreurs({
   return (
     <>
       <div className="overflow-x-auto rounded-xl border border-gray-200">
-        <table className="w-full text-sm" aria-label="Liste des livreurs">
+        <table className="w-full text-sm" aria-label="Liste de mes livreurs">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              {['Livreur', 'Boutique', 'Contact', 'Véhicule', 'Ville', 'Profil', 'Statut', 'Inscription', 'Actions'].map((h) => (
+              {['Livreur', 'Contact', 'Véhicule', 'Ville', 'Profil', 'Statut', 'Ajouté le', 'Actions'].map((h) => (
                 <th
                   key={h}
                   className="text-left px-4 py-3 text-xs font-semibold text-[#74777d] uppercase tracking-wider whitespace-nowrap"
@@ -90,11 +119,6 @@ export default function TableauLivreurs({
                     </div>
                   </td>
 
-                  {/* Boutique du vendeur créateur */}
-                  <td className="px-4 py-3.5 text-xs text-primary">
-                    {(l as any).creerPar?.nomEntreprise ?? '—'}
-                  </td>
-
                   {/* Contact */}
                   <td className="px-4 py-3.5">
                     <p className="text-primary text-xs truncate max-w-[150px]">{l.utilisateur?.email ?? '—'}</p>
@@ -112,7 +136,7 @@ export default function TableauLivreurs({
                   {/* Ville */}
                   <td className="px-4 py-3.5 text-xs text-primary">{l.villeService || '—'}</td>
 
-                  {/* Profil complet */}
+                  {/* Profil */}
                   <td className="px-4 py-3.5">
                     {l.profilComplete ? (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
@@ -124,40 +148,46 @@ export default function TableauLivreurs({
                   </td>
 
                   {/* Statut */}
-                  <td className="px-4 py-3.5">
-                    <BadgeStatutLivreur statut={l.statut} />
-                  </td>
+                  <td className="px-4 py-3.5"><BadgeStatutLivreur statut={l.statut} /></td>
 
-                  {/* Inscription */}
+                  {/* Date */}
                   <td className="px-4 py-3.5 text-xs text-[#74777d] whitespace-nowrap">
                     {new Date(l.createdAt).toLocaleDateString('fr-FR', {
                       day: '2-digit', month: 'short', year: 'numeric',
                     })}
                   </td>
 
-                  {/* Actions : Voir + Supprimer uniquement */}
+                  {/* Actions */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1">
                       {enCours ? (
                         <Loader2 size={17} className="animate-spin text-accent" />
                       ) : (
                         <>
-                          <button
-                            onClick={() => setLivreurDetailId(l._id)}
-                            title="Voir les détails"
-                            aria-label={`Voir les détails de ${l.utilisateur?.fullName ?? 'ce livreur'}`}
-                            className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
-                          >
+                          <button onClick={() => setLivreurDetailId(l._id)} title="Voir les détails"
+                            className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors">
                             <Eye size={16} />
                           </button>
-                          <button
-                            onClick={() =>
-                              setSuppressionId({ id: l._id, nom: l.utilisateur?.fullName ?? '—' })
-                            }
-                            title="Supprimer"
-                            aria-label={`Supprimer ${l.utilisateur?.fullName ?? 'ce livreur'}`}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                          >
+                          {l.statut === 'suspendu' && (
+                            <button onClick={() => ouvrir('activer', l)} title="Activer"
+                              className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors">
+                              <UserCheck size={16} />
+                            </button>
+                          )}
+                          {l.statut !== 'suspendu' && (
+                            <button onClick={() => ouvrir('suspendre', l)} title="Suspendre"
+                              className="p-1.5 rounded-lg text-orange-500 hover:bg-orange-50 transition-colors">
+                              <Ban size={16} />
+                            </button>
+                          )}
+                          {!l.profilComplete && (
+                            <button onClick={() => ouvrir('renvoi', l)} title="Renvoyer l'invitation"
+                              className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors">
+                              <Mail size={16} />
+                            </button>
+                          )}
+                          <button onClick={() => ouvrir('supprimer', l)} title="Supprimer"
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
                             <Trash2 size={16} />
                           </button>
                         </>
@@ -171,23 +201,38 @@ export default function TableauLivreurs({
         </table>
       </div>
 
-      {/* Modal de confirmation de suppression */}
       <ModalConfirmation
-        ouvert={!!suppressionId}
-        titre="Supprimer ce livreur ?"
-        description={`Le compte de « ${suppressionId?.nom ?? ''} » sera supprimé définitivement. Cette action est irréversible.`}
-        labelConfirmer="Supprimer"
-        variante="danger"
-        avecRaison={false}
+        ouvert={modal.ouvert}
+        titre={
+          modal.type === 'activer'   ? 'Activer ce livreur ?'      :
+          modal.type === 'suspendre' ? 'Suspendre ce livreur ?'    :
+          modal.type === 'renvoi'    ? "Renvoyer l'invitation ?"   :
+                                       'Supprimer définitivement ?'
+        }
+        description={
+          modal.type === 'activer'   ? `« ${modal.nom} » pourra à nouveau livrer.`                                                                          :
+          modal.type === 'suspendre' ? `« ${modal.nom} » ne pourra plus accéder à la plateforme.`                                                            :
+          modal.type === 'renvoi'    ? `Un nouvel email d'invitation sera envoyé à « ${modal.nom} » avec un nouveau mot de passe temporaire.`               :
+                                       `Le compte de « ${modal.nom} » sera supprimé définitivement. Cette action est irréversible.`
+        }
+        labelConfirmer={
+          modal.type === 'activer'   ? 'Activer'   :
+          modal.type === 'suspendre' ? 'Suspendre' :
+          modal.type === 'renvoi'    ? 'Renvoyer'  :
+                                       'Supprimer'
+        }
+        variante={
+          modal.type === 'activer' ? 'success' :
+          modal.type === 'renvoi'  ? 'warning'  :
+                                      'danger'
+        }
+        avecRaison={modal.type === 'suspendre'}
+        labelRaison="Raison de la suspension (optionnel)"
         chargement={!!chargementAction}
-        onConfirmer={() => {
-          if (suppressionId) onSupprimer(suppressionId.id);
-          setSuppressionId(null);
-        }}
-        onAnnuler={() => setSuppressionId(null)}
+        onConfirmer={handleConfirmer}
+        onAnnuler={fermer}
       />
 
-      {/* Modal de détails (lecture seule) */}
       <ModalDetailLivreur
         livreurId={livreurDetailId}
         onFermer={() => setLivreurDetailId(null)}

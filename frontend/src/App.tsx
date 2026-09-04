@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { NavigationService } from './services/navigationService';
 import { PanierProvider } from './context/PanierContext';
 import AccueilPage from './pages/acheteur/AccueilPage';
 import CataloguePage from './pages/acheteur/CataloguePage';
@@ -23,8 +25,8 @@ import FormulairePubliciteAdmin from './pages/admin/publicite/FormulairePublicit
 import GestionPagesStatiquesAdmin from './pages/admin/contenu/GestionPagesStatiquesAdmin';
 import ListeArticlesAdmin from './pages/admin/contenu/ListeArticlesAdmin';
 import EditeurArticleAdmin from './pages/admin/contenu/EditeurArticleAdmin';
-import ListeLivreursAdmin from './pages/admin/livreur/ListeLivreursAdmin';
 import ProfilLivreurAdmin from './pages/admin/livreur/ProfilLivreurAdmin';
+import ListeLivreursAdmin from './pages/admin/livreur/ListeLivreursAdmin';
 import PageDashboard from './pages/admin/PageDashboard';
 import TableauDeBordLivreurPage from './pages/livreur/TableauDeBordLivreurPage';
 import MesLivraisonsPage from './pages/livreur/MesLivraisonsPage';
@@ -42,10 +44,26 @@ import BoutiquePage from './pages/vendeur/BoutiquePage';
 import MesProduitsPage from './pages/vendeur/MesProduitsPage';
 import MesCommandesPage from './pages/vendeur/MesCommandesPage';
 import PromotionsPage from './pages/vendeur/PromotionsPage';
+import MesLivreursPage from './pages/vendeur/livreur/MesLivreursPage';
+import ProfilLivreurVendeurPage from './pages/vendeur/livreur/ProfilLivreurVendeurPage';
+
+/**
+ * Composant interne monté sous <BrowserRouter> pour injecter
+ * la fonction navigate dans NavigationService.
+ * Doit rester à l'intérieur du routeur.
+ */
+function NavigationInjector() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    NavigationService.setNavigate(navigate);
+  }, [navigate]);
+  return null;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
+      <NavigationInjector />
       <PanierProvider>
         <Routes>
         {/* ── Acheteur ───────────────────────────────────────────────────────── */}
@@ -72,6 +90,8 @@ export default function App() {
         <Route path="/vendeur/produits"         element={<GardeVendeur><MesProduitsPage /></GardeVendeur>} />
         <Route path="/vendeur/commandes"        element={<GardeVendeur><MesCommandesPage /></GardeVendeur>} />
         <Route path="/vendeur/promotions"       element={<GardeVendeur><PromotionsPage /></GardeVendeur>} />
+        <Route path="/vendeur/livreurs"         element={<GardeVendeur><MesLivreursPage /></GardeVendeur>} />
+        <Route path="/vendeur/livreurs/:id"     element={<GardeVendeur><ProfilLivreurVendeurPage /></GardeVendeur>} />
 
         {/* ── Livreur — flux d'activation (public, token dans l'URL) ─────── */}
         <Route path="/livreur/activation/:token"                          element={<ActivationPage />} />

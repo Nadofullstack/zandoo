@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, User, Mail, Phone, Truck, MapPin,
-  UserCheck, Ban, RotateCcw, CheckCircle2,
+  Trash2, CheckCircle2,
 } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import BadgeStatutLivreur from '../../../components/admin/livreurs/BadgeStatutLivreur';
@@ -10,6 +10,7 @@ import HistoriqueStatut from '../../../components/admin/vendeurs/HistoriqueStatu
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';
 import { useProfilLivreur } from '../../../hooks/admin/useProfilLivreur';
+import { supprimerLivreur } from '../../../services/admin/adminLivreurService';
 
 const LIBELLE_VEHICULE: Record<string, string> = {
   moto:        'Moto',
@@ -19,29 +20,55 @@ const LIBELLE_VEHICULE: Record<string, string> = {
   autre:       'Autre',
 };
 
+interface InfoLigneProps {
+  libelle: string;
+  valeur: string;
+  icone?: React.ComponentType<{ size?: number; className?: string }>;
+  spanFull?: boolean;
+  mono?: boolean;
+}
+
+function InfoLigne({ libelle, valeur, spanFull, mono }: InfoLigneProps) {
+  return (
+    <div className={spanFull ? 'sm:col-span-2' : ''}>
+      <dt className="text-xs font-semibold text-[#74777d] uppercase tracking-wider">{libelle}</dt>
+      <dd className={`mt-0.5 text-primary font-medium ${mono ? 'font-mono tracking-wider' : ''}`}>
+        {valeur}
+      </dd>
+    </div>
+  );
+}
+
 /**
- * Page de profil détaillé d'un livreur.
- * Informations personnelles, véhicule, zone de livraison, historique, notes admin.
+ * Page de profil détaillé d'un livreur — espace admin.
+ * Actions disponibles : voir les détails, supprimer le compte.
  */
 export default function ProfilLivreurAdmin() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  const {
-    livreur,
-    chargement,
-    chargementAction,
-    erreur,
-    messageSucces,
-    changerStatut,
-    renvoyerInvitation,
-  } = useProfilLivreur(id ?? '');
+  const { livreur, chargement, erreur } = useProfilLivreur(id ?? '');
 
-  const [modal, setModal] = useState<{
-    ouvert: boolean;
-    type: 'activer' | 'suspendre' | 'renvoi';
-  }>({ ouvert: false, type: 'activer' });
+  const [modalSuppression, setModalSuppression] = useState(false);
+  const [chargementSuppression, setChargementSuppression] = useState(false);
+  const [erreurSuppression, setErreurSuppression]         = useState<string | null>(null);
 
-  /* ── Skeleton chargement ───────────────────────────────────── */
+  const handleSupprimer = async () => {
+    if (!id) return;
+    setChargementSuppression(true);
+    setErreurSuppression(null);
+    try {
+      await supprimerLivreur(id);
+      navigate('/admin/livreurs', { replace: true });
+    } catch (err) {
+      setErreurSuppression(err instanceof Error ? err.message : 'Erreur lors de la suppression.');
+      setModalSuppression(false);
+    } finally {
+      setChargementSuppression(false);
+    }
+  };
+
+  /* ── Skeleton ─────────────────────────────────────────────── */
   if (chargement) {
     return (
       <DispositionAdmin>
@@ -55,7 +82,6 @@ export default function ProfilLivreurAdmin() {
             </div>
             <div className="space-y-4">
               <div className="h-40 rounded-xl bg-gray-200" />
-              <div className="h-40 rounded-xl bg-gray-200" />
             </div>
           </div>
         </div>
@@ -63,7 +89,7 @@ export default function ProfilLivreurAdmin() {
     );
   }
 
-  /* ── Introuvable ───────────────────────────────────────────── */
+  /* ── Introuvable ──────────────────────────────────────────── */
   if (!livreur) {
     return (
       <DispositionAdmin>
@@ -71,14 +97,6 @@ export default function ProfilLivreurAdmin() {
       </DispositionAdmin>
     );
   }
-
-  /* ── Confirmation modale ───────────────────────────────────── */
-  const handleConfirmerModal = (raison?: string) => {
-    if (modal.type === 'activer')   changerStatut('actif',    raison);
-    if (modal.type === 'suspendre') changerStatut('suspendu', raison);
-    if (modal.type === 'renvoi')    renvoyerInvitation();
-    setModal((prev) => ({ ...prev, ouvert: false }));
-  };
 
   const user       = livreur.utilisateur;
   const nomComplet = user?.fullName ?? '—';
@@ -96,14 +114,10 @@ export default function ProfilLivreurAdmin() {
       </Link>
 
       {/* Alertes */}
-      {erreur && (
-        <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>
-      )}
-      {messageSucces && (
-        <div className="mb-4"><Alert variant="success">{messageSucces}</Alert></div>
-      )}
+      {erreur           && <div className="mb-4"><Alert variant="error">{erreur}</Alert></div>}
+      {erreurSuppression && <div className="mb-4"><Alert variant="error">{erreurSuppression}</Alert></div>}
 
-      {/* ── En-tête profil ─────────────────────────────────────── */}
+      {/* ── En-tête profil ───────────────────────────────────── */}
       <div className="bg-surface border border-gray-200 rounded-2xl p-6 mb-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
@@ -142,46 +156,31 @@ export default function ProfilLivreurAdmin() {
                   day: '2-digit', month: 'long', year: 'numeric',
                 })}
               </p>
+              {/* Boutique du vendeur créateur */}
+              {(livreur as any).creerPar?.nomEntreprise && (
+                <p className="text-xs text-[#74777d] mt-0.5">
+                  Créé par la boutique{' '}
+                  <span className="font-semibold text-primary">
+                    {(livreur as any).creerPar.nomEntreprise}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Boutons d'action */}
-          <div className="flex flex-wrap gap-2 shrink-0">
-            {livreur.statut === 'suspendu' && (
-              <button
-                onClick={() => setModal({ ouvert: true, type: 'activer' })}
-                disabled={chargementAction}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-              >
-                <UserCheck size={15} aria-hidden="true" />
-                Activer
-              </button>
-            )}
-            {livreur.statut !== 'suspendu' && (
-              <button
-                onClick={() => setModal({ ouvert: true, type: 'suspendre' })}
-                disabled={chargementAction}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
-              >
-                <Ban size={15} aria-hidden="true" />
-                Suspendre
-              </button>
-            )}
-            {!livreur.profilComplete && (
-              <button
-                onClick={() => setModal({ ouvert: true, type: 'renvoi' })}
-                disabled={chargementAction}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-300 text-blue-700 bg-blue-50 text-sm font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50"
-              >
-                <RotateCcw size={15} aria-hidden="true" />
-                Renvoyer l'invitation
-              </button>
-            )}
-          </div>
+          {/* Bouton supprimer uniquement */}
+          <button
+            onClick={() => setModalSuppression(true)}
+            disabled={chargementSuppression}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 shrink-0"
+          >
+            <Trash2 size={15} aria-hidden="true" />
+            Supprimer ce livreur
+          </button>
         </div>
       </div>
 
-      {/* ── Grille principale ──────────────────────────────────── */}
+      {/* ── Grille principale ────────────────────────────────── */}
       <div className="grid lg:grid-cols-3 gap-5">
 
         {/* Colonne principale */}
@@ -194,17 +193,11 @@ export default function ProfilLivreurAdmin() {
               Compte utilisateur
             </h2>
             <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-              <InfoLigne libelle="Nom complet" valeur={user?.fullName ?? '—'} />
-              <InfoLigne libelle="Email" valeur={user?.email ?? '—'} icone={Mail} />
-              <InfoLigne libelle="Téléphone" valeur={livreur.telephone || user?.phone || '—'} icone={Phone} />
-              <InfoLigne
-                libelle="Email vérifié"
-                valeur={user?.isVerified ? 'Oui' : 'Non'}
-              />
-              <InfoLigne
-                libelle="Compte actif"
-                valeur={user?.isActive ? 'Oui' : 'Non'}
-              />
+              <InfoLigne libelle="Nom complet"   valeur={user?.fullName  ?? '—'} icone={User}  />
+              <InfoLigne libelle="Email"         valeur={user?.email     ?? '—'} icone={Mail}  />
+              <InfoLigne libelle="Téléphone"     valeur={livreur.telephone || user?.phone || '—'} icone={Phone} />
+              <InfoLigne libelle="Email vérifié" valeur={user?.isVerified ? 'Oui' : 'Non'} />
+              <InfoLigne libelle="Compte actif"  valeur={user?.isActive  ? 'Oui' : 'Non'} />
             </dl>
           </section>
 
@@ -212,30 +205,15 @@ export default function ProfilLivreurAdmin() {
           <section className="bg-surface border border-gray-200 rounded-xl p-5">
             <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
               <Truck size={15} className="text-accent" aria-hidden="true" />
-              Véhicule & zone de livraison
+              Véhicule &amp; zone de livraison
             </h2>
 
             {livreur.profilComplete ? (
               <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                <InfoLigne
-                  libelle="Type de véhicule"
-                  valeur={livreur.typeVehicule ? LIBELLE_VEHICULE[livreur.typeVehicule] : '—'}
-                />
-                <InfoLigne
-                  libelle="Numéro de plaque"
-                  valeur={livreur.numeroplaque ?? '—'}
-                  mono
-                />
-                <InfoLigne
-                  libelle="Ville de service"
-                  valeur={livreur.villeService ?? '—'}
-                  icone={MapPin}
-                />
-                <InfoLigne
-                  libelle="Zone de livraison"
-                  valeur={livreur.zonelivraison ?? '—'}
-                  spanFull
-                />
+                <InfoLigne libelle="Type de véhicule" valeur={livreur.typeVehicule ? LIBELLE_VEHICULE[livreur.typeVehicule] : '—'} />
+                <InfoLigne libelle="Numéro de plaque" valeur={livreur.numeroplaque ?? '—'} mono />
+                <InfoLigne libelle="Ville de service" valeur={livreur.villeService  ?? '—'} icone={MapPin} />
+                <InfoLigne libelle="Zone de livraison" valeur={livreur.zonelivraison ?? '—'} spanFull />
               </dl>
             ) : (
               <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
@@ -249,67 +227,27 @@ export default function ProfilLivreurAdmin() {
               </div>
             )}
           </section>
-
         </div>
 
-        {/* Colonne latérale */}
+        {/* Colonne latérale — historique des statuts */}
         <div className="space-y-5">
           <HistoriqueStatut historique={livreur.historiqueStatut} />
         </div>
-
       </div>
 
-      {/* ── Modal confirmation ─────────────────────────────────── */}
+      {/* ── Modal confirmation suppression ──────────────────── */}
       <ModalConfirmation
-        ouvert={modal.ouvert}
-        titre={
-          modal.type === 'activer'   ? 'Activer ce livreur ?'            :
-          modal.type === 'suspendre' ? 'Suspendre ce livreur ?'          :
-                                       'Renvoyer l\'invitation ?'
-        }
-        description={
-          modal.type === 'activer'   ? `« ${nomComplet} » pourra à nouveau effectuer des livraisons.` :
-          modal.type === 'suspendre' ? `« ${nomComplet} » ne pourra plus accéder à la plateforme.`    :
-                                       `Un nouvel email d'invitation sera envoyé à « ${user?.email} » avec de nouveaux identifiants temporaires.`
-        }
-        labelConfirmer={
-          modal.type === 'activer'   ? 'Activer'   :
-          modal.type === 'suspendre' ? 'Suspendre' :
-                                       'Renvoyer'
-        }
-        variante={
-          modal.type === 'activer' ? 'success' :
-          modal.type === 'renvoi'  ? 'warning'  :
-                                      'danger'
-        }
-        avecRaison={modal.type === 'suspendre'}
-        labelRaison="Raison de la suspension (optionnel)"
-        chargement={chargementAction}
-        onConfirmer={handleConfirmerModal}
-        onAnnuler={() => setModal((prev) => ({ ...prev, ouvert: false }))}
+        ouvert={modalSuppression}
+        titre="Supprimer ce livreur ?"
+        description={`Le compte de « ${nomComplet} » sera supprimé définitivement. Cette action est irréversible.`}
+        labelConfirmer="Supprimer définitivement"
+        variante="danger"
+        avecRaison={false}
+        chargement={chargementSuppression}
+        onConfirmer={handleSupprimer}
+        onAnnuler={() => setModalSuppression(false)}
       />
 
     </DispositionAdmin>
-  );
-}
-
-/* ── Composant local : ligne de définition ────────────────────────────────── */
-
-interface InfoLigneProps {
-  libelle: string;
-  valeur: string;
-  icone?: typeof Mail;
-  spanFull?: boolean;
-  mono?: boolean;
-}
-
-function InfoLigne({ libelle, valeur, spanFull, mono }: InfoLigneProps) {
-  return (
-    <div className={spanFull ? 'sm:col-span-2' : ''}>
-      <dt className="text-xs font-semibold text-[#74777d] uppercase tracking-wider">{libelle}</dt>
-      <dd className={`mt-0.5 text-primary font-medium ${mono ? 'font-mono tracking-wider' : ''}`}>
-        {valeur}
-      </dd>
-    </div>
   );
 }

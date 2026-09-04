@@ -15,6 +15,16 @@ const livreurSchema = new mongoose.Schema(
       unique: true,
     },
 
+    /**
+     * Référence vers le Vendeur qui a créé ce livreur.
+     * null = créé par l'admin (ancien flow, conservé pour compatibilité).
+     */
+    creerPar: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Vendeur',
+      default: null,
+    },
+
     /* ── Informations véhicule ─────────────────────────────────── */
     typeVehicule: {
       type: String,

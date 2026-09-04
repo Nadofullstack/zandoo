@@ -3,6 +3,9 @@ import {
   getGraphiquesTemporelles,
   getStatistiquesParRoleCtrl,
   getComparaisonPeriodeCtrl,
+  getEvolutionVentesCtrl,
+  getKpisVentesCtrl,
+  getStatutsCommandesCtrl,
 } from '../../controllers/admin/AdminUtilisateurControleur.js';
 import { protect, requireRole } from '../../middlewars/authentification.js';
 
@@ -57,6 +60,25 @@ routeur.get('/stats-par-role', getStatistiquesParRoleCtrl);
  *   }
  * }
  */
-routeur.get('/comparaison', getComparaisonPeriodeCtrl);
+routeur.get('/comparaison',           getComparaisonPeriodeCtrl);
+
+/**
+ * ── VENTES ──────────────────────────────────────────────────────────────────
+ *
+ * GET /api/admin/dashboard/evolution-ventes?periode=mois
+ *   Évolution temporelle du CA + nb commandes (double axe barres/courbe)
+ *   Response: { success, periode, data: { labels, datasets[] } }
+ *
+ * GET /api/admin/dashboard/kpis-ventes?periode=mois
+ *   KPIs ventes : CA, nb commandes, panier moyen + variations vs période précédente
+ *   Response: { success, periode, data: { actuelle, precedente, variations } }
+ *
+ * GET /api/admin/dashboard/statuts-commandes?periode=mois
+ *   Répartition par statut (en_attente, payee, livree…) — pour donut chart
+ *   Response: { success, periode, data: { labels, montants, datasets[] } }
+ */
+routeur.get('/evolution-ventes',     getEvolutionVentesCtrl);
+routeur.get('/kpis-ventes',          getKpisVentesCtrl);
+routeur.get('/statuts-commandes',    getStatutsCommandesCtrl);
 
 export default routeur;

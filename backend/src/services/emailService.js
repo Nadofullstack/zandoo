@@ -534,6 +534,80 @@ function htmlChangementStatutAcheteur({
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   Template — Invitation livreur par un vendeur
+───────────────────────────────────────────────────────────────────────────── */
+function htmlInvitationLivreurParVendeur({
+  prenomNom,
+  email,
+  motDePasseTemporaire,
+  lienActivation,
+  nomBoutique,
+}) {
+  const corps = `
+    <h2 style="color:#011023;font-size:20px;font-weight:700;margin:0 0 16px;">
+      Bienvenue, ${escapeHtml(prenomNom)} !
+    </h2>
+
+    <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 24px;">
+      La boutique <strong style="color:#FC7701;">${escapeHtml(nomBoutique)}</strong>
+      vous a ajouté en tant que livreur sur la plateforme
+      <strong style="color:#FC7701;">ZANDOO</strong>.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:28px;">
+      <tr>
+        <td style="padding:24px;">
+          <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#011023;text-transform:uppercase;">
+            Vos identifiants
+          </p>
+          <table cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:6px 0;color:#6b7280;font-size:14px;min-width:130px;">E-mail :</td>
+              <td style="padding:6px 0;color:#011023;font-weight:600;font-size:14px;">${escapeHtml(email)}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;color:#6b7280;font-size:14px;">Mot de passe :</td>
+              <td style="padding:6px 0;">
+                <code style="background:#011023;color:#FC7701;padding:4px 10px;border-radius:6px;font-size:15px;font-weight:700;letter-spacing:2px;">
+                  ${escapeHtml(motDePasseTemporaire)}
+                </code>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#4b5563;font-size:14px;line-height:1.6;margin:0 0 28px;">
+      ⚠️ <strong>Mot de passe temporaire.</strong>
+      Vous devrez le modifier lors de la première connexion.
+      Lien valable <strong>48 heures</strong>.
+    </p>
+
+    <div style="text-align:center;margin-bottom:32px;">
+      <a
+        href="${safeUrl(lienActivation)}"
+        style="display:inline-block;background:#FC7701;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:16px;"
+      >
+        Activer mon compte →
+      </a>
+    </div>
+
+    <p style="color:#9ca3af;font-size:12px;text-align:center;">
+      Si vous n'attendiez pas cet email, vous pouvez l'ignorer.
+    </p>
+  `;
+
+  return htmlEnveloppe({
+    titre: 'Bienvenue sur ZANDOO',
+    sousTitre: `Invitation livreur — ${escapeHtml(nomBoutique)}`,
+    corps,
+    anneeCourante: new Date().getFullYear(),
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    Fonctions exportées
 ───────────────────────────────────────────────────────────────────────────── */
 
@@ -646,6 +720,37 @@ export async function envoyerChangementStatutAcheteur({
       statut,
       raison,
       vendeurNom,
+    }),
+  });
+}
+
+/**
+ * Envoie l'email d'invitation à un livreur créé par un vendeur.
+ *
+ * @param {object} options
+ * @param {string} options.prenomNom
+ * @param {string} options.email
+ * @param {string} options.motDePasseTemporaire
+ * @param {string} options.lienActivation
+ * @param {string} options.nomBoutique  — nom de la boutique du vendeur
+ */
+export async function envoyerInvitationLivreurVendeur({
+  prenomNom,
+  email,
+  motDePasseTemporaire,
+  lienActivation,
+  nomBoutique,
+}) {
+  await transporter.sendMail({
+    from: EXPEDITEUR,
+    to: email,
+    subject: `[ZANDOO] Invitation livreur — ${nomBoutique}`,
+    html: htmlInvitationLivreurParVendeur({
+      prenomNom,
+      email,
+      motDePasseTemporaire,
+      lienActivation,
+      nomBoutique,
     }),
   });
 }

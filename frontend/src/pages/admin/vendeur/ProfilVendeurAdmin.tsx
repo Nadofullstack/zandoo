@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Mail, Phone, MapPin, CheckCircle, Ban } from 'lucide-react';
+import { ArrowLeft, Building2, User, Mail, Phone, MapPin, CheckCircle, Ban, Truck } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import BadgeStatut from '../../../components/admin/modal/BadgeStatut';
 import SectionDocuments from '../../../components/admin/vendeurs/SectionDocuments';
@@ -114,6 +114,14 @@ export default function ProfilVendeurAdmin() {
               Suspendre
             </button>
           )}
+          {/* Lien vers les livreurs de ce vendeur */}
+          <Link
+            to={`/admin/livreurs?vendeurId=${vendeur._id}`}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-300 text-cyan-700 bg-cyan-50 text-sm font-semibold hover:bg-cyan-100 transition-colors"
+          >
+            <Truck size={15} aria-hidden="true" />
+            Voir les livreurs
+          </Link>
         </div>
       </div>
 

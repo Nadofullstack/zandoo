@@ -1,36 +1,56 @@
-import { Truck, Clock, CheckCircle2, Ban, CheckSquare } from 'lucide-react';
-import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
+import { useState } from 'react';
+import { Truck, Clock, CheckCircle2, Ban, UserPlus, CheckSquare } from 'lucide-react';
+import DispositionVendeur from '../../../components/vendeur/layout/DispositionVendeur';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
-import TableauLivreurs from '../../../components/admin/livreurs/TableauLivreurs';
-import FiltresLivreurs from '../../../components/admin/livreurs/FiltresLivreurs';
+import TableauLivreurs from '../../../components/vendeur/livreurs/TableauLivreurs';
+import FiltresLivreurs from '../../../components/vendeur/livreurs/FiltresLivreurs';
+import ModalCreationLivreur from '../../../components/vendeur/livreurs/ModalCreationLivreur';
 import Pagination from '../../../components/admin/modal/Pagination';
 import Alert from '../../../components/ui/Alert';
-import { useGestionLivreurs } from '../../../hooks/admin/useGestionLivreurs';
-import type { StatutLivreur } from '../../../types/admin';
+import { useGestionLivreursVendeur } from '../../../hooks/vendeur/useGestionLivreursVendeur';
+import type { StatutLivreurVendeur } from '../../../types/vendeur/livreur';
 
-export default function ListeLivreursAdmin() {
+/**
+ * Page "Mes livreurs" dans l'espace vendeur.
+ * Permet de créer, consulter, activer/suspendre et supprimer ses propres livreurs.
+ */
+export default function MesLivreursPage() {
   const {
     livreurs,
     pagination,
     statistiques,
-    boutiques,
     chargement,
     chargementAction,
     erreur,
     filtre,
     setFiltre,
+    activerLivreur,
+    suspendreLivreur,
     supprimerLivreur,
-  } = useGestionLivreurs();
+    renvoyerInvitation,
+    recharger,
+  } = useGestionLivreursVendeur();
+
+  const [modalCreation, setModalCreation] = useState(false);
 
   return (
-    <DispositionAdmin>
+    <DispositionVendeur>
 
       {/* En-tête */}
-      <header className="mb-6">
-        <h1 className="text-2xl font-extrabold text-primary">Livreurs des vendeurs</h1>
-        <p className="text-sm text-[#74777d] mt-1">
-          Consultez et supprimez les livreurs créés par les vendeurs de la plateforme.
-        </p>
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-extrabold text-primary">Mes livreurs</h1>
+          <p className="text-sm text-[#74777d] mt-1">
+            Gérez les livreurs rattachés à votre boutique.
+          </p>
+        </div>
+        <button
+          onClick={() => setModalCreation(true)}
+          className="cursor-pointer flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0"
+        >
+          <UserPlus size={16} aria-hidden="true" />
+          Créer un livreur
+        </button>
       </header>
 
       {/* Statistiques */}
@@ -49,12 +69,9 @@ export default function ListeLivreursAdmin() {
         <div className="p-4 border-b border-gray-100">
           <FiltresLivreurs
             recherche={filtre.recherche}
-            statut={filtre.statut as StatutLivreur | ''}
-            vendeurId={filtre.vendeurId}
-            boutiques={boutiques}
+            statut={filtre.statut as StatutLivreurVendeur | ''}
             onRechercheChange={(v) => setFiltre({ recherche: v, page: 1 })}
             onStatutChange={(v)    => setFiltre({ statut: v,   page: 1 })}
-            onVendeurChange={(v)   => setFiltre({ vendeurId: v, page: 1 })}
           />
         </div>
 
@@ -69,7 +86,10 @@ export default function ListeLivreursAdmin() {
             <TableauLivreurs
               livreurs={livreurs}
               chargementAction={chargementAction}
+              onActiver={activerLivreur}
+              onSuspendre={suspendreLivreur}
               onSupprimer={supprimerLivreur}
+              onRenvoyerInvitation={renvoyerInvitation}
             />
           )}
 
@@ -85,6 +105,13 @@ export default function ListeLivreursAdmin() {
         </div>
       </div>
 
-    </DispositionAdmin>
+      {/* Modal création */}
+      <ModalCreationLivreur
+        ouvert={modalCreation}
+        onFermer={() => setModalCreation(false)}
+        onSucces={recharger}
+      />
+
+    </DispositionVendeur>
   );
 }

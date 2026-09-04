@@ -3,6 +3,9 @@ import {
   getEvolutionUtilisateurs,
   getStatistiquesByRole,
   getComparaisonPeriodes,
+  getEvolutionVentes,
+  getComparaisonVentes,
+  getVentesParStatut,
 } from '../../services/dashboardStatsService.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -396,6 +399,149 @@ export const getComparaisonPeriodeCtrl = async (req, res) => {
     });
   } catch (erreur) {
     console.error('Erreur getComparaisonPeriodeCtrl:', erreur);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTRÔLEURS VENTES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const PERIODES_VALIDES = ['jour', 'semaine', 'mois', 'annee'];
+
+/** Validation commune de la période — retourne false et répond si invalide */
+const validerPeriode = (periode, res) => {
+  if (!PERIODES_VALIDES.includes(periode)) {
+    res.status(422).json({
+      success: false,
+      message: `Période invalide. Valeurs acceptées : ${PERIODES_VALIDES.join(', ')}.`,
+    });
+    return false;
+  }
+  return true;
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GET /api/admin/dashboard/evolution-ventes?periode=mois
+   Évolution temporelle du CA et du nombre de commandes (double axe)
+───────────────────────────────────────────────────────────────────────────── */
+export const getEvolutionVentesCtrl = async (req, res) => {
+  try {
+    const { periode = 'mois' } = req.query;
+    if (!validerPeriode(periode, res)) return;
+
+    const evolution = await getEvolutionVentes(periode);
+
+    const labels          = evolution.map((d) => d._id);
+    const chiffreAffaires = evolution.map((d) => d.chiffreAffaires);
+    const nombreCommandes = evolution.map((d) => d.nombreCommandes);
+
+    return res.status(200).json({
+      success: true,
+      periode,
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Chiffre d'affaires (FCFA)",
+            data: chiffreAffaires,
+            type: 'bar',
+            backgroundColor: 'rgba(99, 102, 241, 0.75)',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            borderRadius: 6,
+            yAxisID: 'yCA',
+          },
+          {
+            label: 'Commandes',
+            data: nombreCommandes,
+            type: 'line',
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.08)',
+            borderWidth: 2.5,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#f59e0b',
+            fill: true,
+            yAxisID: 'yCommandes',
+          },
+        ],
+      },
+    });
+  } catch (erreur) {
+    console.error('Erreur getEvolutionVentesCtrl:', erreur);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GET /api/admin/dashboard/kpis-ventes?periode=mois
+   KPIs ventes : CA, nb commandes, panier moyen + variations vs période précédente
+───────────────────────────────────────────────────────────────────────────── */
+export const getKpisVentesCtrl = async (req, res) => {
+  try {
+    const { periode = 'mois' } = req.query;
+    if (!validerPeriode(periode, res)) return;
+
+    const kpis = await getComparaisonVentes(periode);
+
+    return res.status(200).json({
+      success: true,
+      periode,
+      data: kpis,
+    });
+  } catch (erreur) {
+    console.error('Erreur getKpisVentesCtrl:', erreur);
+    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GET /api/admin/dashboard/statuts-commandes?periode=mois
+   Répartition des commandes par statut sur la période (pour donut)
+───────────────────────────────────────────────────────────────────────────── */
+export const getStatutsCommandesCtrl = async (req, res) => {
+  try {
+    const { periode = 'mois' } = req.query;
+    if (!validerPeriode(periode, res)) return;
+
+    const stats = await getVentesParStatut(periode);
+
+    const LABELS_STATUT = {
+      en_attente:     'En attente',
+      payee:          'Payée',
+      en_preparation: 'En préparation',
+      expediee:       'Expédiée',
+      livree:         'Livrée',
+      annulee:        'Annulée',
+    };
+
+    const COULEURS_STATUT = {
+      en_attente:     { bg: 'rgba(245, 158, 11, 0.8)',  border: '#f59e0b' },
+      payee:          { bg: 'rgba(99, 102, 241, 0.8)',  border: '#6366f1' },
+      en_preparation: { bg: 'rgba(59, 130, 246, 0.8)',  border: '#3b82f6' },
+      expediee:       { bg: 'rgba(139, 92, 246, 0.8)',  border: '#8b5cf6' },
+      livree:         { bg: 'rgba(16, 185, 129, 0.8)',  border: '#10b981' },
+      annulee:        { bg: 'rgba(239, 68, 68, 0.8)',   border: '#ef4444' },
+    };
+
+    const labels   = stats.map((s) => LABELS_STATUT[s._id] ?? s._id);
+    const data     = stats.map((s) => s.count);
+    const montants = stats.map((s) => Math.round(s.montant));
+    const bgs      = stats.map((s) => (COULEURS_STATUT[s._id] ?? { bg: 'rgba(148,163,184,0.8)' }).bg);
+    const borders  = stats.map((s) => (COULEURS_STATUT[s._id] ?? { border: '#94a3b8' }).border);
+
+    return res.status(200).json({
+      success: true,
+      periode,
+      data: {
+        labels,
+        montants,
+        datasets: [{ data, backgroundColor: bgs, borderColor: borders, borderWidth: 2 }],
+      },
+    });
+  } catch (erreur) {
+    console.error('Erreur getStatutsCommandesCtrl:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };

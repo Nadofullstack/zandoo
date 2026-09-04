@@ -1,36 +1,21 @@
-import crypto from 'crypto';
 import Livreur from '../../models/Livreur.js';
 import User   from '../../models/User.js';
-import { envoyerInvitationLivreur } from '../../services/emailService.js';
-import env from '../../config/env.js';
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Helpers
-───────────────────────────────────────────────────────────────────────────── */
-
-/** Projection pour la liste — champs légers uniquement */
-const PROJECTION_LISTE = { notesAdmin: 0 };
-
-/** Génère un mot de passe temporaire lisible */
-function genererMotDePasseTemp() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let mdp = '';
-  const bytes = crypto.randomBytes(8);
-  for (const b of bytes) mdp += chars[b % chars.length];
-  return mdp;
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GET /api/admin/livreurs/statistiques
+   Compte tous les livreurs créés par les vendeurs.
 ───────────────────────────────────────────────────────────────────────────── */
 export const getStatistiquesLivreurs = async (_req, res) => {
   try {
+    /* On compte uniquement les livreurs créés par des vendeurs */
+    const filtrVendeur = { creerPar: { $ne: null } };
+
     const [enAttente, actifs, suspendus, total, profilsComplets] = await Promise.all([
-      Livreur.countDocuments({ statut: 'en_attente' }),
-      Livreur.countDocuments({ statut: 'actif'      }),
-      Livreur.countDocuments({ statut: 'suspendu'   }),
-      Livreur.countDocuments(),
-      Livreur.countDocuments({ profilComplete: true }),
+      Livreur.countDocuments({ ...filtrVendeur, statut: 'en_attente' }),
+      Livreur.countDocuments({ ...filtrVendeur, statut: 'actif'      }),
+      Livreur.countDocuments({ ...filtrVendeur, statut: 'suspendu'   }),
+      Livreur.countDocuments(filtrVendeur),
+      Livreur.countDocuments({ ...filtrVendeur, profilComplete: true }),
     ]);
 
     return res.status(200).json({
@@ -44,134 +29,54 @@ export const getStatistiquesLivreurs = async (_req, res) => {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   POST /api/admin/livreurs
-   Création d'un compte livreur + envoi de l'email d'invitation.
-───────────────────────────────────────────────────────────────────────────── */
-export const creerLivreur = async (req, res) => {
-  try {
-    const { nom, prenom, email } = req.body;
-
-    /* Validation de base */
-    if (!nom?.trim() || !prenom?.trim() || !email?.trim()) {
-      return res.status(422).json({
-        success: false,
-        message: 'Nom, prénom et email sont obligatoires.',
-      });
-    }
-
-    const emailNorm = email.toLowerCase().trim();
-    const nomComplet = `${prenom.trim()} ${nom.trim()}`;
-
-    /* Unicité de l'email */
-    const existant = await User.findOne({ email: emailNorm });
-    if (existant) {
-      return res.status(409).json({
-        success: false,
-        message: 'Un compte avec cette adresse e-mail existe déjà.',
-      });
-    }
-
-    /* Génération du mot de passe temporaire */
-    const motDePasseTemp = genererMotDePasseTemp();
-
-    /* Token d'activation sécurisé (48h) */
-    const tokenActivation  = crypto.randomBytes(32).toString('hex');
-    const expirationToken  = new Date(Date.now() + 48 * 60 * 60 * 1000);
-
-    /* Création de l'utilisateur */
-    const utilisateur = await User.create({
-      fullName:          nomComplet,
-      email:             emailNorm,
-      phone:             '',
-      password:          motDePasseTemp,
-      role:              'livreur',
-      isVerified:        false,
-      isActive:          true,
-      /* Champs customs pour le flux d'activation */
-      mustChangePassword:  true,
-      activationToken:     tokenActivation,
-      activationTokenExp:  expirationToken,
-    });
-
-    /* Création du profil Livreur associé */
-    await Livreur.create({ utilisateur: utilisateur._id });
-
-    /* Construction du lien d'activation */
-    const lienActivation = `${env.server.clientUrl}/livreur/activation/${tokenActivation}`;
-
-    /* Envoi de l'email d'invitation */
-    try {
-      await envoyerInvitationLivreur({
-        prenomNom:          nomComplet,
-        email:              emailNorm,
-        motDePasseTemporaire: motDePasseTemp,
-        lienActivation,
-      });
-    } catch (erreurEmail) {
-      /* L'email a échoué — on log mais on ne bloque pas la création */
-      console.error('Erreur envoi email invitation livreur:', erreurEmail);
-    }
-
-    return res.status(201).json({
-      success: true,
-      message: `Compte livreur créé. Un email d'invitation a été envoyé à ${emailNorm}.`,
-      data: {
-        livreur: {
-          utilisateurId: utilisateur._id,
-          nomComplet,
-          email: emailNorm,
-        },
-      },
-    });
-  } catch (erreur) {
-    console.error('Erreur creerLivreur:', erreur);
-    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-};
-
-/* ─────────────────────────────────────────────────────────────────────────────
    GET /api/admin/livreurs
-   Liste paginée avec filtres.
+   Liste paginée de tous les livreurs créés par des vendeurs.
 ───────────────────────────────────────────────────────────────────────────── */
 export const getLivreurs = async (req, res) => {
   try {
     const {
       statut,
+      vendeurId,
       recherche = '',
       page  = 1,
       limite = 15,
     } = req.query;
 
-    const filtre = {};
+    /* Restreindre aux livreurs créés par des vendeurs */
+    const filtre = { creerPar: { $ne: null } };
 
     if (statut && ['en_attente', 'actif', 'suspendu'].includes(statut)) {
       filtre.statut = statut;
     }
 
-    /* Recherche sur les champs du User lié — on passe par $lookup ou on filtre via populate */
+    /* Filtre par boutique (vendeurId) */
+    if (vendeurId) {
+      filtre.creerPar = vendeurId;
+    }
+
     const saut = (Number(page) - 1) * Number(limite);
 
-    let requete = Livreur.find(filtre, PROJECTION_LISTE)
-      .populate('utilisateur', 'fullName email phone isActive isVerified createdAt avatar')
-      .sort({ createdAt: -1 })
-      .skip(saut)
-      .limit(Number(limite))
-      .lean();
-
     let [livreurs, total] = await Promise.all([
-      requete,
+      Livreur.find(filtre)
+        .populate('utilisateur', 'fullName email phone isActive isVerified createdAt avatar')
+        .populate('creerPar',    'nomEntreprise')
+        .sort({ createdAt: -1 })
+        .skip(saut)
+        .limit(Number(limite))
+        .lean(),
       Livreur.countDocuments(filtre),
     ]);
 
-    /* Filtrage textuel post-populate (simple, efficace pour des volumes raisonnables) */
+    /* Filtrage textuel post-populate */
     if (recherche.trim()) {
       const regex = new RegExp(recherche.trim(), 'i');
       livreurs = livreurs.filter(
         (l) =>
-          regex.test(l.utilisateur?.fullName ?? '') ||
-          regex.test(l.utilisateur?.email    ?? '') ||
-          regex.test(l.telephone             ?? '') ||
-          regex.test(l.villeService          ?? '')
+          regex.test(l.utilisateur?.fullName   ?? '') ||
+          regex.test(l.utilisateur?.email      ?? '') ||
+          regex.test(l.telephone               ?? '') ||
+          regex.test(l.villeService            ?? '') ||
+          regex.test(l.creerPar?.nomEntreprise ?? '')
       );
       total = livreurs.length;
     }
@@ -196,12 +101,13 @@ export const getLivreurs = async (req, res) => {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GET /api/admin/livreurs/:id
-   Profil complet d'un livreur.
+   Profil complet d'un livreur (lecture seule).
 ───────────────────────────────────────────────────────────────────────────── */
 export const getLivreurParId = async (req, res) => {
   try {
     const livreur = await Livreur.findById(req.params.id)
       .populate('utilisateur', 'fullName email phone isActive isVerified createdAt avatar')
+      .populate('creerPar',    'nomEntreprise utilisateur')
       .populate('historiqueStatut.modifiePar', 'fullName email')
       .lean();
 
@@ -212,108 +118,6 @@ export const getLivreurParId = async (req, res) => {
     return res.status(200).json({ success: true, data: { livreur } });
   } catch (erreur) {
     console.error('Erreur getLivreurParId:', erreur);
-    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-};
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   PATCH /api/admin/livreurs/:id/statut
-   Change le statut : actif | suspendu | en_attente
-───────────────────────────────────────────────────────────────────────────── */
-export const modifierStatutLivreur = async (req, res) => {
-  try {
-    const { statut, raison = '' } = req.body;
-
-    if (!['en_attente', 'actif', 'suspendu'].includes(statut)) {
-      return res.status(422).json({
-        success: false,
-        message: 'Statut invalide. Valeurs : en_attente, actif, suspendu.',
-      });
-    }
-
-    const livreur = await Livreur.findById(req.params.id);
-    if (!livreur) {
-      return res.status(404).json({ success: false, message: 'Livreur introuvable.' });
-    }
-
-    livreur.statut = statut;
-    livreur.historiqueStatut.push({
-      statut,
-      modifiePar: req.user._id,
-      raison:     raison.trim().slice(0, 300),
-      modifieAt:  new Date(),
-    });
-
-    await livreur.save();
-
-    /* Synchronise isActive sur l'utilisateur lié */
-    await User.findByIdAndUpdate(livreur.utilisateur, {
-      isActive: statut !== 'suspendu',
-    });
-
-    const miseAJour = await Livreur.findById(livreur._id)
-      .populate('utilisateur', 'fullName email phone isActive')
-      .lean();
-
-    return res.status(200).json({
-      success: true,
-      message: `Statut mis à jour : ${statut}.`,
-      data: { livreur: miseAJour },
-    });
-  } catch (erreur) {
-    console.error('Erreur modifierStatutLivreur:', erreur);
-    return res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-};
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   POST /api/admin/livreurs/:id/renvoyer-invitation
-   Renvoie l'email d'invitation avec un nouveau token d'activation.
-───────────────────────────────────────────────────────────────────────────── */
-export const renvoyerInvitation = async (req, res) => {
-  try {
-    const livreur = await Livreur.findById(req.params.id).lean();
-    if (!livreur) {
-      return res.status(404).json({ success: false, message: 'Livreur introuvable.' });
-    }
-
-    const utilisateur = await User.findById(livreur.utilisateur).select('+mustChangePassword');
-    if (!utilisateur) {
-      return res.status(404).json({ success: false, message: 'Utilisateur introuvable.' });
-    }
-
-    /* Nouveau mot de passe temporaire + nouveau token */
-    const motDePasseTemp  = genererMotDePasseTemp();
-    const tokenActivation = crypto.randomBytes(32).toString('hex');
-    const expirationToken = new Date(Date.now() + 48 * 60 * 60 * 1000);
-
-    utilisateur.password            = motDePasseTemp;
-    utilisateur.mustChangePassword  = true;
-    utilisateur.activationToken     = tokenActivation;
-    utilisateur.activationTokenExp  = expirationToken;
-    utilisateur.isVerified          = false;
-    await utilisateur.save();
-
-    const lienActivation = `${env.server.clientUrl}/livreur/activation/${tokenActivation}`;
-
-    try {
-      await envoyerInvitationLivreur({
-        prenomNom:            utilisateur.fullName,
-        email:                utilisateur.email,
-        motDePasseTemporaire: motDePasseTemp,
-        lienActivation,
-      });
-    } catch (erreurEmail) {
-      console.error('Erreur renvoi email invitation:', erreurEmail);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: `Email d'invitation renvoyé à ${utilisateur.email}.`,
-      data: { lienActivation },
-    });
-  } catch (erreur) {
-    console.error('Erreur renvoyerInvitation:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }
 };

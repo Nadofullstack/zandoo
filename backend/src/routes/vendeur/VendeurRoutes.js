@@ -3,11 +3,11 @@ import { validationResult } from 'express-validator';
 import {
   soumettreInscription,
   getStatutInscription,
-} from '../controllers/vendeur/VendeurInscriptionControleur.js';
+} from '../../controllers/vendeur/VendeurInscriptionControleur.js';
 import {
   getBoutique,
   mettreAJourBoutique,
-} from '../controllers/vendeur/VendeurBoutiqueControleur.js';
+} from '../../controllers/vendeur/VendeurBoutiqueControleur.js';
 import {
   getMesProduits,
   getStatistiquesProduits,
@@ -17,31 +17,31 @@ import {
   supprimerProduit,
   mettreAJourStock,
   modifierStatutProduit,
-} from '../controllers/vendeur/VendeurProduitControleur.js';
+} from '../../controllers/vendeur/VendeurProduitControleur.js';
 import {
   getMesCommandes,
   getCommandeParId,
   marquerCommande,
   getStatistiquesCommandes,
   annulerCommande,
-} from '../controllers/vendeur/VendeurCommandeControleur.js';
+} from '../../controllers/vendeur/VendeurCommandeControleur.js';
 import {
   getMesPromotions,
   gererPromotion,
-} from '../controllers/vendeur/VendeurPromotionControleur.js';
+} from '../../controllers/vendeur/VendeurPromotionControleur.js';
 import {
   getTableauDeBord,
   getStatistiquesVentes,
-} from '../controllers/vendeur/VendeurTableauDeBordControleur.js';
-import { getCategoriesPlates, creerCategorie } from '../controllers/vendeur/VendeurCategorieControleur.js';
-import { protect, requireRole } from '../middlewars/authentification.js';
-import { uploadPhotos as multerPhotos, uploadVideo as multerVideo } from '../config/cloudinary.js';
-import { uploadPhotos as uploadPhotosCtrl, uploadVideo as uploadVideoCtrl } from '../controllers/admin/AdminCloudinaryControleur.js';
+} from '../../controllers/vendeur/VendeurTableauDeBordControleur.js';
+import { getCategoriesPlates, creerCategorie } from '../../controllers/vendeur/VendeurCategorieControleur.js';
+import { protect, requireRole } from '../../middlewars/authentification.js';
+import { uploadPhotos as multerPhotos, uploadVideo as multerVideo } from '../../config/cloudinary.js';
+import { uploadPhotos as uploadPhotosCtrl, uploadVideo as uploadVideoCtrl } from '../../controllers/admin/AdminCloudinaryControleur.js';
 import {
   validerFiltresCommandesVendeur,
   validerChangementStatutVendeur,
   validerIdCommande,
-} from '../validators/commandeValidators.js';
+} from '../../validators/commandeValidators.js';
 
 const routeur = Router();
 

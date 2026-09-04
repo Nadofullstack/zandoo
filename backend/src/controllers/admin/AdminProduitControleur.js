@@ -50,7 +50,7 @@ export const getProduits = async (req, res) => {
       vendeur,
       recherche = '',
       page  = 1,
-      limite = 20,
+      limite = 10,
     } = req.query;
 
     const filtre = {};
