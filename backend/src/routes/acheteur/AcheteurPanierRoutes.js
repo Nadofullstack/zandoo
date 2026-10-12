@@ -6,7 +6,7 @@ import {
   retirerDuPanier,
   viderPanier,
 } from '../../controllers/acheteur/PanierControleur.js';
-import { protect } from '../../middlewars/authentification.js';
+import { protect } from '../../middlewares/authentification.js';
 
 const routeur = Router();
 

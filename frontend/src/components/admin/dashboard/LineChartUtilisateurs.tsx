@@ -1,145 +1,103 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
-import { getDashboardGraphiquesTemporelles } from '../../../services/admin/dashboardService';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler } from 'chart.js';
+import type { ChartOptions } from 'chart.js';
+import { ChartLine } from 'lucide-react';
+import type { ChartData } from '../../../services/admin/dashboardService';
+import { Carte, EtatErreur, EtatVide, Pastille, Squelette } from './ui';
+import { COULEURS, COULEURS_ROLES, TICKS_BASE, TOOLTIP_BASE, alpha } from './theme';
 
-/* Enregistrement des composants Chart.js */
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
-/**
- * Composant: Graphique en courbe - Évolution temporelle des utilisateurs
- * Affiche les trois rôles principaux (Acheteurs, Vendeurs, Livreurs) sur une période
- */
-interface LineChartUtilisateursProps {
-  periode?: 'jour' | 'semaine' | 'mois' | 'annee';
+interface Props {
+  donnees: ChartData | null;
+  chargement: boolean;
+  erreur: boolean;
+  onReessayer: () => void;
 }
 
-const LineChartUtilisateurs: React.FC<LineChartUtilisateursProps> = ({ periode = 'mois' }) => {
-  const [chartData, setChartData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const SERIES = [
+  { label: 'Acheteurs', couleur: COULEURS_ROLES.acheteurs },
+  { label: 'Vendeurs',  couleur: COULEURS_ROLES.vendeurs },
+  { label: 'Livreurs',  couleur: COULEURS_ROLES.livreurs },
+];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const data = await getDashboardGraphiquesTemporelles(periode);
-        setChartData(data);
-        setError(null);
-      } catch (err) {
-        console.error('Erreur lors du chargement du graphique en courbe:', err);
-        setError('Erreur lors du chargement du graphique');
-        setChartData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+const HAUTEUR = 'h-72';
 
-    fetchData();
-  }, [periode]);
+const LineChartUtilisateurs: React.FC<Props> = ({ donnees, chargement, erreur, onReessayer }) => {
+  const labels = donnees?.labels ?? [];
+  const vide   = !donnees?.datasets.some((d) => d.data.some((v) => v > 0));
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="mt-4 text-gray-600">Chargement du graphique...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96 bg-red-50 rounded-lg border border-red-200">
-        <div className="text-center">
-          <p className="text-red-600 font-semibold">⚠️ {error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!chartData || !chartData.labels || chartData.labels.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg border border-gray-200 gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <p className="text-gray-500 font-medium">Aucune inscription sur cette période</p>
-        <p className="text-gray-400 text-sm">Essayez une période plus large (ex. Année)</p>
-      </div>
-    );
-  }
-
-  const options: any = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    animation: { duration: 600, easing: 'easeOutQuart' },
     plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: { size: 12 } as any,
-          usePointStyle: true,
-          padding: 15,
-        },
-      },
-      title: {
-        display: false,
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleFont: { size: 13 } as any,
-        bodyFont: { size: 12 } as any,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-      },
+      legend: { display: false },
+      tooltip: { ...TOOLTIP_BASE, callbacks: { label: (ctx) => ` ${ctx.dataset.label} : ${ctx.parsed.y}` } },
     },
     scales: {
+      x: { grid: { display: false }, border: { display: false }, ticks: { ...TICKS_BASE, maxRotation: 0, autoSkipPadding: 12 } },
       y: {
         beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-          drawBorder: false,
-        },
-        ticks: {
-          font: { size: 11 } as any,
-          color: '#666',
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-          drawBorder: false,
-        },
-        ticks: {
-          font: { size: 11 } as any,
-          color: '#666',
-        },
+        grid: { color: COULEURS.grille },
+        border: { display: false },
+        ticks: { ...TICKS_BASE, precision: 0, maxTicksLimit: 6 },
       },
     },
   };
 
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-gray-900">Évolution des Utilisateurs</h3>
-        <p className="text-sm text-gray-500 mt-1">Suivi par jour, semaine, mois ou année</p>
-      </div>
-      <div className="relative h-96">
-        <Line data={chartData} options={options} />
-      </div>
+  const legende = (
+    <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 shrink-0">
+      {SERIES.map((s) => (
+        <span key={s.label} className="flex items-center gap-1.5"><Pastille couleur={s.couleur} /> {s.label}</span>
+      ))}
     </div>
+  );
+
+  return (
+    <Carte
+      titre="Inscriptions"
+      sousTitre="Nouveaux comptes créés par rôle"
+      action={legende}
+      rechargement={chargement && !!donnees}
+      className="h-full"
+    >
+      {erreur && !donnees ? (
+        <EtatErreur onReessayer={onReessayer} className={HAUTEUR} />
+      ) : !donnees ? (
+        <Squelette className={HAUTEUR} />
+      ) : vide ? (
+        <EtatVide
+          icone={<ChartLine className="w-6 h-6" />}
+          titre="Aucune inscription sur cette période"
+          detail="Sélectionnez une période plus large pour voir l'historique."
+          className={HAUTEUR}
+        />
+      ) : (
+        <div className={`relative ${HAUTEUR}`}>
+          <Line
+            data={{
+              labels,
+              datasets: SERIES.map((s) => ({
+                label: s.label,
+                data: donnees.datasets.find((d) => d.label === s.label)?.data ?? [],
+                borderColor: s.couleur,
+                backgroundColor: alpha(s.couleur, 0.06),
+                borderWidth: 2,
+                tension: 0.35,
+                fill: s.label === 'Acheteurs',
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHoverBackgroundColor: s.couleur,
+              })),
+            }}
+            options={options}
+          />
+        </div>
+      )}
+    </Carte>
   );
 };
 

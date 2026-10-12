@@ -1,6 +1,13 @@
 import Commande from '../../models/Commande.js';
 import { validationResult } from 'express-validator';
 import { envoyerChangementStatutAcheteur } from '../../services/emailService.js';
+import {
+  ErreurCommande,
+  STATUTS_ANNULABLES_ADMIN,
+  STATUTS_TERMINAUX,
+  annulerCommande,
+  notifierVendeurAnnulation,
+} from '../../services/commandeService.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Helpers
@@ -147,7 +154,9 @@ export const getCommandeParId = async (req, res) => {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    PATCH /api/admin/commandes/:id/statut
-   L'admin peut changer le statut vers n'importe quel statut valide.
+   L'admin peut changer le statut vers n'importe quel statut valide, sauf :
+     - depuis un statut terminal (annulée / remboursée) ;
+   L'annulation passe par le service commande (remise en stock + email vendeur).
 ───────────────────────────────────────────────────────────────────────────── */
 export const modifierStatutCommande = async (req, res) => {
   const errs = getErreurs(req);
@@ -161,24 +170,44 @@ export const modifierStatutCommande = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Commande introuvable.' });
     }
 
-    const maintenant = new Date();
-    commande.statut  = statut;
+    if (STATUTS_TERMINAUX.includes(commande.statut)) {
+      return res.status(409).json({
+        success: false,
+        message: `Cette commande est clôturée (${commande.statut}) : son statut ne peut plus être modifié.`,
+      });
+    }
+    if (commande.statut === statut) {
+      return res.status(422).json({ success: false, message: `La commande est déjà au statut « ${statut} ».` });
+    }
 
-    if (statut === 'payee')          commande.payeeAt          = maintenant;
-    if (statut === 'en_preparation') commande.enPreparationAt  = maintenant;
-    if (statut === 'expediee')       commande.expedieeAt       = maintenant;
-    if (statut === 'livree')         commande.livreeAt         = maintenant;
-    if (statut === 'annulee')        commande.annuleeAt        = maintenant;
-    if (statut === 'remboursee')     commande.remboureeAt      = maintenant;
+    if (statut === 'annulee') {
+      /* Annulation atomique avec remise en stock */
+      const annulee = await annulerCommande({
+        filtre:           { _id: commande._id },
+        statutsAutorises: STATUTS_ANNULABLES_ADMIN,
+        auteurId:         req.user._id,
+        raison,
+      });
+      notifierVendeurAnnulation(annulee, 'admin', raison);
+    } else {
+      const maintenant = new Date();
+      commande.statut  = statut;
 
-    commande.historiqueStatut.push({
-      statut,
-      modifiePar: req.user._id,
-      raison:     raison.trim().slice(0, 300),
-      modifieAt:  maintenant,
-    });
+      if (statut === 'payee')          commande.payeeAt          = maintenant;
+      if (statut === 'en_preparation') commande.enPreparationAt  = maintenant;
+      if (statut === 'expediee')       commande.expedieeAt       = maintenant;
+      if (statut === 'livree')         commande.livreeAt         = maintenant;
+      if (statut === 'remboursee')     commande.remboureeAt      = maintenant;
 
-    await commande.save();
+      commande.historiqueStatut.push({
+        statut,
+        modifiePar: req.user._id,
+        raison:     raison.trim().slice(0, 300),
+        modifieAt:  maintenant,
+      });
+
+      await commande.save();
+    }
 
     const miseAJour = await Commande.findById(commande._id)
       .populate('acheteur', 'fullName email phone')
@@ -205,6 +234,9 @@ export const modifierStatutCommande = async (req, res) => {
       data: { commande: miseAJour },
     });
   } catch (erreur) {
+    if (erreur instanceof ErreurCommande) {
+      return res.status(erreur.status).json({ success: false, message: erreur.message });
+    }
     console.error('Erreur modifierStatutCommande:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }

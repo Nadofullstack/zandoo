@@ -534,6 +534,71 @@ function htmlChangementStatutAcheteur({
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   Template — Commande annulée (vendeur)
+───────────────────────────────────────────────────────────────────────────── */
+const AUTEURS_ANNULATION = {
+  acheteur: "L'acheteur a annulé cette commande",
+  admin:    "L'équipe ZANDOO a annulé cette commande",
+};
+
+function htmlAnnulationCommandeVendeur({ vendeurNom, commande, auteur, raison }) {
+  const lignes = commande.lignes
+    .map((l) => `
+      <tr>
+        <td style="padding:8px 12px;border-top:1px solid #f1f5f9;font-size:13px;color:#374151;">
+          ${escapeHtml(l.nomProduit)}
+        </td>
+        <td style="padding:8px 12px;border-top:1px solid #f1f5f9;font-size:13px;text-align:center;color:#374151;">
+          ${escapeHtml(l.quantite)}
+        </td>
+      </tr>
+    `)
+    .join('');
+
+  const corps = `
+    <h2 style="color:#011023;font-size:20px;font-weight:700;margin:0 0 8px;">
+      ❌ Commande annulée
+    </h2>
+
+    <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Bonjour <strong>${escapeHtml(vendeurNom)}</strong>,
+      ${escapeHtml((AUTEURS_ANNULATION[auteur] ?? 'Cette commande a été annulée').toLowerCase())} :
+      <strong style="color:#FC7701;">${escapeHtml(commande.numero)}</strong>
+      (${formatMontant(commande.total)}).
+    </p>
+
+    ${
+      raison
+        ? `
+          <p style="color:#6b7280;font-size:14px;background:#f8fafc;padding:12px 16px;border-radius:8px;border-left:4px solid #dc2626;margin:0 0 20px;">
+            Motif : ${escapeHtml(raison)}
+          </p>
+        `
+        : ''
+    }
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+      <tr style="background:#f8fafc;">
+        <th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;">Produit</th>
+        <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;">Qté</th>
+      </tr>
+      ${lignes}
+    </table>
+
+    <p style="color:#4b5563;font-size:14px;margin:0;">
+      Les quantités ont été automatiquement remises en stock. Vous n'avez rien à expédier pour cette commande.
+    </p>
+  `;
+
+  return htmlEnveloppe({
+    titre: 'Commande annulée',
+    sousTitre: 'Espace vendeur ZANDOO',
+    corps,
+    anneeCourante: new Date().getFullYear(),
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    Template — Invitation livreur par un vendeur
 ───────────────────────────────────────────────────────────────────────────── */
 function htmlInvitationLivreurParVendeur({
@@ -721,6 +786,31 @@ export async function envoyerChangementStatutAcheteur({
       raison,
       vendeurNom,
     }),
+  });
+}
+
+/**
+ * Prévient le vendeur qu'une de ses commandes a été annulée (par l'acheteur ou l'admin).
+ *
+ * @param {object} options
+ * @param {string} options.emailVendeur
+ * @param {string} options.vendeurNom
+ * @param {object} options.commande        - { numero, total, lignes[] }
+ * @param {'acheteur'|'admin'} options.auteur
+ * @param {string} [options.raison]
+ */
+export async function envoyerAnnulationCommandeVendeur({
+  emailVendeur,
+  vendeurNom,
+  commande,
+  auteur,
+  raison,
+}) {
+  await transporter.sendMail({
+    from: EXPEDITEUR,
+    to: emailVendeur,
+    subject: `[ZANDOO] Commande annulée — ${commande.numero}`,
+    html: htmlAnnulationCommandeVendeur({ vendeurNom, commande, auteur, raison }),
   });
 }
 

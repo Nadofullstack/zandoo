@@ -4,6 +4,49 @@ import mongoose from 'mongoose';
  * Modèle Vendeur — profil vendeur lié à un Utilisateur (User).
  * Créé lors de la demande d'inscription en tant que vendeur.
  */
+
+/* ── Livraison : zone tarifaire définie par le vendeur ──────────────────── */
+const zoneLivraisonSchema = new mongoose.Schema(
+  {
+    nom:      { type: String, required: true, trim: true, maxlength: 60 },   // ex: "Cotonou et environs"
+    villes:   {
+      type: [{ type: String, trim: true, maxlength: 60 }],
+      validate: [(v) => v.length > 0 && v.length <= 30, 'Une zone doit contenir entre 1 et 30 villes.'],
+    },
+    tarif:    { type: Number, required: true, min: 0 },
+    delaiMin: { type: Number, min: 0, max: 60, default: 1 },   // en jours
+    delaiMax: { type: Number, min: 0, max: 60, default: 3 },
+  },
+  { _id: true }
+);
+
+const livraisonSchema = new mongoose.Schema(
+  {
+    /** false tant que le vendeur n'a jamais enregistré sa politique de livraison */
+    configuree: { type: Boolean, default: false },
+
+    domicile: {
+      actif: { type: Boolean, default: true },
+      zones: { type: [zoneLivraisonSchema], default: [] },
+      /** Tarif pour les villes hors zones ; null = pas de livraison hors zones */
+      tarifAutresVilles:    { type: Number, min: 0, default: null },
+      delaiAutresVillesMin: { type: Number, min: 0, max: 60, default: 3 },
+      delaiAutresVillesMax: { type: Number, min: 0, max: 60, default: 7 },
+      /** Livraison offerte à partir de ce sous-total (null = jamais) */
+      gratuiteDes: { type: Number, min: 0, default: null },
+    },
+
+    retrait: {
+      actif:        { type: Boolean, default: false },
+      adresse:      { type: String, trim: true, maxlength: 200, default: '' },
+      ville:        { type: String, trim: true, maxlength: 60, default: '' },
+      horaires:     { type: String, trim: true, maxlength: 120, default: '' },  // ex: "Lun–Sam, 9h–18h"
+      instructions: { type: String, trim: true, maxlength: 300, default: '' },
+    },
+  },
+  { _id: false }
+);
+
 const vendeurSchema = new mongoose.Schema(
   {
     /* Référence vers l'utilisateur propriétaire du compte */
@@ -93,6 +136,16 @@ const vendeurSchema = new mongoose.Schema(
       trim: true,
       maxlength: [1000, 'La description ne peut pas dépasser 1000 caractères'],
       default: '',
+    },
+
+    /**
+     * Politique de livraison de la boutique (tarifs fixés par le vendeur).
+     * Les frais sont calculés côté serveur par services/livraisonService.js.
+     * Boutique non configurée (`configuree: false`) : livraison à domicile offerte.
+     */
+    livraison: {
+      type: livraisonSchema,
+      default: () => ({}),
     },
 
     /* Conditions d'utilisation acceptées */

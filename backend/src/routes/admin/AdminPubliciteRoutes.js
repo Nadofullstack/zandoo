@@ -7,7 +7,7 @@ import {
   modifierPublicite,
   supprimerPublicite,
 } from '../../controllers/admin/AdminPubliciteControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 import {
   validerIdPublicite,
   validerCreerPublicite,

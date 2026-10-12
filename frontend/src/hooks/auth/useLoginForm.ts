@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { loginUser, type ApiServiceError } from '../../services/auth/authService';
 
 export interface LoginFormState {
@@ -18,6 +18,10 @@ const INITIAL: LoginFormState = { identifier: '', password: '', remember: false 
 
 export function useLoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  /* Page protégée demandée avant la connexion (posée par les gardes de route) */
+  const origine = (location.state as { from?: string } | null)?.from;
+  const retourInterne = origine?.startsWith('/') && !origine.startsWith('//') ? origine : null;
   const [form, setForm] = useState<LoginFormState>(INITIAL);
   const [errors, setErrors] = useState<LoginErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +60,7 @@ export function useLoginForm() {
         } else if (role === 'livreur') {
           navigate('/livreur/tableau-de-bord');
         } else {
-          navigate('/');
+          navigate(retourInterne ?? '/', { replace: true });
         }
       }, 1200);
     } catch (err) {

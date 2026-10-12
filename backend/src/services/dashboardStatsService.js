@@ -39,6 +39,65 @@ export const getPeriodeDates = (periode) => {
   return { dateDebut, dateFin };
 };
 
+/* ── Séries temporelles continues ──────────────────────────────────────────
+   Les agrégations ne renvoient que les intervalles qui contiennent des données.
+   On groupe donc sur une clé triable (format ISO, fuseau du serveur) puis on
+   complète chaque intervalle manquant avec des zéros, dans l'ordre chronologique. */
+
+const FORMATS_CLE = {
+  jour:    '%Y-%m-%d %H',
+  semaine: '%Y-%m-%d',
+  mois:    '%Y-%m-%d',
+  annee:   '%Y-%m',
+};
+
+const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+const pad = (n) => String(n).padStart(2, '0');
+
+/** Décalage horaire du serveur au format MongoDB (ex: "+01:00") */
+const fuseauServeur = () => {
+  const decalage = -new Date().getTimezoneOffset();
+  const signe = decalage >= 0 ? '+' : '-';
+  const abs = Math.abs(decalage);
+  return `${signe}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
+};
+
+/** Expression $dateToString produisant la clé d'intervalle de la période */
+const cleIntervalle = (periode) => ({
+  $dateToString: { format: FORMATS_CLE[periode], date: '$createdAt', timezone: fuseauServeur() },
+});
+
+/**
+ * Liste ordonnée de tous les intervalles de la période en cours
+ * @returns {Array<{ cle: string, libelle: string }>}
+ */
+const genererIntervalles = (periode) => {
+  const { dateDebut, dateFin } = getPeriodeDates(periode);
+  const intervalles = [];
+  const curseur = new Date(dateDebut);
+
+  while (curseur <= dateFin) {
+    const a = curseur.getFullYear();
+    const m = pad(curseur.getMonth() + 1);
+    const j = pad(curseur.getDate());
+
+    if (periode === 'jour') {
+      const h = pad(curseur.getHours());
+      intervalles.push({ cle: `${a}-${m}-${j} ${h}`, libelle: `${h}h` });
+      curseur.setHours(curseur.getHours() + 1);
+    } else if (periode === 'annee') {
+      intervalles.push({ cle: `${a}-${m}`, libelle: MOIS_COURTS[curseur.getMonth()] });
+      curseur.setMonth(curseur.getMonth() + 1);
+    } else {
+      intervalles.push({ cle: `${a}-${m}-${j}`, libelle: `${j}/${m}` });
+      curseur.setDate(curseur.getDate() + 1);
+    }
+  }
+
+  return intervalles;
+};
+
 /**
  * Crée les groupes pour l'agrégation MongoDB selon la période
  * @param {string} periode - 'jour', 'semaine', 'mois', 'annee'
@@ -135,15 +194,6 @@ export const getEvolutionUtilisateurs = async (periode = 'mois') => {
   try {
     const { dateDebut, dateFin } = getPeriodeDates(periode);
 
-    let formatDate;
-    if (periode === 'jour') {
-      formatDate = '%Y-%m-%d %H:00';
-    } else if (periode === 'semaine' || periode === 'mois') {
-      formatDate = '%Y-%m-%d';
-    } else if (periode === 'annee') {
-      formatDate = '%Y-%m';
-    }
-
     const evolution = await User.aggregate([
       {
         $match: {
@@ -156,9 +206,7 @@ export const getEvolutionUtilisateurs = async (periode = 'mois') => {
       {
         $group: {
           _id: {
-            date: {
-              $dateToString: { format: formatDate, date: '$createdAt' },
-            },
+            date: cleIntervalle(periode),
             role: '$role',
           },
           count: { $sum: 1 },
@@ -179,12 +227,14 @@ export const getEvolutionUtilisateurs = async (periode = 'mois') => {
           total: { $sum: '$count' },
         },
       },
-      {
-        $sort: { '_id': 1 },
-      },
     ]);
 
-    return evolution || [];
+    const parCle = new Map(evolution.map((d) => [d._id, d]));
+    return genererIntervalles(periode).map(({ cle, libelle }) => ({
+      _id:   libelle,
+      roles: parCle.get(cle)?.roles ?? [],
+      total: parCle.get(cle)?.total ?? 0,
+    }));
   } catch (erreur) {
     console.error('Erreur getEvolutionUtilisateurs:', erreur);
     throw new Error('Erreur lors de la récupération de l\'évolution des utilisateurs');
@@ -375,11 +425,6 @@ export const getEvolutionVentes = async (periode = 'mois') => {
   try {
     const { dateDebut, dateFin } = getPeriodeDates(periode);
 
-    let formatDate;
-    if (periode === 'jour')                         formatDate = '%H:00';
-    else if (periode === 'semaine' || periode === 'mois') formatDate = '%d/%m';
-    else                                            formatDate = '%m/%Y';
-
     const evolution = await Commande.aggregate([
       {
         $match: {
@@ -389,15 +434,19 @@ export const getEvolutionVentes = async (periode = 'mois') => {
       },
       {
         $group: {
-          _id: { $dateToString: { format: formatDate, date: '$createdAt' } },
+          _id: cleIntervalle(periode),
           chiffreAffaires: { $sum: '$total' },
           nombreCommandes: { $sum: 1 },
         },
       },
-      { $sort: { _id: 1 } },
     ]);
 
-    return evolution || [];
+    const parCle = new Map(evolution.map((d) => [d._id, d]));
+    return genererIntervalles(periode).map(({ cle, libelle }) => ({
+      _id:             libelle,
+      chiffreAffaires: Math.round(parCle.get(cle)?.chiffreAffaires ?? 0),
+      nombreCommandes: parCle.get(cle)?.nombreCommandes ?? 0,
+    }));
   } catch (erreur) {
     console.error('Erreur getEvolutionVentes:', erreur);
     throw new Error('Erreur lors de la récupération de l\'évolution des ventes');

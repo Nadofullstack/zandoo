@@ -3,9 +3,10 @@
  */
 
 export { default as AdminDashboardGraphiques }   from './AdminDashboardGraphiques';
-export { default as LineChartUtilisateurs }      from './LineChartUtilisateurs';
-export { default as PieChartRoles }              from './PieChartRoles';
-export { default as StatistiquesCards }          from './StatistiquesCards';
+export { default as KpisPrincipaux }             from './KpisPrincipaux';
 export { default as BarChartVentes }             from './BarChartVentes';
-export { default as StatistiquesVentesCards }    from './StatistiquesVentesCards';
 export { default as DonutStatutCommandes }       from './DonutStatutCommandes';
+export { default as DernieresCommandes }         from './DernieresCommandes';
+export { default as ActionsRequises }            from './ActionsRequises';
+export { default as LineChartUtilisateurs }      from './LineChartUtilisateurs';
+export { default as RepartitionUtilisateurs }    from './RepartitionUtilisateurs';

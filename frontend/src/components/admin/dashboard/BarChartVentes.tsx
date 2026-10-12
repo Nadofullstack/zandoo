@@ -1,147 +1,138 @@
-import React, { useState, useEffect } from 'react';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
+import React from 'react';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
+import type { ChartOptions } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
-import { TrendingUp } from 'lucide-react';
-import { getDashboardEvolutionVentes } from '../../../services/admin/dashboardService';
-import type { Periode, ChartData } from '../../../services/admin/dashboardService';
+import { ChartColumn } from 'lucide-react';
+import type { ChartData } from '../../../services/admin/dashboardService';
+import { Carte, EtatErreur, EtatVide, Pastille, Squelette } from './ui';
+import { COULEURS, TICKS_BASE, TOOLTIP_BASE, alpha, formatCompact, formatFCFA, formatNombre } from './theme';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler);
 
 interface Props {
-  periode?: Periode;
+  donnees: ChartData | null;
+  chargement: boolean;
+  erreur: boolean;
+  onReessayer: () => void;
 }
 
-/** Formatte un montant en FCFA compact (ex: 1 250 000 → 1,25M) */
-const formatCA = (val: number): string => {
-  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(2)}M`;
-  if (val >= 1_000)     return `${(val / 1_000).toFixed(1)}k`;
-  return String(val);
-};
+const HAUTEUR = 'h-72 sm:h-80';
 
-const BarChartVentes: React.FC<Props> = ({ periode = 'mois' }) => {
-  const [chartData, setChartData] = useState<ChartData | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
+const BarChartVentes: React.FC<Props> = ({ donnees, chargement, erreur, onReessayer }) => {
+  const labels    = donnees?.labels ?? [];
+  const ca        = donnees?.datasets[0]?.data ?? [];
+  const commandes = donnees?.datasets[1]?.data ?? [];
+  const vide      = ca.every((v) => !v) && commandes.every((v) => !v);
 
-  useEffect(() => {
-    let annule = false;
-    const charger = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getDashboardEvolutionVentes(periode);
-        if (!annule) setChartData(data);
-      } catch {
-        if (!annule) setError('Impossible de charger l\'évolution des ventes.');
-      } finally {
-        if (!annule) setLoading(false);
-      }
-    };
-    charger();
-    return () => { annule = true; };
-  }, [periode]);
+  const legende = (
+    <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 shrink-0">
+      <span className="flex items-center gap-1.5"><Pastille couleur={COULEURS.primaire} className="rounded-sm" /> CA</span>
+      <span className="flex items-center gap-1.5"><Pastille couleur={COULEURS.accent} /> Commandes</span>
+    </div>
+  );
 
-  /* ── États de chargement / erreur / vide ─────────────────────────────── */
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 h-96 flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="inline-block w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Chargement des ventes…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 h-96 flex items-center justify-center">
-        <p className="text-sm text-red-600 font-medium">⚠ {error}</p>
-      </div>
-    );
-  }
-
-  const vide = !chartData?.labels?.length;
-
-  if (vide) {
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 h-96 flex flex-col items-center justify-center gap-3">
-        <TrendingUp className="w-10 h-10 text-gray-300" />
-        <p className="text-gray-500 font-medium text-sm">Aucune vente sur cette période</p>
-        <p className="text-gray-400 text-xs">Essayez une période plus large</p>
-      </div>
-    );
-  }
-
-  /* ── Options Chart.js ───────────────────────────────────────────────── */
-  const options: any = {
+  const options: ChartOptions<'bar' | 'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
+    animation: { duration: 600, easing: 'easeOutQuart' },
     plugins: {
-      legend: {
-        position: 'top',
-        labels: { usePointStyle: true, font: { size: 12 }, padding: 16 },
-      },
+      legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(15, 23, 42, 0.92)',
-        padding: 12,
-        titleFont: { size: 13, weight: 'bold' },
-        bodyFont: { size: 12 },
-        cornerRadius: 8,
+        ...TOOLTIP_BASE,
         callbacks: {
-          label: (ctx: any) => {
-            const label = ctx.dataset.label ?? '';
-            if (ctx.dataset.yAxisID === 'yCA') {
-              return ` ${label} : ${Number(ctx.parsed.y).toLocaleString('fr-FR')} FCFA`;
-            }
-            return ` ${label} : ${ctx.parsed.y}`;
-          },
+          label: (ctx) =>
+            ctx.datasetIndex === 0
+              ? ` Chiffre d'affaires : ${formatFCFA(ctx.parsed.y ?? 0)}`
+              : ` Commandes : ${formatNombre(ctx.parsed.y ?? 0)}`,
         },
       },
     },
     scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { ...TICKS_BASE, maxRotation: 0, autoSkipPadding: 12 },
+      },
       yCA: {
         type: 'linear',
         position: 'left',
         beginAtZero: true,
-        grid: { color: 'rgba(0,0,0,0.04)' },
-        ticks: {
-          font: { size: 11 },
-          color: '#6366f1',
-          callback: (v: number) => formatCA(v),
-        },
-        title: { display: true, text: 'CA (FCFA)', color: '#6366f1', font: { size: 11, weight: '600' } },
+        grid: { color: COULEURS.grille },
+        border: { display: false },
+        ticks: { ...TICKS_BASE, maxTicksLimit: 6, callback: (v) => formatCompact(Number(v)) },
       },
       yCommandes: {
         type: 'linear',
         position: 'right',
         beginAtZero: true,
         grid: { drawOnChartArea: false },
-        ticks: {
-          font: { size: 11 },
-          color: '#f59e0b',
-          precision: 0,
-        },
-        title: { display: true, text: 'Commandes', color: '#f59e0b', font: { size: 11, weight: '600' } },
-      },
-      x: {
-        grid: { display: false },
-        ticks: { font: { size: 11 }, color: '#64748b' },
+        border: { display: false },
+        ticks: { ...TICKS_BASE, maxTicksLimit: 6, precision: 0 },
       },
     },
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-      <div className="mb-5">
-        <h3 className="text-base font-bold text-gray-900">Évolution des ventes</h3>
-        <p className="text-xs text-gray-500 mt-0.5">Chiffre d'affaires et volume de commandes</p>
-      </div>
-      <div className="relative h-80">
-        <Chart type="bar" data={chartData!} options={options} />
-      </div>
-    </div>
+    <Carte
+      titre="Évolution des ventes"
+      sousTitre="Chiffre d'affaires (FCFA) et volume de commandes validées"
+      action={legende}
+      rechargement={chargement && !!donnees}
+      className="h-full"
+    >
+      {erreur && !donnees ? (
+        <EtatErreur onReessayer={onReessayer} className={HAUTEUR} />
+      ) : !donnees ? (
+        <Squelette className={HAUTEUR} />
+      ) : vide ? (
+        <EtatVide
+          icone={<ChartColumn className="w-6 h-6" />}
+          titre="Aucune vente sur cette période"
+          detail="Sélectionnez une période plus large pour voir l'historique."
+          className={HAUTEUR}
+        />
+      ) : (
+        <div className={`relative ${HAUTEUR}`}>
+          <Chart<'bar' | 'line', number[], string>
+            type="bar"
+            data={{
+              labels,
+              datasets: [
+                {
+                  type: 'bar',
+                  label: "Chiffre d'affaires",
+                  data: ca,
+                  yAxisID: 'yCA',
+                  backgroundColor: alpha(COULEURS.primaire, 0.88),
+                  hoverBackgroundColor: COULEURS.primaire,
+                  borderRadius: 6,
+                  borderSkipped: false,
+                  maxBarThickness: 28,
+                  order: 2,
+                },
+                {
+                  type: 'line',
+                  label: 'Commandes',
+                  data: commandes,
+                  yAxisID: 'yCommandes',
+                  borderColor: COULEURS.accent,
+                  backgroundColor: COULEURS.accent,
+                  borderWidth: 2,
+                  tension: 0.35,
+                  pointRadius: labels.length > 31 ? 0 : 3,
+                  pointHoverRadius: 5,
+                  pointBackgroundColor: '#ffffff',
+                  pointBorderWidth: 2,
+                  order: 1,
+                },
+              ],
+            }}
+            options={options}
+          />
+        </div>
+      )}
+    </Carte>
   );
 };
 

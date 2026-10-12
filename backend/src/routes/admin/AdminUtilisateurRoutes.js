@@ -7,7 +7,7 @@ import {
   modifierStatutUtilisateur,
   supprimerUtilisateur,
 } from '../../controllers/admin/AdminUtilisateurControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 
 const routeur = Router();
 

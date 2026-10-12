@@ -5,7 +5,7 @@ import {
   getLivreurParId,
   supprimerLivreur,
 } from '../../controllers/admin/AdminLivreurControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 
 const routeur = Router();
 

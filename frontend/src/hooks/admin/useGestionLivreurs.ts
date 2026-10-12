@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Livreur, StatutLivreur, StatistiquesLivreurs, Pagination } from '../../types/admin';
 import {
   getLivreurs,
@@ -36,6 +37,10 @@ interface EtatHook {
 }
 
 export function useGestionLivreurs(): EtatHook {
+  /* ?vendeurId=… (lien « Voir ses livreurs » depuis le profil vendeur) pré-remplit le filtre boutique */
+  const [searchParams] = useSearchParams();
+  const vendeurIdUrl   = searchParams.get('vendeurId') ?? '';
+
   const [livreurs, setLivreurs]         = useState<Livreur[]>([]);
   const [pagination, setPagination]     = useState<Pagination | null>(null);
   const [statistiques, setStatistiques] = useState<StatistiquesLivreurs | null>(null);
@@ -43,7 +48,7 @@ export function useGestionLivreurs(): EtatHook {
   const [chargement, setChargement]     = useState(true);
   const [chargementAction, setChargementAction] = useState<string | null>(null);
   const [erreur, setErreur]             = useState<string | null>(null);
-  const [filtre, setFiltreState]        = useState<EtatFiltre>(FILTRE_INITIAL);
+  const [filtre, setFiltreState]        = useState<EtatFiltre>(() => ({ ...FILTRE_INITIAL, vendeurId: vendeurIdUrl }));
   const [compteur, setCompteur]         = useState(0);
 
   const setFiltre = useCallback((f: Partial<EtatFiltre>) => {

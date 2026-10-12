@@ -234,3 +234,5 @@ export interface ReponseStatutInscription {
   success: boolean;
   data: { vendeur: StatutVendeurInscription | null };
 }
+
+export * from './livraison';

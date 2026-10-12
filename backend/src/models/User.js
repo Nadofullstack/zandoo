@@ -1,6 +1,25 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+/** Nombre maximum d'adresses enregistrées par utilisateur */
+export const MAX_ADRESSES = 10;
+
+/* ── Carnet d'adresses de livraison ─────────────────────────────────────── */
+const adresseSchema = new mongoose.Schema(
+  {
+    libelle:      { type: String, trim: true, maxlength: 40, default: '' },   // ex: "Maison", "Bureau"
+    nomComplet:   { type: String, required: true, trim: true, maxlength: 100 },
+    telephone:    { type: String, required: true, trim: true, maxlength: 30 },
+    ville:        { type: String, required: true, trim: true, maxlength: 100 },
+    quartier:     { type: String, trim: true, maxlength: 100, default: '' },
+    rue:          { type: String, trim: true, maxlength: 200, default: '' },
+    pays:         { type: String, trim: true, maxlength: 100, default: 'Bénin' },
+    instructions: { type: String, trim: true, maxlength: 300, default: '' },
+    parDefaut:    { type: Boolean, default: false },
+  },
+  { _id: true, timestamps: true }
+);
+
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -64,6 +83,13 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: null,
+    },
+
+    /* Carnet d'adresses de livraison (une seule marquée parDefaut) */
+    adresses: {
+      type: [adresseSchema],
+      default: [],
+      validate: [(v) => v.length <= MAX_ADRESSES, `Maximum ${MAX_ADRESSES} adresses.`],
     },
 
     /* ── Champs pour le flux d'activation livreur ───────────────── */

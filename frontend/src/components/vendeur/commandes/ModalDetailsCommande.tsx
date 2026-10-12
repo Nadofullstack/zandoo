@@ -122,6 +122,11 @@ export default function ModalDetailsCommande({ commande, onFermer }: Props) {
                   <MapPin size={13} /> Livraison
                 </h4>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1 text-sm">
+                  <p className={`inline-block mb-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                    cmd.livraison?.mode === 'retrait' ? 'bg-violet-100 text-violet-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {cmd.livraison?.mode === 'retrait' ? 'Retrait en boutique' : `À domicile${cmd.livraison?.zone ? ` · ${cmd.livraison.zone}` : ''}`}
+                  </p>
                   <p className="font-medium text-primary">{adresse.nomComplet}</p>
                   {adresse.telephone && <p className="text-xs text-[#74777d]">{adresse.telephone}</p>}
                   {adresse.rue       && <p className="text-xs text-[#74777d]">{adresse.rue}</p>}

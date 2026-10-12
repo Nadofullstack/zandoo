@@ -1,5 +1,14 @@
-import Livreur from '../../models/Livreur.js';
-import User   from '../../models/User.js';
+import mongoose from 'mongoose';
+import Livreur  from '../../models/Livreur.js';
+import User     from '../../models/User.js';
+import Vendeur  from '../../models/Vendeur.js';
+import Commande from '../../models/Commande.js';
+
+/** Statuts de commande pour lesquels une livraison est encore en cours */
+const STATUTS_COMMANDE_EN_COURS = ['payee', 'en_preparation', 'expediee'];
+
+/** Échappe les caractères spéciaux pour construire une RegExp à partir d'une saisie utilisateur */
+const echapperRegex = (texte) => texte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GET /api/admin/livreurs/statistiques
@@ -51,12 +60,33 @@ export const getLivreurs = async (req, res) => {
 
     /* Filtre par boutique (vendeurId) */
     if (vendeurId) {
+      if (!mongoose.isValidObjectId(vendeurId)) {
+        return res.status(422).json({ success: false, message: 'Identifiant de boutique invalide.' });
+      }
       filtre.creerPar = vendeurId;
+    }
+
+    /* Recherche textuelle — appliquée dans la requête (avant pagination)
+       pour couvrir tous les livreurs et garder un total exact. */
+    if (recherche.trim()) {
+      const regex = new RegExp(echapperRegex(recherche.trim()), 'i');
+
+      const [utilisateurs, vendeurs] = await Promise.all([
+        User.find({ role: 'livreur', $or: [{ fullName: regex }, { email: regex }] }).select('_id').lean(),
+        Vendeur.find({ nomEntreprise: regex }).select('_id').lean(),
+      ]);
+
+      filtre.$or = [
+        { utilisateur:  { $in: utilisateurs.map((u) => u._id) } },
+        { creerPar:     { $in: vendeurs.map((v) => v._id) } },
+        { telephone:    regex },
+        { villeService: regex },
+      ];
     }
 
     const saut = (Number(page) - 1) * Number(limite);
 
-    let [livreurs, total] = await Promise.all([
+    const [livreurs, total] = await Promise.all([
       Livreur.find(filtre)
         .populate('utilisateur', 'fullName email phone isActive isVerified createdAt avatar')
         .populate('creerPar',    'nomEntreprise')
@@ -66,20 +96,6 @@ export const getLivreurs = async (req, res) => {
         .lean(),
       Livreur.countDocuments(filtre),
     ]);
-
-    /* Filtrage textuel post-populate */
-    if (recherche.trim()) {
-      const regex = new RegExp(recherche.trim(), 'i');
-      livreurs = livreurs.filter(
-        (l) =>
-          regex.test(l.utilisateur?.fullName   ?? '') ||
-          regex.test(l.utilisateur?.email      ?? '') ||
-          regex.test(l.telephone               ?? '') ||
-          regex.test(l.villeService            ?? '') ||
-          regex.test(l.creerPar?.nomEntreprise ?? '')
-      );
-      total = livreurs.length;
-    }
 
     return res.status(200).json({
       success: true,
@@ -105,6 +121,10 @@ export const getLivreurs = async (req, res) => {
 ───────────────────────────────────────────────────────────────────────────── */
 export const getLivreurParId = async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Livreur introuvable.' });
+    }
+
     const livreur = await Livreur.findById(req.params.id)
       .populate('utilisateur', 'fullName email phone isActive isVerified createdAt avatar')
       .populate('creerPar',    'nomEntreprise utilisateur')
@@ -125,12 +145,28 @@ export const getLivreurParId = async (req, res) => {
 /* ─────────────────────────────────────────────────────────────────────────────
    DELETE /api/admin/livreurs/:id
    Supprime le livreur et l'utilisateur associé.
+   Refusé tant que le livreur a des livraisons en cours.
 ───────────────────────────────────────────────────────────────────────────── */
 export const supprimerLivreur = async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Livreur introuvable.' });
+    }
+
     const livreur = await Livreur.findById(req.params.id);
     if (!livreur) {
       return res.status(404).json({ success: false, message: 'Livreur introuvable.' });
+    }
+
+    const livraisonsEnCours = await Commande.countDocuments({
+      livreur: livreur._id,
+      statut:  { $in: STATUTS_COMMANDE_EN_COURS },
+    });
+    if (livraisonsEnCours > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `Impossible de supprimer ce livreur : ${livraisonsEnCours} livraison(s) en cours lui sont assignée(s).`,
+      });
     }
 
     await Promise.all([

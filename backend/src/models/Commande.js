@@ -41,8 +41,9 @@ const adresseSchema = new mongoose.Schema(
   {
     nomComplet:   { type: String, required: true, trim: true },
     telephone:    { type: String, trim: true, default: '' },
+    quartier:     { type: String, trim: true, default: '' },
     rue:          { type: String, trim: true, default: '' },
-    ville:        { type: String, required: true, trim: true },
+    ville:       { type: String, required: true, trim: true },
     pays:         { type: String, trim: true, default: 'Bénin' },
     codePostal:   { type: String, trim: true, default: '' },
     instructions: { type: String, trim: true, default: '' },
@@ -67,6 +68,24 @@ const paiementSchema = new mongoose.Schema(
     montant:   { type: Number, min: 0, default: 0 },
     devise:    { type: String, default: 'XOF' },
     payeAt:    { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+/* ── Sous-schéma : mode de livraison retenu (snapshot au checkout) ───── */
+const livraisonSchema = new mongoose.Schema(
+  {
+    mode:     { type: String, enum: ['domicile', 'retrait'], default: 'domicile' },
+    zone:     { type: String, trim: true, default: '' },   // nom de la zone tarifaire appliquée
+    delaiMin: { type: Number, default: null },             // jours
+    delaiMax: { type: Number, default: null },
+    /** Point de retrait (mode 'retrait') — copie de la config vendeur au moment de la commande */
+    pointRetrait: {
+      adresse:      { type: String, default: '' },
+      ville:        { type: String, default: '' },
+      horaires:     { type: String, default: '' },
+      instructions: { type: String, default: '' },
+    },
   },
   { _id: false }
 );
@@ -136,6 +155,9 @@ const commandeSchema = new mongoose.Schema(
     /* ── Adresses ───────────────────────────────────────────────────── */
     adresseLivraison:   { type: adresseSchema, required: true },
     adresseFacturation: { type: adresseSchema, default: null },
+
+    /* ── Livraison (mode + délai, frais dans `fraisLivraison`) ──────── */
+    livraison: { type: livraisonSchema, default: () => ({}) },
 
     /* ── Paiement ───────────────────────────────────────────────────── */
     paiement: { type: paiementSchema, required: true },

@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 
 /**
  * Modèle Livreur — profil livreur lié à un Utilisateur (User).
- * Créé par l'administrateur lors de la création du compte livreur.
+ * Créé par un vendeur, qui est seul habilité à suspendre ou réactiver le livreur.
+ * L'admin le consulte (et peut le supprimer) mais ne le crée pas.
  * Le livreur complète son profil lors de sa première connexion.
  */
 const livreurSchema = new mongoose.Schema(

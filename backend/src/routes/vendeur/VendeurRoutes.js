@@ -9,6 +9,10 @@ import {
   mettreAJourBoutique,
 } from '../../controllers/vendeur/VendeurBoutiqueControleur.js';
 import {
+  getPolitiqueLivraison,
+  mettreAJourPolitiqueLivraison,
+} from '../../controllers/vendeur/VendeurLivraisonControleur.js';
+import {
   getMesProduits,
   getStatistiquesProduits,
   creerProduit,
@@ -34,7 +38,7 @@ import {
   getStatistiquesVentes,
 } from '../../controllers/vendeur/VendeurTableauDeBordControleur.js';
 import { getCategoriesPlates, creerCategorie } from '../../controllers/vendeur/VendeurCategorieControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 import { uploadPhotos as multerPhotos, uploadVideo as multerVideo } from '../../config/cloudinary.js';
 import { uploadPhotos as uploadPhotosCtrl, uploadVideo as uploadVideoCtrl } from '../../controllers/admin/AdminCloudinaryControleur.js';
 import {
@@ -68,6 +72,10 @@ routeur.get('/tableau-de-bord/statistiques-ventes', ...auth, getStatistiquesVent
 /* Boutique */
 routeur.get('/boutique',   ...auth, getBoutique);
 routeur.patch('/boutique', ...auth, mettreAJourBoutique);
+
+/* ── Livraison (tarifs par zone, retrait en boutique) ─────────────────────── */
+routeur.get('/livraison', ...auth, getPolitiqueLivraison);
+routeur.put('/livraison', ...auth, mettreAJourPolitiqueLivraison);
 
 /* Produits */
 routeur.get('/produits/statistiques',  ...auth, getStatistiquesProduits);

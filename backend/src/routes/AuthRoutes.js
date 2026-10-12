@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { register, login, logout, googleLogin, getMe, updateMe } from '../controllers/auth/AuthController.js';
-import validate from '../middlewars/validate.js';
+import validate from '../middlewares/validate.js';
 import { registerValidators, loginValidators } from '../validators/authValidators.js';
-import { protect } from '../middlewars/authentification.js';
+import { protect } from '../middlewares/authentification.js';
 
 const router = Router();
 

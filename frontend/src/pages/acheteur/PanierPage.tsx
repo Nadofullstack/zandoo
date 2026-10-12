@@ -242,10 +242,10 @@ export default function PanierPage() {
             <div className="border-t border-gray-100 pt-4 mb-6">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">Livraison</span>
-                <span className="text-sm font-semibold text-green-600">À définir</span>
+                <span className="text-sm text-gray-500">Calculée à l'étape suivante</span>
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className="font-bold text-[#011023]">Total</span>
+                <span className="font-bold text-[#011023]">Sous-total</span>
                 <span className="font-black text-xl text-[#011023]">
                   {formatPrix(panier?.total ?? 0)}
                 </span>
@@ -263,7 +263,7 @@ export default function PanierPage() {
             </button>
 
             <p className="text-xs text-gray-400 text-center mt-3">
-              Paiement sécurisé — livraison partout au Bénin
+              Frais de livraison fixés par chaque boutique selon votre ville
             </p>
           </div>
         </div>

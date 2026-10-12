@@ -9,46 +9,39 @@ import {
   envoyerConfirmationCommande,
   envoyerNouvelleCommandeVendeur,
 } from './emailService.js';
+import { calculerOptionsLivraison, resoudreLivraison, ErreurLivraison } from './livraisonService.js';
 
 /**
  * Service Checkout — logique métier du passage en caisse.
  *
  * Responsabilités :
  *  1. Valider les produits (existence, stock, vendeur approuvé).
- *  2. Regrouper les lignes par vendeur.
- *  3. Créer une commande distincte par vendeur (session Mongo).
- *  4. Décrémenter les stocks atomiquement.
- *  5. Vider le panier de l'acheteur.
- *
- * @param {object} params
- * @param {string} params.acheteurId       - ID de l'utilisateur acheteur
- * @param {object} params.adresseLivraison  - Adresse de livraison
- * @param {object} params.paiement          - Informations de paiement
- * @param {string} [params.notesClient]     - Notes optionnelles du client
- * @returns {Promise<{ commandes: Commande[], groupeCommandeId: string }>}
+ *  2. Regrouper les lignes par vendeur (une commande = une boutique).
+ *  3. Calculer les frais de livraison de chaque boutique (tarifs du vendeur).
+ *  4. Créer une commande distincte par vendeur (session Mongo).
+ *  5. Décrémenter les stocks atomiquement.
+ *  6. Vider le panier de l'acheteur.
  */
-export async function validerPanier({
-  acheteurId,
-  adresseLivraison,
-  paiement,
-  notesClient = '',
-}) {
-  /* ── 1. Charger le panier ─────────────────────────────────────────── */
+
+/**
+ * Charge le panier de l'acheteur, valide les produits et regroupe les lignes par boutique.
+ *
+ * @returns {Promise<{ panier, produitMap: Map, groupes: Map<string, { vendeur, lignes, sousTotal }> }>}
+ */
+async function chargerPanierParBoutique(acheteurId) {
   const panier = await Panier.findOne({ acheteur: acheteurId }).lean();
   if (!panier || panier.lignes.length === 0) {
     throw new ErreurCheckout('Votre panier est vide.', 400);
   }
 
-  /* ── 2. Charger et valider tous les produits ──────────────────────── */
   const produitIds = [...new Set(panier.lignes.map((l) => l.produit.toString()))];
   const produits   = await Produit.find({ _id: { $in: produitIds } })
-    .populate('vendeur', '_id nomEntreprise statut')
+    .populate('vendeur', '_id nomEntreprise statut livraison')
     .lean();
 
   const produitMap = new Map(produits.map((p) => [p._id.toString(), p]));
 
   const erreursStock = [];
-
   for (const ligne of panier.lignes) {
     const produit = produitMap.get(ligne.produit.toString());
 
@@ -66,30 +59,88 @@ export async function validerPanier({
       );
     }
   }
-
   if (erreursStock.length > 0) {
     throw new ErreurCheckout(erreursStock.join(' | '), 422);
   }
 
-  /* ── 3. Regrouper les lignes par vendeur ──────────────────────────── */
-  const groupes = new Map(); // vendeurId → lignes[]
-
+  const groupes = new Map(); // vendeurId → { vendeur, lignes[], sousTotal }
   for (const ligne of panier.lignes) {
     const produit   = produitMap.get(ligne.produit.toString());
     const vendeurId = produit.vendeur._id.toString();
+    const prix      = produit.prixPromotionnel ?? produit.prix;
 
-    if (!groupes.has(vendeurId)) groupes.set(vendeurId, []);
+    if (!groupes.has(vendeurId)) groupes.set(vendeurId, { vendeur: produit.vendeur, lignes: [], sousTotal: 0 });
+    const groupe = groupes.get(vendeurId);
 
-    groupes.get(vendeurId).push({
+    groupe.lignes.push({
       produit:      produit._id,
       nomProduit:   produit.nom,
       photoProduit: produit.photoCouverture ?? null,
       reference:    produit.reference ?? '',
       variante:     ligne.variante ?? '',
       quantite:     ligne.quantite,
-      prixUnitaire: produit.prixPromotionnel ?? produit.prix,
-      sousTotal:    (produit.prixPromotionnel ?? produit.prix) * ligne.quantite,
+      prixUnitaire: prix,
+      sousTotal:    prix * ligne.quantite,
     });
+    groupe.sousTotal += prix * ligne.quantite;
+  }
+
+  return { panier, produitMap, groupes };
+}
+
+/**
+ * Options de livraison de chaque boutique du panier, pour une ville donnée.
+ * Utilisé par le tunnel de commande pour afficher les choix et les frais.
+ *
+ * @returns {Promise<Array<{ vendeur, sousTotal, nombreArticles, options }>>}
+ */
+export async function calculerOptionsCheckout({ acheteurId, ville }) {
+  const { groupes } = await chargerPanierParBoutique(acheteurId);
+
+  return [...groupes.values()].map(({ vendeur, lignes, sousTotal }) => ({
+    vendeur:        { _id: vendeur._id, nomEntreprise: vendeur.nomEntreprise },
+    sousTotal,
+    nombreArticles: lignes.reduce((n, l) => n + l.quantite, 0),
+    options:        calculerOptionsLivraison(vendeur.livraison, { ville, sousTotal }),
+  }));
+}
+
+/**
+ * Passage en caisse : crée une commande par boutique.
+ *
+ * @param {object} params
+ * @param {string} params.acheteurId
+ * @param {object} params.adresseLivraison
+ * @param {object} params.paiement
+ * @param {Object<string, 'domicile'|'retrait'>} [params.livraisons] - Mode choisi par boutique (vendeurId → mode).
+ *        Par défaut : domicile. Les frais sont toujours recalculés ici, jamais repris du client.
+ * @param {string} [params.notesClient]
+ * @returns {Promise<{ commandes: Commande[], groupeCommandeId: string }>}
+ */
+export async function validerPanier({
+  acheteurId,
+  adresseLivraison,
+  paiement,
+  livraisons = {},
+  notesClient = '',
+}) {
+  /* ── 1-2. Panier validé et regroupé par boutique ──────────────────── */
+  const { panier, produitMap, groupes } = await chargerPanierParBoutique(acheteurId);
+
+  /* ── 3. Frais de livraison par boutique (avant toute écriture) ────── */
+  const livraisonParVendeur = new Map();
+  try {
+    for (const [vendeurId, { vendeur, sousTotal }] of groupes) {
+      livraisonParVendeur.set(vendeurId, resoudreLivraison(vendeur.livraison, {
+        ville:       adresseLivraison.ville,
+        sousTotal,
+        mode:        livraisons[vendeurId] ?? 'domicile',
+        nomBoutique: vendeur.nomEntreprise,
+      }));
+    }
+  } catch (erreur) {
+    if (erreur instanceof ErreurLivraison) throw new ErreurCheckout(erreur.message, 422);
+    throw erreur;
   }
 
   /* ── 4. Créer les commandes dans une session Mongo (atomique) ─────── */
@@ -99,9 +150,9 @@ export async function validerPanier({
 
   try {
     await session.withTransaction(async () => {
-      for (const [vendeurId, lignes] of groupes) {
-        const sousTotal = lignes.reduce((acc, l) => acc + l.sousTotal, 0);
-        const total     = sousTotal; // frais livraison à ajouter selon logique métier
+      for (const [vendeurId, { lignes, sousTotal }] of groupes) {
+        const { fraisLivraison, livraison } = livraisonParVendeur.get(vendeurId);
+        const total = sousTotal + fraisLivraison;
 
         const [commande] = await Commande.create(
           [
@@ -111,11 +162,12 @@ export async function validerPanier({
               vendeur:           vendeurId,
               lignes,
               sousTotal,
-              fraisLivraison:    0,
+              fraisLivraison,
               remise:            0,
               total,
               devise:            'XOF',
               adresseLivraison,
+              livraison,
               paiement: {
                 ...paiement,
                 montant: total,

@@ -15,7 +15,7 @@ import api from '../api';
  * @param {string} periode - 'jour', 'semaine', 'mois', 'annee'
  * @returns {Promise<Object>} { labels, datasets }
  */
-export const getDashboardGraphiquesTemporelles = async (periode = 'mois') => {
+export const getDashboardGraphiquesTemporelles = async (periode: Periode = 'mois'): Promise<ChartData> => {
   try {
     const { data } = await api.get('/admin/dashboard/graphiques-temporels', {
       params: { periode },
@@ -37,7 +37,7 @@ export const getDashboardGraphiquesTemporelles = async (periode = 'mois') => {
  * @param {string} periode - 'jour', 'semaine', 'mois', 'annee'
  * @returns {Promise<Object>} { labels, datasets }
  */
-export const getDashboardStatistiquesByRole = async (periode = 'mois') => {
+export const getDashboardStatistiquesByRole = async (periode: Periode = 'mois'): Promise<ChartData> => {
   try {
     const { data } = await api.get('/admin/dashboard/stats-par-role', {
       params: { periode },
@@ -59,7 +59,7 @@ export const getDashboardStatistiquesByRole = async (periode = 'mois') => {
  * @param {string} periode - 'jour', 'semaine', 'mois', 'annee'
  * @returns {Promise<Object>} { actuelle, precedente, variations }
  */
-export const getDashboardComparaison = async (periode = 'mois') => {
+export const getDashboardComparaison = async (periode: Periode = 'mois'): Promise<ComparaisonUtilisateurs> => {
   try {
     const { data } = await api.get('/admin/dashboard/comparaison', {
       params: { periode },
@@ -108,6 +108,19 @@ export interface KpisVentesActuelle {
   nombreCommandes: number;
   panierMoyen: number;
   commandesEnAttente: number;
+}
+
+export interface CompteursRoles {
+  acheteurs: number;
+  vendeurs: number;
+  livreurs: number;
+  total: number;
+}
+
+export interface ComparaisonUtilisateurs {
+  actuelle: CompteursRoles;
+  precedente: CompteursRoles;
+  variations: CompteursRoles;
 }
 
 export interface KpisVentes {

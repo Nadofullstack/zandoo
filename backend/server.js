@@ -14,7 +14,6 @@ import routesAdminPublicite   from './src/routes/admin/AdminPubliciteRoutes.js';
 import routesAdminPageStatique from './src/routes/admin/AdminPageStatiqueRoutes.js';
 import routesAdminArticle     from './src/routes/admin/AdminArticleRoutes.js';
 import routesAdminLivreur     from './src/routes/admin/AdminLivreurRoutes.js';
-import routesAdminLivreurVendeur from './src/routes/admin/AdminLivreurVendeurRoutes.js';
 import routesAdminUpload      from './src/routes/admin/AdminCloudinaryRoutes.js';
 import routesAdminDashboard   from './src/routes/admin/AdminDashboardRoutes.js';
 import routesVendeur          from './src/routes/vendeur/VendeurRoutes.js';
@@ -24,6 +23,7 @@ import routesAcheteurAccueil  from './src/routes/acheteur/AcheteurAccueilRoutes.
 import routesAcheteurCatalogue from './src/routes/acheteur/AcheteurCatalogueRoutes.js';
 import routesAcheteurCommande from './src/routes/acheteur/AcheteurCommandeRoutes.js';
 import routesAcheteurPanier   from './src/routes/acheteur/AcheteurPanierRoutes.js';
+import routesAcheteurAdresse  from './src/routes/acheteur/AcheteurAdresseRoutes.js';
 
 dotenv.config();
 
@@ -56,7 +56,6 @@ app.use('/api/admin/publicites',     routesAdminPublicite);
 app.use('/api/admin/pages-statiques',routesAdminPageStatique);
 app.use('/api/admin/articles',       routesAdminArticle);
 app.use('/api/admin/livreurs',         routesAdminLivreur);
-app.use('/api/admin/livreurs-vendeurs', routesAdminLivreurVendeur);
 app.use('/api/admin/upload',         routesAdminUpload);
 app.use('/api/admin/dashboard',      routesAdminDashboard);
 app.use('/api/vendeur',              routesVendeur);
@@ -65,6 +64,7 @@ app.use('/api/livreur',              routesLivreur);
 app.use('/api/acheteur/accueil',    routesAcheteurAccueil);
 app.use('/api/acheteur/produits',   routesAcheteurCatalogue);
 app.use('/api/acheteur/panier',     routesAcheteurPanier);
+app.use('/api/acheteur/adresses',   routesAcheteurAdresse);
 app.use('/api/acheteur',            routesAcheteurCommande);
 
 // Health check

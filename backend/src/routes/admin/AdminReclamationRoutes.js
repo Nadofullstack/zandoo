@@ -9,7 +9,7 @@ import {
   modifierPriorite,
   modifierNotesAdmin,
 } from '../../controllers/admin/AdminReclamationControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 import {
   validerIdReclamation,
   validerFiltresReclamations,

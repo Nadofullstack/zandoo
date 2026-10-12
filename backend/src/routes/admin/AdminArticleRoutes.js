@@ -3,7 +3,7 @@ import {
   getStatistiquesArticles, getArticles, getArticleParId,
   creerArticle, modifierArticle, supprimerArticle,
 } from '../../controllers/admin/AdminArticleControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 import {
   validerIdArticle, validerCreerArticle, validerModifierArticle, validerFiltresArticles,
 } from '../../validators/contenuValidators.js';

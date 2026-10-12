@@ -1,6 +1,7 @@
 import Commande from '../../models/Commande.js';
 import Vendeur from '../../models/Vendeur.js';
 import { envoyerChangementStatutAcheteur } from '../../services/emailService.js';
+import { annulerCommande as annulerCommandeService, ErreurCommande, STATUTS_ANNULABLES_VENDEUR } from '../../services/commandeService.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Helper — récupère l'_id Vendeur de l'utilisateur connecté (approuvé)
@@ -191,33 +192,15 @@ export const annulerCommande = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Boutique non approuvée.' });
     }
 
-    const commande = await Commande.findOne({ _id: req.params.id, vendeur: vendeurId });
-    if (!commande) {
-      return res.status(404).json({ success: false, message: 'Commande introuvable.' });
-    }
-
-    const STATUTS_ANNULABLES = ['en_attente', 'payee'];
-    if (!STATUTS_ANNULABLES.includes(commande.statut)) {
-      return res.status(422).json({
-        success: false,
-        message: `Impossible d'annuler une commande avec le statut "${commande.statut}".`,
-      });
-    }
-
     const { raison = '' } = req.body;
-    const maintenant = new Date();
 
-    commande.statut    = 'annulee';
-    commande.annuleeAt = maintenant;
-
-    commande.historiqueStatut.push({
-      statut:    'annulee',
-      modifiePar: req.user._id,
-      raison:    raison.trim().slice(0, 300),
-      modifieAt: maintenant,
+    /* Annulation + remise en stock atomiques (service partagé) */
+    const commande = await annulerCommandeService({
+      filtre:           { _id: req.params.id, vendeur: vendeurId },
+      statutsAutorises: STATUTS_ANNULABLES_VENDEUR,
+      auteurId:         req.user._id,
+      raison,
     });
-
-    await commande.save();
 
     const miseAJour = await Commande.findById(commande._id)
       .populate('acheteur', 'fullName email phone')
@@ -243,6 +226,9 @@ export const annulerCommande = async (req, res) => {
       data: { commande: miseAJour },
     });
   } catch (erreur) {
+    if (erreur instanceof ErreurCommande) {
+      return res.status(erreur.status).json({ success: false, message: erreur.message });
+    }
     console.error('Erreur annulerCommande vendeur:', erreur);
     return res.status(500).json({ success: false, message: 'Erreur serveur.' });
   }

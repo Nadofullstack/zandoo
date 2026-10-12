@@ -12,17 +12,19 @@ import {
   Settings,
   CreditCard,
   Heart,
-  Star,
-  Award,
-  Clock,
   MapPin,
   ShoppingBag,
+  Truck,
+  CircleCheck,
+  Wallet,
   X,
   Save,
   Loader2,
 } from 'lucide-react';
 import AcheteurLayout from '../../components/acheteur/layout/AcheteurLayout';
 import { lireSession, logoutUser, mettreAJourProfil } from '../../services/auth/authService';
+import { useResumeCommandes } from '../../hooks/acheteur/useResumeCommandes';
+import { formatPrix } from '../../components/acheteur/commandes/configCommandes';
 
 export default function MonComptePage() {
   const navigate = useNavigate();
@@ -35,6 +37,10 @@ export default function MonComptePage() {
   const [erreurs, setErreurs] = useState<{ fullName?: string; phone?: string }>({});
   const [enregistrement, setEnregistrement] = useState(false);
   const [messageSucces, setMessageSucces] = useState('');
+
+  /* Chiffres réels issus des commandes (aucune requête si non connecté) */
+  const { resume, erreur: erreurResume } = useResumeCommandes(!!utilisateur);
+  const chiffre = (n: number | undefined) => (resume ? String(n ?? 0) : erreurResume ? '—' : null);
 
   if (!utilisateur) {
     navigate('/connexion');
@@ -134,11 +140,21 @@ export default function MonComptePage() {
 
               {/* Statistiques */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <StatItem icon={<ShoppingBag size={18} className="text-indigo-500" />} value="12" label="Commandes" />
-                  <StatItem icon={<Heart size={18} className="text-red-500" />} value="8" label="Favoris" />
-                  <StatItem icon={<Star size={18} className="text-yellow-500" />} value="4.8" label="Évaluation" />
-                  <StatItem icon={<Award size={18} className="text-green-500" />} value="15" label="Points" />
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">Mes achats</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <StatItem icon={<ShoppingBag size={18} className="text-indigo-500" />} value={chiffre(resume?.compteurs.toutes)} label="Commandes" to="/mes-commandes" />
+                  <StatItem icon={<Truck size={18} className="text-[#FC7701]" />} value={chiffre(resume?.compteurs.en_cours)} label="En cours" to="/mes-commandes?onglet=en_cours" />
+                  <StatItem icon={<CircleCheck size={18} className="text-emerald-500" />} value={chiffre(resume?.compteurs.livree)} label="Livrées" to="/mes-commandes?onglet=livree" />
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2 text-sm text-gray-500"><Wallet size={16} className="text-gray-400" /> Total dépensé</span>
+                  {resume ? (
+                    <span className="text-sm font-bold text-[#011023] tabular-nums">{formatPrix(resume.montantTotal)}</span>
+                  ) : erreurResume ? (
+                    <span className="text-sm text-gray-400">—</span>
+                  ) : (
+                    <span className="h-4 w-24 rounded bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </div>
             </div>
@@ -150,12 +166,12 @@ export default function MonComptePage() {
                   <h3 className="text-sm font-semibold text-gray-700">Actions rapides</h3>
                 </div>
                 <div className="divide-y divide-gray-50">
-                  <ActionItem icon={<Package size={18} className="text-indigo-500" />} title="Mes commandes" description="Suivez et gérez toutes vos commandes" to="/mes-commandes" color="indigo" />
-                  <ActionItem icon={<Clock size={18} className="text-blue-500" />} title="Historique" description="Consultez votre historique d'achats" to="/historique" color="blue" />
-                  <ActionItem icon={<Heart size={18} className="text-red-500" />} title="Mes favoris" description="Retrouvez vos articles préférés" to="/favoris" color="red" />
-                  <ActionItem icon={<CreditCard size={18} className="text-green-500" />} title="Moyens de paiement" description="Gérez vos cartes et méthodes de paiement" to="/paiement" color="green" />
-                  <ActionItem icon={<MapPin size={18} className="text-purple-500" />} title="Adresses de livraison" description="Gérez vos adresses d'expédition" to="/adresses" color="purple" />
-                  <ActionItem icon={<Settings size={18} className="text-gray-500" />} title="Paramètres" description="Préférences et configuration du compte" to="/parametres" color="gray" />
+                  <ActionItem icon={<Package size={18} className="text-indigo-500" />} title="Mes commandes" description="Suivez vos commandes et consultez votre historique d'achats" to="/mes-commandes" color="indigo" badge={resume?.compteurs.en_cours ? `${resume.compteurs.en_cours} en cours` : undefined} />
+                  {/* Fonctionnalités prévues au cahier des charges, pas encore disponibles */}
+                  <ActionItem icon={<Heart size={18} className="text-red-500" />} title="Mes favoris" description="Retrouvez vos articles préférés" color="red" bientot />
+                  <ActionItem icon={<MapPin size={18} className="text-purple-500" />} title="Adresses de livraison" description="Gérez vos adresses d'expédition" to="/mes-adresses" color="purple" />
+                  <ActionItem icon={<CreditCard size={18} className="text-green-500" />} title="Moyens de paiement" description="Gérez vos méthodes de paiement" color="green" bientot />
+                  <ActionItem icon={<Settings size={18} className="text-gray-500" />} title="Paramètres" description="Préférences et configuration du compte" color="gray" bientot />
                 </div>
               </div>
 
@@ -354,19 +370,31 @@ function InfoItem({ icon, label, value }: InfoItemProps) {
   );
 }
 
-interface StatItemProps { icon: React.ReactNode; value: string; label: string; }
-function StatItem({ icon, value, label }: StatItemProps) {
+interface StatItemProps { icon: React.ReactNode; value: string | null; label: string; to: string; }
+/** `value` à null : chargement en cours (squelette) */
+function StatItem({ icon, value, label, to }: StatItemProps) {
   return (
-    <div className="text-center">
+    <Link to={to} className="text-center rounded-xl py-2 hover:bg-gray-50 transition-colors">
       <div className="flex justify-center mb-1">{icon}</div>
-      <div className="text-lg font-bold text-gray-900">{value}</div>
+      {value === null
+        ? <div className="mx-auto h-7 w-8 rounded bg-gray-100 animate-pulse" />
+        : <div className="text-lg font-bold text-gray-900 tabular-nums">{value}</div>}
       <div className="text-xs text-gray-500">{label}</div>
-    </div>
+    </Link>
   );
 }
 
-interface ActionItemProps { icon: React.ReactNode; title: string; description: string; to: string; color: string; }
-function ActionItem({ icon, title, description, to, color }: ActionItemProps) {
+interface ActionItemProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+  to?: string;
+  badge?: string;
+  /** Fonctionnalité pas encore disponible : affichée mais non cliquable */
+  bientot?: boolean;
+}
+function ActionItem({ icon, title, description, to, color, badge, bientot }: ActionItemProps) {
   const hoverColor = {
     indigo: 'group-hover:bg-indigo-50',
     blue:   'group-hover:bg-blue-50',
@@ -375,6 +403,19 @@ function ActionItem({ icon, title, description, to, color }: ActionItemProps) {
     purple: 'group-hover:bg-purple-50',
     gray:   'group-hover:bg-gray-50',
   }[color];
+
+  if (bientot || !to) {
+    return (
+      <div className="flex items-center gap-4 px-6 py-4 opacity-60 cursor-not-allowed" aria-disabled="true">
+        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-800">{title}</p>
+          <p className="text-xs text-gray-400">{description}</p>
+        </div>
+        <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Bientôt</span>
+      </div>
+    );
+  }
 
   return (
     <Link to={to} className={`flex items-center gap-4 px-6 py-4 transition-colors group ${hoverColor}`}>
@@ -385,6 +426,7 @@ function ActionItem({ icon, title, description, to, color }: ActionItemProps) {
         <p className="text-sm font-semibold text-gray-800 group-hover:text-[#FC7701] transition-colors">{title}</p>
         <p className="text-xs text-gray-400">{description}</p>
       </div>
+      {badge && <span className="text-[11px] font-semibold text-[#FC7701] bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap">{badge}</span>}
       <ChevronRight size={16} className="text-gray-300 group-hover:text-[#FC7701] transition-colors" />
     </Link>
   );

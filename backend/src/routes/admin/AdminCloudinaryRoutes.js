@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 import { uploadPhotos as uploadPhotosCtrl, uploadVideo as uploadVideoCtrl } from '../../controllers/admin/AdminCloudinaryControleur.js';
 import { uploadPhotos as multerPhotos, uploadVideo as multerVideo } from '../../config/cloudinary.js';
 

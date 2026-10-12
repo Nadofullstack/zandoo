@@ -11,7 +11,7 @@ import {
   getHistoriqueLivraisons,
   marquerLivree,
 } from '../controllers/livreur/LivreurDashboardControleur.js';
-import { protect, requireRole } from '../middlewars/authentification.js';
+import { protect, requireRole } from '../middlewares/authentification.js';
 
 const routeur = Router();
 

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   getPages, getPageParId, creerPage, modifierPage, supprimerPage,
 } from '../../controllers/admin/AdminPageStatiqueControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 import {
   validerIdPage, validerCreerPage, validerModifierPage,
 } from '../../validators/contenuValidators.js';

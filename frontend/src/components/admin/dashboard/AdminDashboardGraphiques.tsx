@@ -1,140 +1,146 @@
 import React, { useState } from 'react';
-import { Calendar, Users, ShoppingBag } from 'lucide-react';
-import LineChartUtilisateurs from './LineChartUtilisateurs';
-import PieChartRoles from './PieChartRoles';
-import StatistiquesCards from './StatistiquesCards';
-import StatistiquesVentesCards from './StatistiquesVentesCards';
+import { RefreshCw } from 'lucide-react';
+import {
+  getDashboardComparaison,
+  getDashboardEvolutionVentes,
+  getDashboardGraphiquesTemporelles,
+  getDashboardKpisVentes,
+  getDashboardStatutsCommandes,
+} from '../../../services/admin/dashboardService';
+import type { Periode } from '../../../services/admin/dashboardService';
+import { useChargement } from './useChargement';
+import { SelecteurPeriode } from './ui';
+import { PERIODES } from './theme';
+import KpisPrincipaux from './KpisPrincipaux';
 import BarChartVentes from './BarChartVentes';
 import DonutStatutCommandes from './DonutStatutCommandes';
+import DernieresCommandes from './DernieresCommandes';
+import ActionsRequises from './ActionsRequises';
+import LineChartUtilisateurs from './LineChartUtilisateurs';
+import RepartitionUtilisateurs from './RepartitionUtilisateurs';
 
-type Periode = 'jour' | 'semaine' | 'mois' | 'annee';
+const CLE_STOCKAGE_PERIODE = 'zandoo.admin.dashboard.periode';
 
-const PERIODES: { value: Periode; label: string }[] = [
-  { value: 'jour',    label: 'Aujourd\'hui' },
-  { value: 'semaine', label: 'Cette semaine' },
-  { value: 'mois',    label: 'Ce mois' },
-  { value: 'annee',   label: 'Cette année' },
-];
+/** Période mémorisée entre deux visites (confort uniquement, jamais bloquant) */
+const periodeInitiale = (): Periode => {
+  try {
+    const p = localStorage.getItem(CLE_STOCKAGE_PERIODE);
+    if (PERIODES.some((x) => x.value === p)) return p as Periode;
+  } catch { /* stockage indisponible */ }
+  return 'mois';
+};
 
-/* ── Sélecteur de période réutilisable ──────────────────────────────────── */
-interface SelectorProps {
-  value: Periode;
-  onChange: (p: Periode) => void;
-}
+const heure = (d: Date) => d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-const PeriodeSelector: React.FC<SelectorProps> = ({ value, onChange }) => (
-  <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-sm self-start sm:self-auto">
-    <Calendar className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value as Periode)}
-      className="pr-3 py-2 bg-transparent text-sm text-gray-700 font-medium focus:outline-none cursor-pointer"
-      aria-label="Sélectionner la période"
-    >
-      {PERIODES.map((p) => (
-        <option key={p.value} value={p.value}>{p.label}</option>
-      ))}
-    </select>
-  </div>
+const TitreSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-3">{children}</h2>
 );
 
-/* ── Composant principal ─────────────────────────────────────────────────── */
+/**
+ * Tableau de bord administrateur.
+ *
+ * Une seule période pilote l'ensemble des indicateurs. Les requêtes sont
+ * centralisées ici puis distribuées aux composants de présentation, ce qui
+ * évite les appels en double (ex: la série CA alimente la carte KPI et le graphique).
+ */
 const AdminDashboardGraphiques: React.FC = () => {
-  const [periodeVentes, setPeriodeVentes]       = useState<Periode>('mois');
-  const [periodeUtilisateurs, setPeriodeUtilisateurs] = useState<Periode>('mois');
+  const [periode, setPeriode] = useState<Periode>(periodeInitiale);
+  const [version, setVersion] = useState(0);
+  const [majA, setMajA]       = useState(() => new Date());
+
+  const cle = `${periode}:${version}`;
+  const kpis         = useChargement(() => getDashboardKpisVentes(periode), cle);
+  const ventes       = useChargement(() => getDashboardEvolutionVentes(periode), cle);
+  const statuts      = useChargement(() => getDashboardStatutsCommandes(periode), cle);
+  const comparaison  = useChargement(() => getDashboardComparaison(periode), cle);
+  const inscriptions = useChargement(() => getDashboardGraphiquesTemporelles(periode), cle);
+
+  const enCours = [kpis, ventes, statuts, comparaison, inscriptions].some((r) => r.chargement);
+
+  const changerPeriode = (p: Periode) => {
+    setPeriode(p);
+    setMajA(new Date());
+    try { localStorage.setItem(CLE_STOCKAGE_PERIODE, p); } catch { /* stockage indisponible */ }
+  };
+
+  const actualiser = () => {
+    setVersion((v) => v + 1);
+    setMajA(new Date());
+  };
+
+  const dateDuJour = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="w-full space-y-12">
-
-      {/* ════════════════════════════════════════════════════════════════════
-          SECTION VENTES
-          ════════════════════════════════════════════════════════════════════ */}
-      <section aria-labelledby="titre-ventes">
-        {/* En-tête section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-indigo-50">
-              <ShoppingBag className="w-4 h-4 text-indigo-600" />
-            </div>
-            <div>
-              <h2
-                id="titre-ventes"
-                className="text-xs font-semibold text-[#74777d] uppercase tracking-wider"
-              >
-                Ventes
-              </h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Chiffre d'affaires, commandes et statuts
-              </p>
-            </div>
-          </div>
-          <PeriodeSelector value={periodeVentes} onChange={setPeriodeVentes} />
+    <div className="w-full space-y-8">
+      {/* ── En-tête ──────────────────────────────────────────────────────── */}
+      <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div>
+          <p className="text-xs font-medium text-slate-400 first-letter:uppercase">{dateDuJour}</p>
+          <h1 className="mt-1 text-2xl sm:text-[28px] font-extrabold text-primary tracking-tight">Tableau de bord</h1>
+          <p className="text-sm text-slate-500 mt-1">Vue d'ensemble de l'activité de la plateforme ZANDOO.</p>
         </div>
 
-        {/* KPIs ventes */}
-        <div className="mb-6">
-          <StatistiquesVentesCards periode={periodeVentes} />
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="hidden sm:inline text-xs text-slate-400 tabular-nums">
+            Données à {heure(majA)}
+          </span>
+          <button
+            type="button"
+            onClick={actualiser}
+            disabled={enCours}
+            aria-label="Actualiser les données"
+            title="Actualiser"
+            className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-500 hover:text-primary hover:bg-slate-50 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors disabled:cursor-wait"
+          >
+            <RefreshCw className={`w-4 h-4 ${enCours ? 'animate-spin' : ''}`} />
+          </button>
+          <SelecteurPeriode value={periode} onChange={changerPeriode} />
         </div>
+      </header>
 
-        {/* Graphiques ventes */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Évolution CA + commandes — 2/3 */}
+      {/* ── Indicateurs clés ─────────────────────────────────────────────── */}
+      <KpisPrincipaux
+        periode={periode}
+        kpis={kpis.donnees}
+        ventes={ventes.donnees}
+        inscriptions={inscriptions.donnees}
+        comparaison={comparaison.donnees}
+        erreur={kpis.erreur}
+        onReessayer={kpis.recharger}
+      />
+
+      {/* ── Ventes ───────────────────────────────────────────────────────── */}
+      <section>
+        <TitreSection>Ventes</TitreSection>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2">
-            <BarChartVentes periode={periodeVentes} />
+            <BarChartVentes {...ventes} onReessayer={ventes.recharger} />
           </div>
-          {/* Donut statuts — 1/3 */}
-          <div className="xl:col-span-1">
-            <DonutStatutCommandes periode={periodeVentes} />
-          </div>
+          <DonutStatutCommandes {...statuts} onReessayer={statuts.recharger} />
         </div>
       </section>
 
-      {/* Séparateur visuel */}
-      <hr className="border-gray-100" />
-
-      {/* ════════════════════════════════════════════════════════════════════
-          SECTION UTILISATEURS
-          ════════════════════════════════════════════════════════════════════ */}
-      <section aria-labelledby="titre-utilisateurs">
-        {/* En-tête section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-blue-50">
-              <Users className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <h2
-                id="titre-utilisateurs"
-                className="text-xs font-semibold text-[#74777d] uppercase tracking-wider"
-              >
-                Utilisateurs
-              </h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Inscriptions et répartition par rôle
-              </p>
-            </div>
-          </div>
-          <PeriodeSelector value={periodeUtilisateurs} onChange={setPeriodeUtilisateurs} />
-        </div>
-
-        {/* Cartes stats utilisateurs */}
-        <div className="mb-6">
-          <StatistiquesCards periode={periodeUtilisateurs} />
-        </div>
-
-        {/* Graphiques utilisateurs */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Courbe évolution — 2/3 */}
+      {/* ── Opérations ───────────────────────────────────────────────────── */}
+      <section>
+        <TitreSection>Opérations</TitreSection>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2">
-            <LineChartUtilisateurs periode={periodeUtilisateurs} />
+            <DernieresCommandes version={version} />
           </div>
-          {/* Camembert rôles — 1/3 */}
-          <div className="xl:col-span-1">
-            <PieChartRoles periode={periodeUtilisateurs} />
-          </div>
+          <ActionsRequises version={version} />
         </div>
       </section>
 
+      {/* ── Utilisateurs ─────────────────────────────────────────────────── */}
+      <section>
+        <TitreSection>Utilisateurs</TitreSection>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="xl:col-span-2">
+            <LineChartUtilisateurs {...inscriptions} onReessayer={inscriptions.recharger} />
+          </div>
+          <RepartitionUtilisateurs {...comparaison} onReessayer={comparaison.recharger} />
+        </div>
+      </section>
     </div>
   );
 };

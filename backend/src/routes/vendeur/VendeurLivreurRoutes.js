@@ -8,7 +8,7 @@ import {
   renvoyerInvitation,
   supprimerLivreur,
 } from '../../controllers/vendeur/VendeurLivreurControleur.js';
-import { protect, requireRole } from '../../middlewars/authentification.js';
+import { protect, requireRole } from '../../middlewares/authentification.js';
 
 const routeur = Router();
 
