@@ -20,7 +20,8 @@ export function useLoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   /* Page protégée demandée avant la connexion (posée par les gardes de route) */
-  const origine = (location.state as { from?: string } | null)?.from;
+  const etat = location.state as { from?: string; redirectAfterLogin?: string } | null;
+  const origine = etat?.from ?? etat?.redirectAfterLogin;
   const retourInterne = origine?.startsWith('/') && !origine.startsWith('//') ? origine : null;
   const [form, setForm] = useState<LoginFormState>(INITIAL);
   const [errors, setErrors] = useState<LoginErrors>({});

@@ -8,6 +8,17 @@ export const validerIdPublicite = [
   param('id').isMongoId().withMessage("Identifiant invalide."),
 ];
 
+/** Contenu affiché à l'acheteur — commun à la création et à la modification */
+const validateursContenu = [
+  body('lienCible').optional().isString().trim()
+    .custom((v) => v === '' || /^\/(?!\/)/.test(v) || /^https?:\/\//i.test(v))
+    .withMessage('Le lien doit être une page du site (/catalogue…) ou une adresse http(s).'),
+  body('texteAlt').optional().isString().trim().isLength({ max: 200 }),
+  body('accroche').optional().isString().trim().isLength({ max: 80 }).withMessage("L'accroche ne peut pas dépasser 80 caractères."),
+  body('description').optional().isString().trim().isLength({ max: 160 }).withMessage('La description ne peut pas dépasser 160 caractères.'),
+  body('libelleBouton').optional().isString().trim().isLength({ max: 30 }).withMessage('Le libellé du bouton ne peut pas dépasser 30 caractères.'),
+];
+
 export const validerCreerPublicite = [
   body('titre')
     .notEmpty().withMessage('Le titre est requis.')
@@ -23,8 +34,7 @@ export const validerCreerPublicite = [
     .notEmpty().withMessage('La date de fin est requise.')
     .isISO8601().withMessage('Date de fin invalide.'),
   body('imageUrl').optional().isURL().withMessage("L'URL de l'image est invalide."),
-  body('lienCible').optional().isString().trim(),
-  body('texteAlt').optional().isString().trim().isLength({ max: 200 }),
+  ...validateursContenu,
   body('ordre').optional().isInt({ min: 0 }),
 ];
 
@@ -37,6 +47,7 @@ export const validerModifierPublicite = [
   body('dateDebut').optional().isISO8601(),
   body('dateFin').optional().isISO8601(),
   body('imageUrl').optional().isURL(),
+  ...validateursContenu,
   body('ordre').optional().isInt({ min: 0 }),
 ];
 

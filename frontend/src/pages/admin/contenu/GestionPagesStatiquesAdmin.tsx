@@ -58,7 +58,12 @@ function PanelEdition({
             <textarea value={form.contenu} onChange={(e) => set('contenu', e.target.value)}
               rows={10} required
               className={`${inputCls} resize-y font-mono text-xs`}
-              placeholder="Contenu HTML ou texte brut…" />
+              placeholder="# Titre de la section&#10;&#10;Votre texte…" />
+              <p className="text-xs text-[#74777d] mt-1.5 leading-relaxed">
+                Mise en forme : <code># Titre</code>, <code>## Sous-titre</code>, <code>- liste</code>, <code>1. liste numérotée</code>,
+                <code> **gras**</code>, <code>*italique*</code>, <code>[texte](https://… ou /page)</code>, <code>&gt; citation</code>, <code>---</code> séparateur.
+                Pages reconnues automatiquement : <code>a-propos</code>, <code>cgu</code>, <code>confidentialite</code>, <code>contact</code> (coordonnées affichées sur la page Contact).
+              </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

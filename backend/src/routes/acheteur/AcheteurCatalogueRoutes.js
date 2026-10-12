@@ -6,6 +6,8 @@ import {
   getProduitsParCategorie,
   rechercherProduits,
 } from '../../controllers/acheteur/CatalogueControleur.js';
+import { getAvisProduit } from '../../controllers/acheteur/AvisControleur.js';
+import { getPromotions } from '../../controllers/acheteur/AccueilControleur.js';
 
 const routeur = Router();
 
@@ -14,6 +16,8 @@ routeur.get('/',                              getProduits);
 routeur.get('/recherche',                     rechercherProduits);
 routeur.get('/categories',                    getCategories);
 routeur.get('/categories/:slug/produits',     getProduitsParCategorie);
+routeur.get('/promotions',                    getPromotions);   // avant /:slug
+routeur.get('/:produitId/avis',               getAvisProduit);
 routeur.get('/:slug',                         getProduitParSlug);
 
 export default routeur;

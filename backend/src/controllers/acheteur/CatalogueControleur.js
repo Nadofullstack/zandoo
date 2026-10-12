@@ -97,7 +97,7 @@ export const getProduitParSlug = async (req, res) => {
       PROJECTION_PUBLIQUE
     )
       .populate('categorie', 'nom slug attributs')
-      .populate('vendeur', 'nomEntreprise logoUrl')
+      .populate('vendeur', 'nomEntreprise logo slug')
       .lean();
 
     if (!produit) {
@@ -109,7 +109,7 @@ export const getProduitParSlug = async (req, res) => {
       { statut: { $in: ['en_stock', 'faible'] }, enStock: true, categorie: produit.categorie._id, _id: { $ne: produit._id } },
       PROJECTION_PUBLIQUE
     )
-      .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur')
+      .select('nom slug photoCouverture variantesPhotos prix prixPromotionnel categorie vendeur noteMoyenne nombreAvis')
       .populate('categorie', 'nom slug')
       .populate('vendeur', 'nomEntreprise')
       .limit(4)

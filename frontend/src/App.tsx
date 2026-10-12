@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { useEffect } from 'react';
 import { NavigationService } from './services/navigationService';
 import { PanierProvider } from './context/PanierContext';
+import { FavorisProvider } from './context/FavorisContext';
 import AccueilPage from './pages/acheteur/AccueilPage';
 import CataloguePage from './pages/acheteur/CataloguePage';
 import DetailProduitPage from './pages/acheteur/DetailProduitPage';
@@ -10,6 +11,12 @@ import PanierPage from './pages/acheteur/PanierPage';
 import MesCommandesAcheteurPage from './pages/acheteur/MesCommandesPage';
 import DetailMaCommandePage from './pages/acheteur/DetailMaCommandePage';
 import MesAdressesPage from './pages/acheteur/MesAdressesPage';
+import MesFavorisPage from './pages/acheteur/MesFavorisPage';
+import PromotionsAcheteurPage from './pages/acheteur/PromotionsPage';
+import BoutiquesPage from './pages/acheteur/BoutiquesPage';
+import DetailBoutiquePage from './pages/acheteur/DetailBoutiquePage';
+import PageContenuPage from './pages/acheteur/PageContenuPage';
+import ContactPage from './pages/acheteur/ContactPage';
 import GardeConnexion from './components/acheteur/GardeConnexion';
 import RegisterPage from './pages/auth/RegisterPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -49,6 +56,7 @@ import MesProduitsPage from './pages/vendeur/MesProduitsPage';
 import MesCommandesPage from './pages/vendeur/MesCommandesPage';
 import PromotionsPage from './pages/vendeur/PromotionsPage';
 import LivraisonPage from './pages/vendeur/LivraisonPage';
+import AvisClientsPage from './pages/vendeur/AvisClientsPage';
 import MesLivreursPage from './pages/vendeur/livreur/MesLivreursPage';
 import ProfilLivreurVendeurPage from './pages/vendeur/livreur/ProfilLivreurVendeurPage';
 
@@ -70,12 +78,23 @@ export default function App() {
     <BrowserRouter>
       <NavigationInjector />
       <PanierProvider>
+      <FavorisProvider>
         <Routes>
         {/* ── Acheteur ───────────────────────────────────────────────────────── */}
         <Route path="/"                             element={<AccueilPage />} />
         <Route path="/catalogue"                    element={<CataloguePage />} />
         <Route path="/catalogue/categorie/:slug"    element={<CataloguePage />} />
         <Route path="/produit/:slug"                element={<DetailProduitPage />} />
+        <Route path="/promotions"                   element={<PromotionsAcheteurPage />} />
+        <Route path="/boutiques"                    element={<BoutiquesPage />} />
+        <Route path="/boutique/:slug"               element={<DetailBoutiquePage />} />
+
+        {/* ── Contenus et informations ───────────────────────────────────── */}
+        <Route path="/contact"                      element={<ContactPage />} />
+        <Route path="/pages/:slug"                  element={<PageContenuPage />} />
+        <Route path="/a-propos"                     element={<PageContenuPage slugFixe="a-propos" />} />
+        <Route path="/cgu"                          element={<PageContenuPage slugFixe="cgu" />} />
+        <Route path="/confidentialite"              element={<PageContenuPage slugFixe="confidentialite" />} />
 
         {/* ── Auth ───────────────────────────────────────────────────────── */}
         <Route path="/inscription" element={<RegisterPage />} />
@@ -86,6 +105,7 @@ export default function App() {
         <Route path="/mes-commandes"     element={<GardeConnexion><MesCommandesAcheteurPage /></GardeConnexion>} />
         <Route path="/mes-commandes/:id" element={<GardeConnexion><DetailMaCommandePage /></GardeConnexion>} />
         <Route path="/mes-adresses"      element={<GardeConnexion><MesAdressesPage /></GardeConnexion>} />
+        <Route path="/favoris"           element={<GardeConnexion><MesFavorisPage /></GardeConnexion>} />
         <Route path="/panier"        element={<PanierPage />} />
 
         {/* ── Vendeur — inscription (public, utilisateur connecté) ───────── */}
@@ -98,6 +118,7 @@ export default function App() {
         <Route path="/vendeur/commandes"        element={<GardeVendeur><MesCommandesPage /></GardeVendeur>} />
         <Route path="/vendeur/promotions"       element={<GardeVendeur><PromotionsPage /></GardeVendeur>} />
         <Route path="/vendeur/livraison"        element={<GardeVendeur><LivraisonPage /></GardeVendeur>} />
+        <Route path="/vendeur/avis"             element={<GardeVendeur><AvisClientsPage /></GardeVendeur>} />
         <Route path="/vendeur/livreurs"         element={<GardeVendeur><MesLivreursPage /></GardeVendeur>} />
         <Route path="/vendeur/livreurs/:id"     element={<GardeVendeur><ProfilLivreurVendeurPage /></GardeVendeur>} />
 
@@ -158,6 +179,7 @@ export default function App() {
         {/* ── Défaut ─────────────────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      </FavorisProvider>
       </PanierProvider>
     </BrowserRouter>
   );

@@ -15,7 +15,7 @@ export const getPanier = async (req, res) => {
       })
       .populate({
         path: 'lignes.vendeur',
-        select: 'nomEntreprise logoUrl',
+        select: 'nomEntreprise logo',
       });
 
     /* Si aucun panier n'existe, on en crée un vide */
@@ -159,7 +159,7 @@ export const ajouterAuPanier = async (req, res) => {
       })
       .populate({
         path: 'lignes.vendeur',
-        select: 'nomEntreprise logoUrl',
+        select: 'nomEntreprise logo',
       });
 
     const lignesValides = panier.lignes.filter((l) => l.produit && l.vendeur);
@@ -253,7 +253,7 @@ export const modifierQuantite = async (req, res) => {
       })
       .populate({
         path: 'lignes.vendeur',
-        select: 'nomEntreprise logoUrl',
+        select: 'nomEntreprise logo',
       });
 
     const lignesValides = panierRecharge.lignes.filter((l) => l.produit && l.vendeur);
@@ -323,7 +323,7 @@ export const retirerDuPanier = async (req, res) => {
       })
       .populate({
         path: 'lignes.vendeur',
-        select: 'nomEntreprise logoUrl',
+        select: 'nomEntreprise logo',
       });
 
     const lignesValides = panierRecharge.lignes.filter((l) => l.produit && l.vendeur);

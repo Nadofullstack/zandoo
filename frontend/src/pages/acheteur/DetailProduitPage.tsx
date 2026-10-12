@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  ChevronRight, Heart, ShoppingCart, ImageOff,
+  ChevronRight, ShoppingCart, ImageOff,
   SearchX, Store, ArrowLeft, Minus, Plus, Loader2,
 } from 'lucide-react';
 import AcheteurLayout from '../../components/acheteur/layout/AcheteurLayout';
 import CarteProduit from '../../components/acheteur/accueil/CarteProduit';
 import { useDetailProduit } from '../../hooks/acheteur/useDetailProduit';
 import { usePanier } from '../../context/PanierContext';
+import BoutonFavori from '../../components/acheteur/favoris/BoutonFavori';
+import EtoilesNote from '../../components/ui/EtoilesNote';
+import SectionAvisProduit from '../../components/acheteur/avis/SectionAvisProduit';
+import { lienBoutique } from '../../services/acheteur/acheteurBoutiqueService';
 
 function formatPrix(prix: number): string {
   return new Intl.NumberFormat('fr-FR').format(prix) + ' FCFA';
@@ -135,7 +139,15 @@ export default function DetailProduitPage() {
             <span className="text-xs font-bold text-[#FC7701] uppercase tracking-wide mb-2">
               {produit.categorie.nom}
             </span>
-            <h1 className="text-3xl font-black text-[#011023] leading-tight mb-5">{produit.nom}</h1>
+            <h1 className="text-3xl font-black text-[#011023] leading-tight mb-3">{produit.nom}</h1>
+            <a href="#avis" className="inline-flex items-center gap-2 mb-5 text-sm text-gray-500 hover:text-[#FC7701]">
+              <EtoilesNote note={produit.noteMoyenne ?? 0} taille={16} />
+              {produit.nombreAvis ? (
+                <span><span className="font-semibold text-[#011023]">{(produit.noteMoyenne ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 1 })}</span> · {produit.nombreAvis} avis</span>
+              ) : (
+                <span>Aucun avis</span>
+              )}
+            </a>
 
             {/* Prix */}
             <div className="flex items-end gap-3 mb-2">
@@ -244,28 +256,37 @@ export default function DetailProduitPage() {
                   </>
                 )}
               </button>
-              <button
-                className=" cursor-pointer w-14 h-14 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-red-300 hover:text-red-400 transition-all"
-                aria-label="Ajouter aux favoris"
-              >
-                <Heart size={20} className="text-gray-400" />
-              </button>
+              <BoutonFavori produitId={produit._id} variante="fiche" />
             </div>
 
             {/* Vendeur */}
             {produit.vendeur && (
               <div className="mt-8 pt-6 border-t border-gray-100">
                 <p className="text-xs text-gray-400 mb-2 uppercase font-semibold tracking-wide">Vendu par</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#FC7701]/10 flex items-center justify-center">
-                    <Store size={16} className="text-[#FC7701]" />
+                <Link to={lienBoutique(produit.vendeur)} className="group flex items-center gap-3 p-3 -mx-3 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-[#FC7701]/10 overflow-hidden flex items-center justify-center shrink-0">
+                    {produit.vendeur.logo
+                      ? <img src={produit.vendeur.logo} alt="" className="w-full h-full object-cover" />
+                      : <Store size={18} className="text-[#FC7701]" />}
                   </div>
-                  <span className="font-bold text-[#011023]">{produit.vendeur.nomEntreprise}</span>
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block font-bold text-[#011023] group-hover:text-[#FC7701] transition-colors truncate">{produit.vendeur.nomEntreprise}</span>
+                    <span className="text-xs text-gray-500">Voir la boutique</span>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-300 group-hover:text-[#FC7701] group-hover:translate-x-0.5 transition-all" />
+                </Link>
               </div>
             )}
           </div>
         </div>
+
+        {/* Avis clients */}
+        <SectionAvisProduit
+          produitId={produit._id}
+          nomProduit={produit.nom}
+          photo={produit.photoCouverture}
+          nomBoutique={produit.vendeur?.nomEntreprise}
+        />
 
         {/* Produits similaires */}
         {similaires.length > 0 && (

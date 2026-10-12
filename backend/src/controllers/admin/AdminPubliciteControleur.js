@@ -96,6 +96,14 @@ export const getPubliciteParId = async (req, res) => {
   }
 };
 
+/** Champs modifiables par l'admin (impressions, clics et creePar sont gérés par le serveur) */
+const CHAMPS_PUBLICITE = ['titre', 'type', 'emplacement', 'imageUrl', 'lienCible', 'texteAlt',
+  'accroche', 'description', 'libelleBouton',
+  'produit', 'vendeur', 'dateDebut', 'dateFin', 'statut', 'ordre'];
+
+const extraireChamps = (corps) =>
+  Object.fromEntries(CHAMPS_PUBLICITE.filter((c) => corps[c] !== undefined).map((c) => [c, corps[c]]));
+
 /* ─────────────────────────────────────────────────────────────────────────────
    POST /api/admin/publicites
 ───────────────────────────────────────────────────────────────────────────── */
@@ -104,7 +112,7 @@ export const creerPublicite = async (req, res) => {
   if (errs) return res.status(422).json({ success: false, errors: errs });
 
   try {
-    const pub = await Publicite.create({ ...req.body, creePar: req.user._id });
+    const pub = await Publicite.create({ ...extraireChamps(req.body), creePar: req.user._id });
     return res.status(201).json({ success: true, message: 'Publicité créée.', data: { publicite: pub } });
   } catch (err) {
     console.error('Erreur creerPublicite:', err);
@@ -120,10 +128,7 @@ export const modifierPublicite = async (req, res) => {
   if (errs) return res.status(422).json({ success: false, errors: errs });
 
   try {
-    const champs = ['titre','type','emplacement','imageUrl','lienCible','texteAlt',
-                    'produit','vendeur','dateDebut','dateFin','statut','ordre'];
-    const mise_a_jour = {};
-    champs.forEach((c) => { if (req.body[c] !== undefined) mise_a_jour[c] = req.body[c]; });
+    const mise_a_jour = extraireChamps(req.body);
 
     const pub = await Publicite.findByIdAndUpdate(req.params.id, mise_a_jour, { new: true, runValidators: true })
       .populate('creePar', 'fullName email')

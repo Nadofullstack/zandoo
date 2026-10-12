@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import slugify from 'slugify';
 
 /**
  * Modèle Vendeur — profil vendeur lié à un Utilisateur (User).
@@ -172,6 +173,24 @@ const vendeurSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+/* ── Slug public de la boutique (URL /boutique/:slug) ──────────────────────
+   Généré une seule fois à partir du nom : il reste stable si la boutique est
+   renommée, pour ne pas casser les liens partagés ni le référencement. */
+vendeurSchema.statics.genererSlugUnique = async function (nom, idExclu = null) {
+  const base = slugify(String(nom || 'boutique'), { lower: true, strict: true, locale: 'fr' }).slice(0, 60) || 'boutique';
+  let slug = base;
+  for (let n = 2; await this.exists({ slug, ...(idExclu ? { _id: { $ne: idExclu } } : {}) }); n += 1) {
+    slug = `${base}-${n}`;
+  }
+  return slug;
+};
+
+vendeurSchema.pre('validate', async function () {
+  if (!this.slug && this.nomEntreprise) {
+    this.slug = await this.constructor.genererSlugUnique(this.nomEntreprise, this._id);
+  }
+});
 
 const Vendeur = mongoose.model('Vendeur', vendeurSchema);
 export default Vendeur;

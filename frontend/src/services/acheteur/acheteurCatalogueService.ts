@@ -4,6 +4,7 @@ import type {
   ReponseDetailProduit,
   ReponseCategories,
   FiltresCatalogue,
+  ReponsePromotions,
 } from '../../types/acheteur';
 
 export async function getProduits(filtres?: FiltresCatalogue): Promise<ReponseListeProduits> {
@@ -35,5 +36,13 @@ export async function rechercherProduits(
   limite = 20
 ): Promise<ReponseListeProduits> {
   const { data } = await api.get('/acheteur/produits/recherche', { params: { q, page, limite } });
+  return data;
+}
+
+export type TriPromotions = 'remise' | 'prix_asc' | 'prix_desc' | 'recent';
+
+/** Tous les produits en promotion, triés et paginés côté serveur. */
+export async function getPromotions(params: { page?: number; limite?: number; tri?: TriPromotions } = {}): Promise<ReponsePromotions> {
+  const { data } = await api.get('/acheteur/produits/promotions', { params });
   return data;
 }

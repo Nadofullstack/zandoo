@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Bike, ChevronRight, Clock, CreditCard, Mail, MapPin, Phone, RefreshCw, Store } from 'lucide-react';
+import { ArrowLeft, Bike, ChevronRight, Clock, CreditCard, Mail, MapPin, Phone, RefreshCw, Star, Store } from 'lucide-react';
 import AcheteurLayout from '../../components/acheteur/layout/AcheteurLayout';
 import BadgeStatutCommande from '../../components/acheteur/commandes/BadgeStatutCommande';
 import SuiviCommande from '../../components/acheteur/commandes/SuiviCommande';
@@ -8,6 +8,9 @@ import VignetteProduit from '../../components/acheteur/commandes/VignetteProduit
 import ModalAnnulationCommande from '../../components/acheteur/commandes/ModalAnnulationCommande';
 import { METHODES_PAIEMENT, STATUTS, formatDate, formatPrix, nombreArticles } from '../../components/acheteur/commandes/configCommandes';
 import { useMaCommande } from '../../hooks/acheteur/useMaCommande';
+import { useAvisCommande } from '../../hooks/acheteur/useAvisCommande';
+import ModalAvis from '../../components/acheteur/avis/ModalAvis';
+import EtoilesNote from '../../components/ui/EtoilesNote';
 import type { CommandeDetail, LigneCommande, PointRetrait } from '../../types/acheteur';
 import { libelleDelai } from '../../components/acheteur/checkout/checkoutUtils';
 
@@ -18,6 +21,8 @@ export default function DetailMaCommandePage() {
   const { id } = useParams<{ id: string }>();
   const { commande, autresCommandes, chargement, erreur, annuler, recharger } = useMaCommande(id);
   const [modalAnnulation, setModalAnnulation] = useState(false);
+  const avisCommande = useAvisCommande(id, commande?.statut === 'livree');
+  const [ligneAEvaluer, setLigneAEvaluer] = useState<LigneCommande | null>(null);
 
   return (
     <AcheteurLayout>
@@ -70,7 +75,24 @@ export default function DetailMaCommandePage() {
 
                 <Bloc titre="Articles" action={<LienBoutique commande={commande} />}>
                   <ul className="divide-y divide-gray-100 -my-3">
-                    {commande.lignes.map((l) => <LigneArticle key={l._id} ligne={l} devise={commande.devise} />)}
+                    {commande.lignes.map((l) => {
+                      const avis = avisCommande.avisParProduit[idProduit(l)];
+                      return (
+                        <LigneArticle
+                          key={l._id}
+                          ligne={l}
+                          devise={commande.devise}
+                          action={commande.statut === 'livree' && idProduit(l) ? (
+                            <button
+                              onClick={() => setLigneAEvaluer(l)}
+                              className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-[#FC7701] hover:underline"
+                            >
+                              {avis ? <><EtoilesNote note={avis.note} taille={11} /> Modifier mon avis</> : <><Star size={12} /> Noter ce produit</>}
+                            </button>
+                          ) : null}
+                        />
+                      );
+                    })}
                   </ul>
                 </Bloc>
 
@@ -175,6 +197,17 @@ export default function DetailMaCommandePage() {
         )}
       </div>
 
+      {ligneAEvaluer && (
+        <ModalAvis
+          nomProduit={ligneAEvaluer.nomProduit}
+          photo={ligneAEvaluer.photoProduit}
+          avisExistant={avisCommande.avisParProduit[idProduit(ligneAEvaluer)] ?? null}
+          onEnregistrer={(saisie) => avisCommande.enregistrer(idProduit(ligneAEvaluer), saisie)}
+          onSupprimer={avisCommande.avisParProduit[idProduit(ligneAEvaluer)] ? () => avisCommande.supprimer(idProduit(ligneAEvaluer)) : undefined}
+          onFermer={() => setLigneAEvaluer(null)}
+        />
+      )}
+
       {modalAnnulation && commande && (
         <ModalAnnulationCommande
           numero={commande.numero}
@@ -212,7 +245,11 @@ function LienBoutique({ commande }: { commande: CommandeDetail }) {
   );
 }
 
-function LigneArticle({ ligne, devise }: { ligne: LigneCommande; devise: string }) {
+/** Identifiant du produit d'une ligne (peuplé ou non) */
+const idProduit = (l: LigneCommande): string =>
+  typeof l.produit === 'object' && l.produit ? l.produit._id : (l.produit ?? '');
+
+function LigneArticle({ ligne, devise, action }: { ligne: LigneCommande; devise: string; action?: React.ReactNode }) {
   const slug = typeof ligne.produit === 'object' ? ligne.produit?.slug : undefined;
   const nom = <span className="text-sm font-medium text-gray-900 line-clamp-2">{ligne.nomProduit}</span>;
 
@@ -225,6 +262,7 @@ function LigneArticle({ ligne, devise }: { ligne: LigneCommande; devise: string 
           {ligne.variante && <>{ligne.variante} · </>}
           {ligne.quantite} × {formatPrix(ligne.prixUnitaire, devise)}
         </p>
+        {action}
       </div>
       <p className="text-sm font-semibold text-[#011023] tabular-nums">{formatPrix(ligne.sousTotal, devise)}</p>
     </li>

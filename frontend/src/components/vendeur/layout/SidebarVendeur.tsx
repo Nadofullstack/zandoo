@@ -7,6 +7,7 @@ import {
   Tag,
   Truck,
   PackageCheck,
+  Star,
   LogOut,
   ShoppingCart,
 } from 'lucide-react';
@@ -32,6 +33,7 @@ const LIENS: LienNav[] = [
   { vers: '/vendeur/commandes',       libelle: 'Commandes',        icone: ShoppingBag                 },
   { vers: '/vendeur/promotions',      libelle: 'Promotions',       icone: Tag                         },
   { vers: '/vendeur/livraison',       libelle: 'Livraison',        icone: PackageCheck                },
+  { vers: '/vendeur/avis',            libelle: 'Avis clients',     icone: Star                        },
   { vers: '/vendeur/livreurs',        libelle: 'Mes livreurs',     icone: Truck                       },
 ];
 

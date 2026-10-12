@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Search, ShoppingCart, User, Menu, X, Heart, Flame } from 'lucide-react';
 import logozandoo from '../../../assets/logozandoo.png';
 import { lireSession, rafraichirSession } from '../../../services/auth/authService';
 import { useNombreArticlesPanier } from '../../../context/PanierContext';
+import { useFavoris } from '../../../context/FavorisContext';
+
+const LIENS_NAV = [
+  { vers: '/catalogue',  libelle: 'Catalogue',  icone: null },
+  { vers: '/boutiques',  libelle: 'Boutiques',  icone: null },
+  { vers: '/promotions', libelle: 'Promotions', icone: <Flame size={15} className="text-[#FC7701]" /> },
+];
 
 export default function TopNavBar() {
   const [recherche, setRecherche]   = useState('');
@@ -14,6 +22,7 @@ export default function TopNavBar() {
   const [utilisateur, setUtilisateur] = useState(lireSession);
   const estConnecte = !!utilisateur;
   const nombreArticles = useNombreArticlesPanier();
+  const { nombre: nombreFavoris } = useFavoris();
 
   /* Rafraîchir la session au montage */
   useEffect(() => {
@@ -56,7 +65,25 @@ export default function TopNavBar() {
         </Link>
 
         {/* ── Navigation desktop ───────────────────────── */}
-        <nav className="hidden lg:flex items-center gap-1" />
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Navigation principale">
+          {LIENS_NAV.map((l) => (
+            <NavLink
+              key={l.vers}
+              to={l.vers}
+              className={({ isActive }) => `relative flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}
+            >
+              {({ isActive }) => (
+                <>
+                  {l.icone}
+                  {l.libelle}
+                  {isActive && (
+                    <motion.span layoutId="soulignement-nav" className="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded-full bg-[#FC7701]" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
 
         {/* ── Barre de recherche ───────────────────────── */}
         <form
@@ -103,6 +130,22 @@ export default function TopNavBar() {
             </Link>
           )}
 
+          {/* ── Favoris (connecté) ───────────────────────── */}
+          {estConnecte && (
+            <Link
+              to="/favoris"
+              className="relative hidden sm:flex w-9 h-9 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all"
+              aria-label={`Mes favoris${nombreFavoris > 0 ? ` — ${nombreFavoris}` : ''}`}
+            >
+              <Heart size={20} />
+              {nombreFavoris > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center px-1">
+                  {nombreFavoris > 99 ? '99+' : nombreFavoris}
+                </span>
+              )}
+            </Link>
+          )}
+
           {/* ── Panier ───────────────────────────────────── */}
           <Link
             to="/panier"
@@ -144,6 +187,28 @@ export default function TopNavBar() {
                 className="bg-transparent border-none outline-none text-sm text-white placeholder-white/40 w-full"
               />
             </form>
+
+            {LIENS_NAV.map((l) => (
+              <Link
+                key={l.vers}
+                to={l.vers}
+                onClick={() => setMenuOuvert(false)}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
+              >
+                {l.icone}
+                {l.libelle}
+              </Link>
+            ))}
+            {estConnecte && (
+              <Link
+                to="/favoris"
+                onClick={() => setMenuOuvert(false)}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <Heart size={15} />
+                Mes favoris{nombreFavoris > 0 && <span className="text-xs text-white/50">({nombreFavoris})</span>}
+              </Link>
+            )}
 
             {/* Lien profil ou connexion */}
             {estConnecte ? (

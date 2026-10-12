@@ -12,7 +12,9 @@ export interface CategorieResumee {
 export interface VendeurResume {
   _id: string;
   nomEntreprise: string;
-  logoUrl?: string;
+  logo?: string | null;
+  /** Absent pour les boutiques créées avant la génération automatique des slugs */
+  slug?: string | null;
 }
 
 export interface ProduitResume {
@@ -27,6 +29,9 @@ export interface ProduitResume {
   vendeur: { _id: string; nomEntreprise: string };
   enStock?: boolean;
   statut?: 'en_stock' | 'faible' | 'en_rupture';
+  /** Note moyenne des avis publiés (0 si aucun avis) */
+  noteMoyenne?: number;
+  nombreAvis?: number;
 }
 
 export interface ProduitDetail extends ProduitResume {
@@ -62,7 +67,7 @@ export interface ProduitPanier {
 export interface LignePanier {
   _id: string;
   produit: ProduitPanier;
-  vendeur: { _id: string; nomEntreprise: string; logoUrl?: string };
+  vendeur: { _id: string; nomEntreprise: string; logo?: string | null };
   quantite: number;
   variante: string;
 }
@@ -82,12 +87,39 @@ export interface ReponsePanier {
 
 /* ── Réponses API ─────────────────────────────────────────────────────────── */
 
+/* ── Vitrine de l'accueil : publicités et promotions ─────────────────────── */
+
+export type TypePublicite = 'banniere' | 'mise_en_avant_produit' | 'mise_en_avant_vendeur';
+
+/** Campagne publicitaire telle que diffusée côté acheteur */
+export interface PublicitePublique {
+  _id: string;
+  type: TypePublicite;
+  emplacement: 'accueil_haut' | 'accueil_milieu';
+  imageUrl: string;
+  /** Lien interne (« /produit/… ») ou externe (« https://… ») */
+  lien: string;
+  texteAlt: string;
+  accroche?: string;
+  description?: string;
+  libelleBouton?: string;
+  produit: { nom: string; prix: number; prixPromotionnel: number | null } | null;
+  vendeur: { nomEntreprise: string; logo: string | null } | null;
+}
+
+/** Produit en promotion, avec le pourcentage de remise calculé par l'API */
+export interface ProduitPromotion extends ProduitResume {
+  remise: number;
+}
+
 export interface ReponseAccueil {
   success: boolean;
   data: {
     categories: CategorieResumee[];
     nouveautes: ProduitResume[];
     bestSellers: ProduitResume[];
+    publicites: { haut: PublicitePublique[]; milieu: PublicitePublique[] };
+    promotions: ProduitPromotion[];
   };
 }
 
@@ -132,3 +164,21 @@ export interface FiltresCatalogue {
 
 export * from './commande';
 export * from './livraison';
+
+/* ── Favoris ──────────────────────────────────────────────────────────────── */
+
+export interface ProduitFavori extends ProduitResume {
+  ajouteAuxFavorisLe: string;
+}
+
+export interface ReponseFavoris {
+  success: boolean;
+  data: { produits: ProduitFavori[]; pagination: Pagination };
+}
+export * from './avis';
+
+export interface ReponsePromotions {
+  success: boolean;
+  data: { produits: ProduitPromotion[]; pagination: Pagination };
+}
+export * from './boutique';

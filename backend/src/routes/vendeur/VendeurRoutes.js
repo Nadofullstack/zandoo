@@ -12,6 +12,7 @@ import {
   getPolitiqueLivraison,
   mettreAJourPolitiqueLivraison,
 } from '../../controllers/vendeur/VendeurLivraisonControleur.js';
+import { getAvisBoutique, repondreAvis } from '../../controllers/vendeur/VendeurAvisControleur.js';
 import {
   getMesProduits,
   getStatistiquesProduits,
@@ -76,6 +77,10 @@ routeur.patch('/boutique', ...auth, mettreAJourBoutique);
 /* ── Livraison (tarifs par zone, retrait en boutique) ─────────────────────── */
 routeur.get('/livraison', ...auth, getPolitiqueLivraison);
 routeur.put('/livraison', ...auth, mettreAJourPolitiqueLivraison);
+
+/* ── Avis clients (lecture + réponse publique) ────────────────────────────── */
+routeur.get('/avis',               ...auth, getAvisBoutique);
+routeur.patch('/avis/:id/reponse', ...auth, repondreAvis);
 
 /* Produits */
 routeur.get('/produits/statistiques',  ...auth, getStatistiquesProduits);

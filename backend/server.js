@@ -16,6 +16,7 @@ import routesAdminArticle     from './src/routes/admin/AdminArticleRoutes.js';
 import routesAdminLivreur     from './src/routes/admin/AdminLivreurRoutes.js';
 import routesAdminUpload      from './src/routes/admin/AdminCloudinaryRoutes.js';
 import routesAdminDashboard   from './src/routes/admin/AdminDashboardRoutes.js';
+import routesAdminAvis       from './src/routes/admin/AdminAvisRoutes.js';
 import routesVendeur          from './src/routes/vendeur/VendeurRoutes.js';
 import routesVendeurLivreur   from './src/routes/vendeur/VendeurLivreurRoutes.js';
 import routesLivreur          from './src/routes/LivreurRoutes.js';
@@ -24,6 +25,11 @@ import routesAcheteurCatalogue from './src/routes/acheteur/AcheteurCatalogueRout
 import routesAcheteurCommande from './src/routes/acheteur/AcheteurCommandeRoutes.js';
 import routesAcheteurPanier   from './src/routes/acheteur/AcheteurPanierRoutes.js';
 import routesAcheteurAdresse  from './src/routes/acheteur/AcheteurAdresseRoutes.js';
+import routesAcheteurFavori   from './src/routes/acheteur/AcheteurFavoriRoutes.js';
+import routesAcheteurAvis     from './src/routes/acheteur/AcheteurAvisRoutes.js';
+import routesAcheteurPublicite from './src/routes/acheteur/AcheteurPubliciteRoutes.js';
+import routesAcheteurBoutique  from './src/routes/acheteur/AcheteurBoutiqueRoutes.js';
+import routesAcheteurContenu   from './src/routes/acheteur/AcheteurContenuRoutes.js';
 
 dotenv.config();
 
@@ -58,6 +64,7 @@ app.use('/api/admin/articles',       routesAdminArticle);
 app.use('/api/admin/livreurs',         routesAdminLivreur);
 app.use('/api/admin/upload',         routesAdminUpload);
 app.use('/api/admin/dashboard',      routesAdminDashboard);
+app.use('/api/admin/avis',           routesAdminAvis);
 app.use('/api/vendeur',              routesVendeur);
 app.use('/api/vendeur/livreurs',     routesVendeurLivreur);
 app.use('/api/livreur',              routesLivreur);
@@ -65,6 +72,11 @@ app.use('/api/acheteur/accueil',    routesAcheteurAccueil);
 app.use('/api/acheteur/produits',   routesAcheteurCatalogue);
 app.use('/api/acheteur/panier',     routesAcheteurPanier);
 app.use('/api/acheteur/adresses',   routesAcheteurAdresse);
+app.use('/api/acheteur/favoris',    routesAcheteurFavori);
+app.use('/api/acheteur/avis',       routesAcheteurAvis);
+app.use('/api/acheteur/publicites', routesAcheteurPublicite);
+app.use('/api/acheteur/boutiques',  routesAcheteurBoutique);
+app.use('/api/acheteur',            routesAcheteurContenu);
 app.use('/api/acheteur',            routesAcheteurCommande);
 
 // Health check

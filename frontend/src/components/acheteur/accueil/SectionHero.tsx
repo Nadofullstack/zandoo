@@ -1,5 +1,13 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight, Truck, BadgeCheck, TrendingUp } from 'lucide-react';
+import { EASE_SORTIE, cascade, elementCascade } from './animations';
+
+/** Oscillation verticale lente des cartes flottantes */
+const flottement = (delai: number) => ({
+  animate: { y: [0, -10, 0] },
+  transition: { duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: delai },
+});
 
 const STATS = [
   { valeur: '50K+', libelle: 'Produits' },
@@ -29,16 +37,16 @@ export default function SectionHero() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
 
           {/* ── Colonne texte ──────────────────────────── */}
-          <div>
+          <motion.div variants={cascade(0.1, 0.1)} initial="cache" animate="visible">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-[#FC7701]/15 border border-[#FC7701]/30 rounded-full px-4 py-1.5 mb-4 sm:mb-6">
+            <motion.div variants={elementCascade} className="inline-flex items-center gap-2 bg-[#FC7701]/15 border border-[#FC7701]/30 rounded-full px-4 py-1.5 mb-4 sm:mb-6">
               <span className="w-2 h-2 rounded-full bg-[#FC7701] animate-pulse" />
               <span className="text-[#FC7701] text-xs font-semibold tracking-wide uppercase">
                 Marketplace panafricaine
               </span>
-            </div>
+            </motion.div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[3.5rem] font-black text-primary leading-[1.1] tracking-tight mb-4 sm:mb-6">
+            <motion.h1 variants={elementCascade} className="text-3xl sm:text-4xl lg:text-[3.5rem] font-black text-primary leading-[1.1] tracking-tight mb-4 sm:mb-6">
               Achetez local.{' '}
               <span className="relative inline-block">
                 <span className="text-[#FC7701]">Vendez</span>
@@ -49,16 +57,16 @@ export default function SectionHero() {
               global.
               <br />
               <span className="text-primary">Progressez ensemble.</span>
-            </h1>
+            </motion.h1>
 
-            <p className="text-primary text-sm sm:text-base lg:text-lg leading-relaxed mb-6 sm:mb-10 max-w-[480px]">
+            <motion.p variants={elementCascade} className="text-primary text-sm sm:text-base lg:text-lg leading-relaxed mb-6 sm:mb-10 max-w-[480px]">
               Découvrez des milliers de produits africains authentiques.
               Connectez vendeurs locaux et acheteurs du monde entier sur une
               plateforme sécurisée et innovante.
-            </p>
+            </motion.p>
 
             {/* CTA */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-8 sm:mb-12">
+            <motion.div variants={elementCascade} className="flex flex-col sm:flex-row gap-3 mb-8 sm:mb-12">
               <Link
                 to="/catalogue"
                 className="flex items-center justify-center gap-2 bg-[#FC7701] hover:bg-[#e06900] text-white font-semibold px-6 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#FC7701]/30 text-sm"
@@ -73,21 +81,26 @@ export default function SectionHero() {
                 Devenir vendeur
                 <ArrowRight size={18} />
               </Link>
-            </div>
+            </motion.div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-2 sm:gap-4 pt-6 sm:pt-8 border-t border-accent">
+            <motion.div variants={elementCascade} className="grid grid-cols-4 gap-2 sm:gap-4 pt-6 sm:pt-8 border-t border-accent">
               {STATS.map((s) => (
                 <div key={s.libelle}>
                   <div className="text-base sm:text-xl font-black text-accent">{s.valeur}</div>
                   <div className="text-[10px] sm:text-xs text-primary mt-0.5">{s.libelle}</div>
                 </div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* ── Colonne visuelle ───────────────────────── */}
-          <div className="relative hidden lg:block">
+          <motion.div
+            className="relative hidden lg:block"
+            initial={{ opacity: 0, x: 40, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 1, ease: EASE_SORTIE, delay: 0.25 }}
+          >
             {/* Carte principale */}
             <div className="relative z-10 rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
               <img
@@ -110,7 +123,7 @@ export default function SectionHero() {
             </div>
 
             {/* Carte flottante haut droite — vendeurs vérifiés */}
-            <div className="absolute -top-6 -right-6 z-20 bg-[#011023] border border-white/15 rounded-2xl p-4 shadow-xl shadow-black/40 w-44">
+            <motion.div {...flottement(0)} className="absolute -top-6 -right-6 z-20 bg-[#011023] border border-white/15 rounded-2xl p-4 shadow-xl shadow-black/40 w-44">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-full bg-[#FC7701] flex items-center justify-center">
                   <BadgeCheck size={16} className="text-white" />
@@ -125,10 +138,10 @@ export default function SectionHero() {
                 ))}
               </div>
               <p className="text-white/40 text-xs mt-2">+12 000 vendeurs</p>
-            </div>
+            </motion.div>
 
             {/* Carte flottante bas droite — ventes */}
-            <div className="absolute -bottom-6 -right-4 z-20 bg-white rounded-2xl p-4 shadow-xl w-48">
+            <motion.div {...flottement(1.2)} className="absolute -bottom-6 -right-4 z-20 bg-white rounded-2xl p-4 shadow-xl w-48">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-400 font-medium">Ventes du mois</span>
                 <span className="flex items-center gap-0.5 text-xs text-green-500 font-bold">
@@ -149,10 +162,10 @@ export default function SectionHero() {
                   />
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             <div className="absolute inset-0 -z-10 rounded-full w-72 h-72 bg-[#FC7701]/5 blur-3xl mx-auto my-auto" />
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

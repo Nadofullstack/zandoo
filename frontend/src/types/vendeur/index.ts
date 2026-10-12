@@ -236,3 +236,4 @@ export interface ReponseStatutInscription {
 }
 
 export * from './livraison';
+export * from './avis';

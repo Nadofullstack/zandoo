@@ -158,6 +158,10 @@ const produitSchema = new mongoose.Schema(
       default: '',
     },
 
+    /* Avis clients — valeurs dénormalisées, maintenues par services/avisService.js */
+    noteMoyenne: { type: Number, min: 0, max: 5, default: 0 },
+    nombreAvis:  { type: Number, min: 0, default: 0 },
+
     /* Historique des changements de statut */
     historiqueStatut: [
       {

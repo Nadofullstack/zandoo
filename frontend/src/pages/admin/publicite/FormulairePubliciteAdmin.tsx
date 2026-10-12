@@ -27,6 +27,7 @@ const STATUTS: { v: StatutPublicite; l: string }[] = [
 const VIDE: FormulairePublicite = {
   titre: '', type: 'banniere', emplacement: 'accueil_haut',
   imageUrl: '', lienCible: '', texteAlt: '',
+  accroche: '', description: '', libelleBouton: '',
   produit: '', vendeur: '', dateDebut: '', dateFin: '',
   statut: 'brouillon', ordre: 0,
 };
@@ -58,6 +59,7 @@ export default function FormulairePubliciteAdmin() {
           titre: pub.titre, type: pub.type, emplacement: pub.emplacement,
           imageUrl: pub.imageUrl ?? '', lienCible: pub.lienCible ?? '',
           texteAlt: pub.texteAlt ?? '', produit: '', vendeur: '',
+          accroche: pub.accroche ?? '', description: pub.description ?? '', libelleBouton: pub.libelleBouton ?? '',
           dateDebut: pub.dateDebut.slice(0, 10), dateFin: pub.dateFin.slice(0, 10),
           statut: pub.statut === 'expiree' ? 'brouillon' : pub.statut, ordre: pub.ordre,
         });
@@ -146,7 +148,21 @@ export default function FormulairePubliciteAdmin() {
             <div>
               <label className={labelCls}>Lien de destination</label>
               <input value={form.lienCible} onChange={(e) => set('lienCible', e.target.value)}
-                type="url" className={inputCls} placeholder="https://…" />
+                type="text" className={inputCls} placeholder="/promotions, /produit/… ou https://…" />
+              <p className="text-xs text-[#74777d] mt-1">Page du site (commence par « / ») ou adresse externe (ouverte dans un nouvel onglet).</p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 space-y-4">
+              <div>
+                <p className="text-sm font-bold text-primary">Texte affiché sur la bannière</p>
+                <p className="text-xs text-[#74777d] mt-0.5">Facultatif. Sans accroche, seule l'image est affichée.</p>
+              </div>
+              <ChampCompte libelle="Accroche" valeur={form.accroche} max={80} placeholder="Jusqu'à -40 % sur le textile"
+                onChange={(v) => set('accroche', v)} />
+              <ChampCompte libelle="Description" valeur={form.description} max={160} placeholder="Pagnes, wax et créations locales, livrés partout au Bénin."
+                onChange={(v) => set('description', v)} />
+              <ChampCompte libelle="Libellé du bouton" valeur={form.libelleBouton} max={30} placeholder="J'en profite"
+                onChange={(v) => set('libelleBouton', v)} />
             </div>
 
             <div>
@@ -194,5 +210,19 @@ export default function FormulairePubliciteAdmin() {
         </div>
       </form>
     </DispositionAdmin>
+  );
+}
+
+function ChampCompte({ libelle, valeur, max, placeholder, onChange }: {
+  libelle: string; valeur: string; max: number; placeholder?: string; onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <label className={labelCls}>{libelle}</label>
+        <span className={`text-[11px] tabular-nums ${valeur.length > max * 0.9 ? 'text-accent' : 'text-gray-400'}`}>{valeur.length}/{max}</span>
+      </div>
+      <input value={valeur} onChange={(e) => onChange(e.target.value)} maxLength={max} className={inputCls} placeholder={placeholder} />
+    </div>
   );
 }

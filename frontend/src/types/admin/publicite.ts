@@ -14,6 +14,9 @@ export interface Publicite {
   imageUrl?: string | null;
   lienCible?: string;
   texteAlt?: string;
+  accroche?: string;
+  description?: string;
+  libelleBouton?: string;
   produit?: { _id: string; nom: string; reference: string } | null;
   vendeur?: { _id: string; nomEntreprise: string } | null;
   dateDebut: string;
@@ -34,6 +37,9 @@ export interface FormulairePublicite {
   imageUrl: string;
   lienCible: string;
   texteAlt: string;
+  accroche: string;
+  description: string;
+  libelleBouton: string;
   produit: string;
   vendeur: string;
   dateDebut: string;

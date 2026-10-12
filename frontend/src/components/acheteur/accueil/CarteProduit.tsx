@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart, ImageOff, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, ImageOff, AlertTriangle } from 'lucide-react';
 import type { ProduitResume } from '../../../types/acheteur';
 import { usePanier } from '../../../context/PanierContext';
+import { useFavoris } from '../../../context/FavorisContext';
+import BoutonFavori from '../favoris/BoutonFavori';
+import EtoilesNote from '../../ui/EtoilesNote';
 
 interface Props {
   produit: ProduitResume;
@@ -13,6 +16,7 @@ function formatPrix(prix: number): string {
 
 export default function CarteProduit({ produit }: Props) {
   const { ajouterAuPanier } = usePanier();
+  const { estFavori } = useFavoris();
 
   const photo       = produit.photoCouverture ?? produit.variantesPhotos?.[0]?.photos?.[0] ?? '';
   const prixAffiche = produit.prixPromotionnel ?? produit.prix;
@@ -90,21 +94,11 @@ export default function CarteProduit({ produit }: Props) {
           </div>
         )}
 
-        {/* Bouton favori */}
-        {!indisponible && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // TODO: Ajouter aux favoris
-            }}
-            className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-            title="Ajouter aux favoris"
-            aria-label="Ajouter aux favoris"
-          >
-            <Heart size={16} className="text-gray-400" />
-          </button>
-        )}
+        {/* Bouton favori — toujours visible s'il est actif, sinon au survol (et sur mobile) */}
+        <BoutonFavori
+          produitId={produit._id}
+          className={`absolute top-3 right-3 z-10 ${estFavori(produit._id) ? '' : 'sm:opacity-0 sm:group-hover:opacity-100'}`}
+        />
       </div>
 
       {/* Contenu */}
@@ -116,6 +110,13 @@ export default function CarteProduit({ produit }: Props) {
         <h3 className="font-semibold text-[#011023] text-sm leading-snug mb-3 line-clamp-2 flex-1">
           {produit.nom}
         </h3>
+
+        {!!produit.nombreAvis && (
+          <div className="flex items-center gap-1.5 -mt-1.5 mb-2">
+            <EtoilesNote note={produit.noteMoyenne ?? 0} taille={12} />
+            <span className="text-[11px] text-gray-500">({produit.nombreAvis})</span>
+          </div>
+        )}
 
         {produit.vendeur && (
           <p className="text-xs text-gray-400 mb-3 truncate">

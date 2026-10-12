@@ -844,3 +844,61 @@ export async function envoyerInvitationLivreurVendeur({
     }),
   });
 }
+/* ─────────────────────────────────────────────────────────────────────────────
+   Formulaire de contact
+───────────────────────────────────────────────────────────────────────────── */
+
+const SUJETS_CONTACT = {
+  commande:   'Question sur une commande',
+  vendeur:    'Devenir vendeur / ma boutique',
+  partenariat: 'Partenariat & publicité',
+  technique:  'Problème technique',
+  autre:      'Autre demande',
+};
+
+/** Adresse qui reçoit les messages du formulaire de contact */
+const DESTINATAIRE_CONTACT = process.env.CONTACT_EMAIL || env.smtp.user;
+
+/**
+ * Transmet un message du formulaire de contact à l'équipe ZANDOO,
+ * puis envoie un accusé de réception à l'expéditeur (best-effort).
+ */
+export async function envoyerMessageContact({ nom, email, telephone, sujet, message }) {
+  const libelleSujet = SUJETS_CONTACT[sujet] ?? SUJETS_CONTACT.autre;
+
+  const corpsEquipe = `
+    <h2 style="color:#011023;font-size:20px;font-weight:700;margin:0 0 16px;">Nouveau message de contact</h2>
+    <table cellpadding="0" cellspacing="0" style="font-size:14px;color:#374151;margin-bottom:20px;">
+      <tr><td style="padding:4px 16px 4px 0;color:#6b7280;">Nom</td><td><strong>${escapeHtml(nom)}</strong></td></tr>
+      <tr><td style="padding:4px 16px 4px 0;color:#6b7280;">E-mail</td><td>${escapeHtml(email)}</td></tr>
+      ${telephone ? `<tr><td style="padding:4px 16px 4px 0;color:#6b7280;">Téléphone</td><td>${escapeHtml(telephone)}</td></tr>` : ''}
+      <tr><td style="padding:4px 16px 4px 0;color:#6b7280;">Sujet</td><td>${escapeHtml(libelleSujet)}</td></tr>
+    </table>
+    <div style="background:#f8fafc;border-left:4px solid #FC7701;padding:14px 18px;border-radius:8px;font-size:14px;color:#374151;line-height:1.6;white-space:pre-line;">${escapeHtml(message)}</div>
+    <p style="color:#9ca3af;font-size:12px;margin:20px 0 0;">Répondez directement à cet e-mail pour écrire à l'expéditeur.</p>
+  `;
+
+  await transporter.sendMail({
+    from: EXPEDITEUR,
+    to: DESTINATAIRE_CONTACT,
+    replyTo: email,
+    subject: `[ZANDOO Contact] ${libelleSujet} — ${nom}`,
+    html: htmlEnveloppe({ titre: 'Message de contact', sousTitre: 'Formulaire de contact', corps: corpsEquipe, anneeCourante: new Date().getFullYear() }),
+  });
+
+  const corpsAccuse = `
+    <h2 style="color:#011023;font-size:20px;font-weight:700;margin:0 0 12px;">Nous avons bien reçu votre message</h2>
+    <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Bonjour <strong>${escapeHtml(nom)}</strong>, merci de nous avoir contactés au sujet de :
+      <strong>${escapeHtml(libelleSujet.toLowerCase())}</strong>. Notre équipe vous répond généralement sous 24 à 48 heures ouvrées.
+    </p>
+    <p style="color:#9ca3af;font-size:13px;margin:0;">Ceci est un message automatique, merci de ne pas y répondre.</p>
+  `;
+
+  transporter.sendMail({
+    from: EXPEDITEUR,
+    to: email,
+    subject: '[ZANDOO] Nous avons bien reçu votre message',
+    html: htmlEnveloppe({ titre: 'Message reçu', sousTitre: 'Service client ZANDOO', corps: corpsAccuse, anneeCourante: new Date().getFullYear() }),
+  }).catch((err) => console.error('Accusé de réception contact:', err.message));
+}

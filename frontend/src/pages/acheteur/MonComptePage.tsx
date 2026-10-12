@@ -24,6 +24,7 @@ import {
 import AcheteurLayout from '../../components/acheteur/layout/AcheteurLayout';
 import { lireSession, logoutUser, mettreAJourProfil } from '../../services/auth/authService';
 import { useResumeCommandes } from '../../hooks/acheteur/useResumeCommandes';
+import { useFavoris } from '../../context/FavorisContext';
 import { formatPrix } from '../../components/acheteur/commandes/configCommandes';
 
 export default function MonComptePage() {
@@ -40,6 +41,7 @@ export default function MonComptePage() {
 
   /* Chiffres réels issus des commandes (aucune requête si non connecté) */
   const { resume, erreur: erreurResume } = useResumeCommandes(!!utilisateur);
+  const { nombre: nombreFavoris } = useFavoris();
   const chiffre = (n: number | undefined) => (resume ? String(n ?? 0) : erreurResume ? '—' : null);
 
   if (!utilisateur) {
@@ -168,7 +170,7 @@ export default function MonComptePage() {
                 <div className="divide-y divide-gray-50">
                   <ActionItem icon={<Package size={18} className="text-indigo-500" />} title="Mes commandes" description="Suivez vos commandes et consultez votre historique d'achats" to="/mes-commandes" color="indigo" badge={resume?.compteurs.en_cours ? `${resume.compteurs.en_cours} en cours` : undefined} />
                   {/* Fonctionnalités prévues au cahier des charges, pas encore disponibles */}
-                  <ActionItem icon={<Heart size={18} className="text-red-500" />} title="Mes favoris" description="Retrouvez vos articles préférés" color="red" bientot />
+                  <ActionItem icon={<Heart size={18} className="text-red-500" />} title="Mes favoris" description="Retrouvez vos articles préférés" to="/favoris" color="red" badge={nombreFavoris ? `${nombreFavoris}` : undefined} />
                   <ActionItem icon={<MapPin size={18} className="text-purple-500" />} title="Adresses de livraison" description="Gérez vos adresses d'expédition" to="/mes-adresses" color="purple" />
                   <ActionItem icon={<CreditCard size={18} className="text-green-500" />} title="Moyens de paiement" description="Gérez vos méthodes de paiement" color="green" bientot />
                   <ActionItem icon={<Settings size={18} className="text-gray-500" />} title="Paramètres" description="Préférences et configuration du compte" color="gray" bientot />

@@ -33,6 +33,11 @@ const publiciteSchema = new mongoose.Schema(
     lienCible:  { type: String, trim: true, default: '' }, // URL de redirection au clic
     texteAlt:   { type: String, trim: true, default: '' }, // Texte alternatif accessibilité
 
+    /* Contenu visible par l'acheteur (superposé à la bannière, tous facultatifs) */
+    accroche:      { type: String, trim: true, maxlength: 80,  default: '' },  // titre principal
+    description:   { type: String, trim: true, maxlength: 160, default: '' },  // sous-titre
+    libelleBouton: { type: String, trim: true, maxlength: 30,  default: '' },  // ex : « J'en profite »
+
     /* Référence optionnelle vers un produit ou vendeur mis en avant */
     produit: {
       type: mongoose.Schema.Types.ObjectId,
