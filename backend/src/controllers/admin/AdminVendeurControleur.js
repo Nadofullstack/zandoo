@@ -183,7 +183,7 @@ export const modifierNotesAdmin = async (req, res) => {
     const vendeur = await Vendeur.findByIdAndUpdate(
       req.params.id,
       { notesAdmin: notesAdmin.trim().slice(0, 500) },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).populate('utilisateur', 'nomComplet email').lean();
 
     if (!vendeur) {

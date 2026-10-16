@@ -12,12 +12,13 @@ import {
   marquerLivree,
 } from '../controllers/livreur/LivreurDashboardControleur.js';
 import { protect, requireRole } from '../middlewares/authentification.js';
+import { limiteActivation } from '../middlewares/limitesAuthentification.js';
 
 const routeur = Router();
 
 /* ── Routes publiques (pas de JWT requis) ────────────────────── */
-routeur.get('/activation/:token/verifier',                    verifierTokenActivation);
-routeur.post('/activation/:token/changer-mot-de-passe',       changerMotDePasseInitial);
+routeur.get('/activation/:token/verifier',                    limiteActivation, verifierTokenActivation);
+routeur.post('/activation/:token/changer-mot-de-passe',       limiteActivation, changerMotDePasseInitial);
 
 /* ── Routes protégées (JWT + rôle livreur) ───────────────────── */
 const auth = [protect, requireRole('livreur')];

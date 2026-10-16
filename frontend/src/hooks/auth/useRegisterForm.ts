@@ -1,6 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isValidPhoneNumber } from 'react-phone-number-input';
 import { registerUser, type ApiServiceError } from '../../services/auth/authService';
 import {
   validateRegisterForm,

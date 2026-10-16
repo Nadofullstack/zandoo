@@ -1,5 +1,6 @@
 import api from '../api';
 import type { ReponseVerificationToken } from '../../types/admin';
+import type { AuthUser } from '../../types/auth/auth';
 
 export async function verifierTokenActivation(
   token: string
@@ -16,7 +17,8 @@ export async function changerMotDePasseInitial(
 ): Promise<{
   success: boolean;
   message: string;
-  data: { user: { id: string; fullName: string; email: string; phone: string; role: string }; token: string };
+  /** Le jeton de session est posé en cookie httpOnly, il n'est pas renvoyé ici */
+  data: { user: Omit<AuthUser, 'phone'> & { phone?: string } };
 }> {
   const { data } = await api.post(`/livreur/activation/${token}/changer-mot-de-passe`, {
     motDePasseTemp,

@@ -8,10 +8,12 @@ import {
   Truck,
   PackageCheck,
   Star,
+  MessagesSquare,
   LogOut,
   ShoppingCart,
 } from 'lucide-react';
 import { logoutUser, lireSession, supprimerSession } from '../../../services/auth/authService';
+import { useTempsReel } from '../../../context/TempsReelContext';
 import logo from '../../../assets/logo.jpg';
 
 interface LienNav {
@@ -31,6 +33,7 @@ const LIENS: LienNav[] = [
   { vers: '/vendeur/boutique',        libelle: 'Ma boutique',      icone: Store                       },
   { vers: '/vendeur/produits',        libelle: 'Mes produits',     icone: Package                     },
   { vers: '/vendeur/commandes',       libelle: 'Commandes',        icone: ShoppingBag                 },
+  { vers: '/vendeur/messages',        libelle: 'Messages',         icone: MessagesSquare              },
   { vers: '/vendeur/promotions',      libelle: 'Promotions',       icone: Tag                         },
   { vers: '/vendeur/livraison',       libelle: 'Livraison',        icone: PackageCheck                },
   { vers: '/vendeur/avis',            libelle: 'Avis clients',     icone: Star                        },
@@ -43,6 +46,7 @@ const LIENS: LienNav[] = [
  * - Mobile/tablette : drawer qui glisse depuis la gauche
  */
 export default function SidebarVendeur({ ouvert = false, fermer }: SidebarVendeurProps) {
+  const { messagesNonLus } = useTempsReel();
   const navigate = useNavigate();
   const session  = lireSession();
 
@@ -110,7 +114,12 @@ export default function SidebarVendeur({ ouvert = false, fermer }: SidebarVendeu
               }
             >
               <Icone size={17} aria-hidden="true" />
-              {libelle}
+              <span className="flex-1">{libelle}</span>
+              {vers === '/vendeur/messages' && messagesNonLus.vendeur > 0 && (
+                <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-white text-accent text-[11px] font-bold flex items-center justify-center">
+                  {messagesNonLus.vendeur > 99 ? '99+' : messagesNonLus.vendeur}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

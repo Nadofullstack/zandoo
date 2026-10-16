@@ -9,6 +9,7 @@ import CarteProduit from '../../components/acheteur/accueil/CarteProduit';
 import { useDetailProduit } from '../../hooks/acheteur/useDetailProduit';
 import { usePanier } from '../../context/PanierContext';
 import BoutonFavori from '../../components/acheteur/favoris/BoutonFavori';
+import BoutonDiscuter from '../../components/messagerie/BoutonDiscuter';
 import EtoilesNote from '../../components/ui/EtoilesNote';
 import SectionAvisProduit from '../../components/acheteur/avis/SectionAvisProduit';
 import { lienBoutique } from '../../services/acheteur/acheteurBoutiqueService';
@@ -65,6 +66,8 @@ export default function DetailProduitPage() {
   }
 
   const prixAffiche = produit.prixPromotionnel ?? produit.prix;
+  /* Quantité maximale : stock disponible, plafonné à 99 par ajout */
+  const quantiteMax = Math.max(1, Math.min(99, produit.quantiteDisponible ?? 99));
   const aPromotion  = !!produit.prixPromotionnel && produit.prixPromotionnel < produit.prix;
   const remise      = aPromotion
     ? Math.round(((produit.prix - prixAffiche) / produit.prix) * 100)
@@ -221,8 +224,8 @@ export default function DetailProduitPage() {
                 </button>
                 <span className="w-10 text-center font-bold text-[#011023]">{quantite}</span>
                 <button
-                  onClick={() => setQuantite((q) => Math.min(99, q + 1))}
-                  disabled={quantite >= (produit as { quantiteDisponible?: number }).quantiteDisponible ?? 99}
+                  onClick={() => setQuantite((q) => Math.min(quantiteMax, q + 1))}
+                  disabled={quantite >= quantiteMax}
                   className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-white hover:shadow-sm transition-all disabled:opacity-30"
                   aria-label="Augmenter la quantité"
                 >
@@ -257,6 +260,9 @@ export default function DetailProduitPage() {
                 )}
               </button>
               <BoutonFavori produitId={produit._id} variante="fiche" />
+            </div>
+            <div className="mt-3">
+              <BoutonDiscuter produitId={produit._id} variante="fiche" className="w-full" />
             </div>
 
             {/* Vendeur */}

@@ -82,13 +82,13 @@ export default function TableauVendeurs({
                   {/* Entreprise */}
                   <td className="px-4 py-3.5">
                     <p className="font-semibold text-primary">{vendeur.nomEntreprise}</p>
-                    <p className="text-xs text-[#74777d] mt-0.5">{vendeur.utilisateur?.nomComplet ?? '—'}</p>
+                    <p className="text-xs text-[#74777d] mt-0.5">{vendeur.utilisateur?.fullName ?? '—'}</p>
                   </td>
 
                   {/* Contact */}
                   <td className="px-4 py-3.5">
                     <p className="text-primary">{vendeur.emailContact || vendeur.utilisateur?.email || '—'}</p>
-                    <p className="text-xs text-[#74777d] mt-0.5">{vendeur.telephoneContact || vendeur.utilisateur?.telephone || '—'}</p>
+                    <p className="text-xs text-[#74777d] mt-0.5">{vendeur.telephoneContact || vendeur.utilisateur?.phone || '—'}</p>
                   </td>
 
                   {/* Statut */}

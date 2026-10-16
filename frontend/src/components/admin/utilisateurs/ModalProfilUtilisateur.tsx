@@ -70,9 +70,9 @@ export default function ModalProfilUtilisateur({ utilisateur, onFermer }: Props)
                   {utilisateur.fullName}
                 </h3>
                 {utilisateur.isVerified ? (
-                  <ShieldCheck size={16} className="text-green-600 shrink-0" title="Compte vérifié" />
+                  <span title="Compte vérifié" aria-label="Compte vérifié" className="inline-flex"><ShieldCheck size={16} className="text-green-600 shrink-0" aria-hidden="true" /></span>
                 ) : (
-                  <ShieldOff size={16} className="text-gray-400 shrink-0" title="Non vérifié" />
+                  <span title="Non vérifié" aria-label="Non vérifié" className="inline-flex"><ShieldOff size={16} className="text-gray-400 shrink-0" aria-hidden="true" /></span>
                 )}
               </div>
 

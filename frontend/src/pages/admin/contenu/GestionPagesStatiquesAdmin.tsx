@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Edit2, Trash2, Plus, Eye, EyeOff, Loader2, X, Save } from 'lucide-react';
+import { Edit2, Trash2, Plus, Eye, EyeOff, Loader2, X, Save } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import ModalConfirmation from '../../../components/admin/modal/ModalConfirmation';
 import Alert from '../../../components/ui/Alert';

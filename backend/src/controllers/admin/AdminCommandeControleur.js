@@ -1,4 +1,5 @@
 import Commande from '../../models/Commande.js';
+import { notifierStatutCommande } from '../../services/notificationService.js';
 import { validationResult } from 'express-validator';
 import { envoyerChangementStatutAcheteur } from '../../services/emailService.js';
 import {
@@ -228,6 +229,11 @@ export const modifierStatutCommande = async (req, res) => {
       }).catch((err) => console.error('Email statut commande:', err.message));
     }
 
+    notifierStatutCommande({
+      acheteur: miseAJour?.acheteur?._id, commandeId: miseAJour?._id, numero: miseAJour?.numero, statut,
+      nomBoutique: miseAJour?.vendeur?.nomEntreprise,
+    });
+
     return res.status(200).json({
       success: true,
       message: `Statut mis à jour : ${statut}.`,
@@ -256,7 +262,7 @@ export const modifierNotesCommande = async (req, res) => {
     const commande = await Commande.findByIdAndUpdate(
       req.params.id,
       { notesAdmin: notesAdmin.trim().slice(0, 500) },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('acheteur', 'fullName email')
       .populate('vendeur',  'nomEntreprise')
@@ -287,7 +293,7 @@ export const assignerLivreur = async (req, res) => {
     const commande = await Commande.findByIdAndUpdate(
       req.params.id,
       { livreur: livreurId ?? null },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('acheteur', 'fullName email')
       .populate('vendeur',  'nomEntreprise')

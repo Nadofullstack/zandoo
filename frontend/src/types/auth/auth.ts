@@ -21,7 +21,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data?: {
-    token: string;
+    /** Le jeton n'est plus renvoyé : il vit uniquement dans le cookie httpOnly */
     user: AuthUser;
   };
   errors?: { field: string; message: string }[];

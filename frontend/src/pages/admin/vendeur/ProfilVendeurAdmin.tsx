@@ -157,7 +157,7 @@ export default function ProfilVendeurAdmin() {
             <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
               <InfoLigne libelle="Nom complet"  valeur={vendeur.utilisateur?.fullName   ?? '—'} />
               <InfoLigne libelle="Email"        valeur={vendeur.utilisateur?.email      ?? '—'} icone={Mail} />
-              <InfoLigne libelle="Téléphone"    valeur={vendeur.utilisateur?.telephone  ?? '—'} icone={Phone} />
+              <InfoLigne libelle="Téléphone"    valeur={vendeur.utilisateur?.phone || '—'} icone={Phone} />
               <InfoLigne libelle="Compte actif" valeur={vendeur.utilisateur?.isActive ? 'Oui' : 'Non'} />
             </dl>
           </div>

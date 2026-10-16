@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ClocheNotifications from '../../notifications/ClocheNotifications';
 import { useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import SidebarVendeur from './SidebarVendeur';
@@ -53,6 +54,10 @@ export default function DispositionVendeur({ children }: Props) {
 
         {/* Contenu — padding-top sur mobile pour compenser la navbar fixe */}
         <main className="flex-1 overflow-auto pt-16 lg:pt-0">
+          {/* Barre supérieure (ordinateur) : notifications */}
+          <div className="hidden lg:flex sticky top-0 z-20 justify-end items-center gap-2 px-6 py-2 bg-white/80 backdrop-blur border-b border-gray-100">
+            <ClocheNotifications theme="clair" />
+          </div>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-8">
             {children}
           </div>

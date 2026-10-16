@@ -192,7 +192,7 @@ export const modifierAvis = async (req, res) => {
     const avis = await Avis.findOneAndUpdate(
       { _id: req.params.id, acheteur: req.user._id },
       { $set: { ...saisie, modifieAt: new Date() } },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).lean();
     if (!avis) return res.status(404).json({ success: false, message: 'Avis introuvable.' });
 

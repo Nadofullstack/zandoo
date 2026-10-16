@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { notifierAnnulationVendeur } from './notificationService.js';
 import Commande from '../models/Commande.js';
 import Produit from '../models/Produit.js';
 import Vendeur from '../models/Vendeur.js';
@@ -152,7 +153,7 @@ export async function annulerCommande({ filtre, statutsAutorises, auteurId, rais
         const produit = await Produit.findOneAndUpdate(
           { _id: ligne.produit },
           { $inc: { quantiteDisponible: ligne.quantite } },
-          { new: true, session },
+          { returnDocument: 'after', session },
         );
         if (produit) {
           await Produit.updateOne(
@@ -188,6 +189,8 @@ export async function notifierVendeurAnnulation(commande, auteur, raison = '') {
       .select('nomEntreprise emailContact utilisateur')
       .populate('utilisateur', 'email')
       .lean();
+
+    notifierAnnulationVendeur({ vendeurUtilisateur: vendeur?.utilisateur?._id, numero: commande.numero, auteur });
 
     const emailVendeur = vendeur?.emailContact || vendeur?.utilisateur?.email;
     if (!emailVendeur) return;

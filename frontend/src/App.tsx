@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { NavigationService } from './services/navigationService';
 import { PanierProvider } from './context/PanierContext';
 import { FavorisProvider } from './context/FavorisContext';
+import { TempsReelProvider } from './context/TempsReelContext';
 import AccueilPage from './pages/acheteur/AccueilPage';
 import CataloguePage from './pages/acheteur/CataloguePage';
 import DetailProduitPage from './pages/acheteur/DetailProduitPage';
@@ -17,6 +18,8 @@ import BoutiquesPage from './pages/acheteur/BoutiquesPage';
 import DetailBoutiquePage from './pages/acheteur/DetailBoutiquePage';
 import PageContenuPage from './pages/acheteur/PageContenuPage';
 import ContactPage from './pages/acheteur/ContactPage';
+import MessagesPage from './pages/acheteur/MessagesPage';
+import MessagesVendeurPage from './pages/vendeur/MessagesVendeurPage';
 import GardeConnexion from './components/acheteur/GardeConnexion';
 import RegisterPage from './pages/auth/RegisterPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -79,6 +82,7 @@ export default function App() {
       <NavigationInjector />
       <PanierProvider>
       <FavorisProvider>
+      <TempsReelProvider>
         <Routes>
         {/* ── Acheteur ───────────────────────────────────────────────────────── */}
         <Route path="/"                             element={<AccueilPage />} />
@@ -106,6 +110,8 @@ export default function App() {
         <Route path="/mes-commandes/:id" element={<GardeConnexion><DetailMaCommandePage /></GardeConnexion>} />
         <Route path="/mes-adresses"      element={<GardeConnexion><MesAdressesPage /></GardeConnexion>} />
         <Route path="/favoris"           element={<GardeConnexion><MesFavorisPage /></GardeConnexion>} />
+        <Route path="/messages"          element={<GardeConnexion><MessagesPage /></GardeConnexion>} />
+        <Route path="/messages/:id"      element={<GardeConnexion><MessagesPage /></GardeConnexion>} />
         <Route path="/panier"        element={<PanierPage />} />
 
         {/* ── Vendeur — inscription (public, utilisateur connecté) ───────── */}
@@ -119,6 +125,8 @@ export default function App() {
         <Route path="/vendeur/promotions"       element={<GardeVendeur><PromotionsPage /></GardeVendeur>} />
         <Route path="/vendeur/livraison"        element={<GardeVendeur><LivraisonPage /></GardeVendeur>} />
         <Route path="/vendeur/avis"             element={<GardeVendeur><AvisClientsPage /></GardeVendeur>} />
+        <Route path="/vendeur/messages"         element={<GardeVendeur><MessagesVendeurPage /></GardeVendeur>} />
+        <Route path="/vendeur/messages/:id"     element={<GardeVendeur><MessagesVendeurPage /></GardeVendeur>} />
         <Route path="/vendeur/livreurs"         element={<GardeVendeur><MesLivreursPage /></GardeVendeur>} />
         <Route path="/vendeur/livreurs/:id"     element={<GardeVendeur><ProfilLivreurVendeurPage /></GardeVendeur>} />
 
@@ -179,6 +187,7 @@ export default function App() {
         {/* ── Défaut ─────────────────────────────────────────────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      </TempsReelProvider>
       </FavorisProvider>
       </PanierProvider>
     </BrowserRouter>

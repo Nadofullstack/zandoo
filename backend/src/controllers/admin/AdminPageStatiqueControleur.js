@@ -74,7 +74,7 @@ export const modifierPage = async (req, res) => {
     const miseAJour = { modifiePar: req.user._id };
     champs.forEach((c) => { if (req.body[c] !== undefined) miseAJour[c] = req.body[c]; });
 
-    const page = await PageStatique.findByIdAndUpdate(req.params.id, miseAJour, { new: true, runValidators: true })
+    const page = await PageStatique.findByIdAndUpdate(req.params.id, miseAJour, { returnDocument: 'after', runValidators: true })
       .populate('modifiePar', 'fullName email')
       .lean();
 

@@ -1,4 +1,5 @@
 import Commande from '../../models/Commande.js';
+import { notifierStatutCommande } from '../../services/notificationService.js';
 import Livreur  from '../../models/Livreur.js';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -182,6 +183,9 @@ export const marquerLivree = async (req, res) => {
     });
 
     await commande.save();
+
+    /* L'acheteur est prévenu (et invité à noter ses produits depuis le détail de commande) */
+    notifierStatutCommande({ acheteur: commande.acheteur, commandeId: commande._id, numero: commande.numero, statut: 'livree' });
 
     return res.status(200).json({
       success: true,

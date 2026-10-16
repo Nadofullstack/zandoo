@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../../models/User.js';
@@ -20,6 +22,17 @@ const setCookieToken = (res, token) => {
     maxAge:   7 * 24 * 60 * 60 * 1000,
   });
 };
+
+/**
+ * Empreinte bcrypt factice : comparée quand le compte n'existe pas, pour que le
+ * temps de réponse ne révèle pas si une adresse est inscrite (énumération de comptes).
+ */
+const EMPREINTE_FACTICE = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 12);
+
+/** Mot de passe aléatoire pour les comptes créés via Google (jamais communiqué) */
+const motDePasseAleatoire = () => crypto.randomBytes(32).toString('hex');
+
+const ECHEC_CONNEXION = { success: false, message: 'Identifiants incorrects.' };
 
 /** Construit l'objet user à retourner dans les réponses auth */
 const buildUserPayload = (user) => ({
@@ -52,28 +65,45 @@ export const googleLogin = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    const { email, name, sub: googleId, picture } = payload;
+    const { email, name, sub: googleId, picture, email_verified: emailVerifie } = payload;
 
-    let user = await User.findOne({ email: email.toLowerCase() });
+    /* Sans adresse vérifiée par Google, on ne peut pas rattacher le compte à cet e-mail */
+    if (!email || !emailVerifie) {
+      return res.status(401).json({ success: false, message: 'Votre adresse Google doit être vérifiée.' });
+    }
+
+    let user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
     if (!user) {
       user = await User.create({
         fullName: name,
         email:    email.toLowerCase(),
         phone:    '',
-        password: googleId,
+        password: motDePasseAleatoire(),
         googleId,
         avatar:   picture,
       });
+    } else {
+      if (!user.isActive) {
+        return res.status(403).json({ success: false, message: 'Compte suspendu. Contactez le support.' });
+      }
+      /* Assainissement des comptes créés autrefois avec l'identifiant Google comme mot de passe */
+      if (user.googleId && await user.comparePassword(user.googleId)) {
+        user.password = motDePasseAleatoire();
+        await user.save();
+      }
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
     }
 
-    const token = generateToken(user._id);
-    setCookieToken(res, token);
+    setCookieToken(res, generateToken(user._id));
 
     return res.status(200).json({
       success: true,
       message: 'Connexion Google réussie.',
-      data:    { token, user: buildUserPayload(user) },
+      data:    { user: buildUserPayload(user) },
     });
   } catch (error) {
     console.error('Erreur googleLogin:', error);
@@ -97,30 +127,31 @@ export const login = async (req, res) => {
       : { phone: identifier };
 
     const user = await User.findOne(query).select('+password');
+
+    /* Même réponse et même coût de calcul que le compte existe ou non */
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Identifiants incorrects.',
-        errors: [{ field: 'identifier', message: 'Aucun compte trouvé avec ces identifiants.' }],
-      });
+      await bcrypt.compare(String(password), EMPREINTE_FACTICE);
+      return res.status(401).json(ECHEC_CONNEXION);
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Identifiants incorrects.',
-        errors: [{ field: 'password', message: 'Mot de passe incorrect.' }],
-      });
+    const motDePasseValide = await user.comparePassword(password);
+
+    /* Un identifiant Google n'est jamais un mot de passe valide (anciens comptes Google) */
+    if (!motDePasseValide || (user.googleId && password === user.googleId)) {
+      return res.status(401).json(ECHEC_CONNEXION);
     }
 
-    const token = generateToken(user._id);
-    setCookieToken(res, token);
+    /* Le statut n'est révélé qu'au titulaire du compte (mot de passe correct) */
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: 'Compte suspendu. Contactez le support.' });
+    }
+
+    setCookieToken(res, generateToken(user._id));
 
     return res.status(200).json({
       success: true,
       message: 'Connexion réussie.',
-      data:    { token, user: buildUserPayload(user) },
+      data:    { user: buildUserPayload(user) },
     });
   } catch (error) {
     console.error('Erreur login:', error);
@@ -169,7 +200,7 @@ export const register = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: 'Compte créé avec succès.',
-      data:    { token, user: buildUserPayload(user) },
+      data:    { user: buildUserPayload(user) },
     });
   } catch (error) {
     console.error('Erreur register:', error);
@@ -218,7 +249,7 @@ export const updateMe = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { fullName: fullName.trim(), phone: phone?.trim() ?? '' },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     return res.status(200).json({

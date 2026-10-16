@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, ShoppingCart, User, Menu, X, Heart, Flame } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, Flame, MessagesSquare } from 'lucide-react';
 import logozandoo from '../../../assets/logozandoo.png';
 import { lireSession, rafraichirSession } from '../../../services/auth/authService';
 import { useNombreArticlesPanier } from '../../../context/PanierContext';
 import { useFavoris } from '../../../context/FavorisContext';
+import { useTempsReel } from '../../../context/TempsReelContext';
+import ClocheNotifications from '../../notifications/ClocheNotifications';
 
 const LIENS_NAV = [
   { vers: '/catalogue',  libelle: 'Catalogue',  icone: null },
@@ -23,6 +25,7 @@ export default function TopNavBar() {
   const estConnecte = !!utilisateur;
   const nombreArticles = useNombreArticlesPanier();
   const { nombre: nombreFavoris } = useFavoris();
+  const { messagesNonLus } = useTempsReel();
 
   /* Rafraîchir la session au montage */
   useEffect(() => {
@@ -128,6 +131,25 @@ export default function TopNavBar() {
               <User size={18} />
               <span className="hidden md:block">Connexion</span>
             </Link>
+          )}
+
+          {/* ── Messages + notifications (connecté) ─────── */}
+          {estConnecte && (
+            <>
+              <Link
+                to="/messages"
+                className="relative flex w-9 h-9 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all"
+                aria-label={`Messages${messagesNonLus.acheteur > 0 ? ` — ${messagesNonLus.acheteur} non lu${messagesNonLus.acheteur > 1 ? 's' : ''}` : ''}`}
+              >
+                <MessagesSquare size={20} />
+                {messagesNonLus.acheteur > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#FC7701] rounded-full text-[10px] font-bold text-white flex items-center justify-center px-1">
+                    {messagesNonLus.acheteur > 99 ? '99+' : messagesNonLus.acheteur}
+                  </span>
+                )}
+              </Link>
+              <ClocheNotifications theme="sombre" />
+            </>
           )}
 
           {/* ── Favoris (connecté) ───────────────────────── */}

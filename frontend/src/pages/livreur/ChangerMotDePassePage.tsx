@@ -214,7 +214,7 @@ export default function ChangerMotDePassePage() {
          On normalise phone à '' si absent (les comptes livreur
          sont créés sans téléphone, il sera renseigné à l'étape 2). */
       if (rep.data?.user) {
-        sauvegarderSession({ phone: '', ...rep.data.user });
+        sauvegarderSession({ ...rep.data.user, phone: rep.data.user.phone ?? '' });
       }
 
       setSucces(true);

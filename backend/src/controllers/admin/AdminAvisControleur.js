@@ -53,7 +53,7 @@ export const modifierStatutAvis = async (req, res) => {
     const avis = await Avis.findByIdAndUpdate(
       req.params.id,
       { $set: { statut, motifMasquage: statut === 'masque' ? String(motif).trim().slice(0, 300) : '' } },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
     if (!avis) return res.status(404).json({ success: false, message: 'Avis introuvable.' });
 

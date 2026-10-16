@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, User, Mail, Phone, Truck, MapPin,
+  ArrowLeft, User, Truck, MapPin,
   UserCheck, Ban, RotateCcw, CheckCircle2,
 } from 'lucide-react';
 import DispositionVendeur from '../../../components/vendeur/layout/DispositionVendeur';

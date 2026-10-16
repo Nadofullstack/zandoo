@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  User, Phone, MapPin, Truck, BadgeCheck, RefreshCw,
+  Phone, MapPin, Truck, BadgeCheck, RefreshCw,
   AlertCircle, CheckCircle2, Pencil, X, Save,
 } from 'lucide-react';
 import DispositionLivreur from '../../components/livreur/layout/DispositionLivreur';

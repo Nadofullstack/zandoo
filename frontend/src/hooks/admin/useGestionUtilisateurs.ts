@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { UtilisateurAdmin, RoleUtilisateur, StatistiquesUtilisateurs, Pagination, FormulaireUtilisateur } from '../../types/admin';
+import type { UtilisateurAdmin, RoleUtilisateur, StatistiquesUtilisateurs, Pagination } from '../../types/admin';
 import {
   getUtilisateurs,
   getStatistiquesUtilisateurs,

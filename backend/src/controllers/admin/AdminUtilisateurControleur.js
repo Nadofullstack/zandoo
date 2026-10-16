@@ -163,7 +163,7 @@ export const modifierUtilisateur = async (req, res) => {
     const utilisateur = await User.findByIdAndUpdate(
       id,
       { $set: miseAJour },
-      { new: true, runValidators: true, projection: PROJECTION_SECURISEE }
+      { returnDocument: 'after', runValidators: true, projection: PROJECTION_SECURISEE }
     ).lean();
 
     if (!utilisateur) {
@@ -206,7 +206,7 @@ export const modifierStatutUtilisateur = async (req, res) => {
     const utilisateur = await User.findByIdAndUpdate(
       id,
       { isActive },
-      { new: true, projection: PROJECTION_SECURISEE }
+      { returnDocument: 'after', projection: PROJECTION_SECURISEE }
     ).lean();
 
     if (!utilisateur) {

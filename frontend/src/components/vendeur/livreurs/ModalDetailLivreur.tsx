@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  X, User, Mail, Phone, Truck, MapPin,
+  X, User, Truck, MapPin,
   CheckCircle2, Clock, Loader2, AlertCircle,
 } from 'lucide-react';
 import BadgeStatutLivreur from './BadgeStatutLivreur';

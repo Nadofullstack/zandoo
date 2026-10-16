@@ -128,7 +128,7 @@ export const mettreAJourPolitiqueLivraison = async (req, res) => {
     const vendeur = await Vendeur.findOneAndUpdate(
       { utilisateur: req.user._id },
       { $set: { livraison } },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).select('livraison adresse').lean();
 
     if (!vendeur) return res.status(404).json({ success: false, message: 'Boutique introuvable.' });

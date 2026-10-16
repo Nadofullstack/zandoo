@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { notifierNouvelleCommande } from './notificationService.js';
 import mongoose from 'mongoose';
 import Panier from '../models/Panier.js';
 import Produit from '../models/Produit.js';
@@ -254,7 +255,8 @@ export async function envoyerEmailsCheckout({ acheteurId, commandesCrees, groupe
     /* Enrichir les commandes avec les infos vendeur pour les emails */
     const commandesAvecVendeur = await Promise.all(
       commandesCrees.map(async (cmd) => {
-        const vendeur = await Vendeur.findById(cmd.vendeur).select('nomEntreprise emailContact').lean();
+        const vendeur = await Vendeur.findById(cmd.vendeur).select('nomEntreprise emailContact utilisateur').lean();
+        notifierNouvelleCommande({ vendeurUtilisateur: vendeur?.utilisateur, numero: cmd.numero, total: cmd.total });
         return {
           _id:        cmd._id,
           numero:     cmd.numero,

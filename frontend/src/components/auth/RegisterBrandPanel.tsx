@@ -1,6 +1,5 @@
 import { ShieldCheck, Truck, BadgeCheck, Globe } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import logo from '../../assets/logo.jpg';
 
 interface FeatureItem {
   icon: LucideIcon;

@@ -130,7 +130,7 @@ export const modifierPublicite = async (req, res) => {
   try {
     const mise_a_jour = extraireChamps(req.body);
 
-    const pub = await Publicite.findByIdAndUpdate(req.params.id, mise_a_jour, { new: true, runValidators: true })
+    const pub = await Publicite.findByIdAndUpdate(req.params.id, mise_a_jour, { returnDocument: 'after', runValidators: true })
       .populate('creePar', 'fullName email')
       .lean();
 

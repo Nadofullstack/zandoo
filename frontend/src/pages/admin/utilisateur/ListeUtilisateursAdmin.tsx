@@ -1,4 +1,4 @@
-import { UserCheck, UserX, ShoppingBag, Store, Users } from 'lucide-react';
+import { UserCheck, UserX, ShoppingBag, Store } from 'lucide-react';
 import DispositionAdmin from '../../../components/admin/layout/DispositionAdmin';
 import CarteStatistique from '../../../components/admin/modal/CarteStatistique';
 import TableauUtilisateurs from '../../../components/admin/utilisateurs/TableauUtilisateurs';

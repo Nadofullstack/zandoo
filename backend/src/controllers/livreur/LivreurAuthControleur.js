@@ -121,14 +121,13 @@ export const changerMotDePasseInitial = async (req, res) => {
     await utilisateur.save();
 
     /* Connexion automatique après le changement */
-    const jwtToken = genererToken(utilisateur._id);
-    setCookieToken(res, jwtToken);
+    /* Le jeton vit uniquement dans le cookie httpOnly (jamais dans le corps de réponse) */
+    setCookieToken(res, genererToken(utilisateur._id));
 
     return res.status(200).json({
       success: true,
       message: 'Mot de passe changé avec succès. Vous êtes maintenant connecté.',
       data: {
-        token: jwtToken,
         user: {
           id:       utilisateur._id,
           fullName: utilisateur.fullName,

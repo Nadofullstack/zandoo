@@ -128,7 +128,7 @@ export const modifierArticle = async (req, res) => {
       miseAJour.publieAt = new Date();
     }
 
-    const article = await Article.findByIdAndUpdate(req.params.id, miseAJour, { new: true, runValidators: true })
+    const article = await Article.findByIdAndUpdate(req.params.id, miseAJour, { returnDocument: 'after', runValidators: true })
       .populate('auteur', 'fullName email')
       .lean();
 

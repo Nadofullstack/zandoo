@@ -2,7 +2,6 @@ import api from '../api';
 import type {
   ReponseListeCategories,
   ReponseCategorie,
-  Categorie,
 } from '../../types/admin';
 
 export async function getCategories(): Promise<ReponseListeCategories> {

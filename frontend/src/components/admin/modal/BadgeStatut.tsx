@@ -3,7 +3,8 @@ import type { StatutVendeur, StatutProduit } from '../../../types/admin';
 type StatutUnifie = StatutVendeur | StatutProduit;
 
 interface BadgeStatutProps {
-  statut: StatutUnifie;
+  /** Statut connu, ou valeur brute issue d'un historique (affichée avec le style par défaut) */
+  statut: StatutUnifie | (string & {});
 }
 
 const CONFIG: Record<string, { libelle: string; classes: string }> = {

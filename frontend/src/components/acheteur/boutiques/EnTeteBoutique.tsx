@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { CalendarDays, MapPin, Package, Store, Tag, Truck } from 'lucide-react';
 import type { BoutiqueDetail } from '../../../types/acheteur';
 import EtoilesNote from '../../ui/EtoilesNote';
+import BoutonDiscuter from '../../messagerie/BoutonDiscuter';
 import { cascade, elementCascade } from '../accueil/animations';
 
 /** En-tête de la vitrine : bannière en parallaxe, identité et indicateurs de confiance. */
@@ -43,6 +44,10 @@ export default function EnTeteBoutique({ boutique: b }: { boutique: BoutiqueDeta
               <span className="inline-flex items-center gap-1"><CalendarDays size={14} /> Sur ZANDOO depuis {membreDepuis}</span>
             </motion.div>
           </div>
+
+          <motion.div variants={elementCascade} className="sm:pb-1">
+            <BoutonDiscuter vendeurId={b._id} variante="boutique" />
+          </motion.div>
         </motion.div>
 
         {/* Indicateurs */}

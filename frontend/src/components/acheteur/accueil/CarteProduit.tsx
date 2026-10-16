@@ -4,6 +4,7 @@ import type { ProduitResume } from '../../../types/acheteur';
 import { usePanier } from '../../../context/PanierContext';
 import { useFavoris } from '../../../context/FavorisContext';
 import BoutonFavori from '../favoris/BoutonFavori';
+import BoutonDiscuter from '../../messagerie/BoutonDiscuter';
 import EtoilesNote from '../../ui/EtoilesNote';
 
 interface Props {
@@ -124,21 +125,22 @@ export default function CarteProduit({ produit }: Props) {
           </p>
         )}
 
-        {/* Prix + CTA */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-          <div>
-            <span className="font-black text-base text-[#011023]">{formatPrix(prixAffiche)}</span>
-            {aPromotion && (
-              <span className="block text-xs text-gray-400 line-through leading-none">
-                {formatPrix(produit.prix)}
-              </span>
-            )}
-          </div>
+        {/* Prix */}
+        <div className="mt-auto pt-3 border-t border-gray-100">
+          <span className="font-black text-base text-[#011023]">{formatPrix(prixAffiche)}</span>
+          {aPromotion && (
+            <span className="ml-2 text-xs text-gray-400 line-through">{formatPrix(produit.prix)}</span>
+          )}
+        </div>
+
+        {/* Actions : discuter avec la boutique + ajouter au panier */}
+        <div className="flex items-center gap-2 mt-3">
+          <BoutonDiscuter produitId={produit._id} className="flex-1" />
           <button
             onClick={handleAjouterAuPanier}
             disabled={indisponible}
             className={[
-              'cursor-pointer w-9 h-9 text-white rounded-xl flex items-center justify-center transition-all',
+              'cursor-pointer w-9 h-9 shrink-0 text-white rounded-xl flex items-center justify-center transition-all',
               indisponible
                 ? 'bg-gray-300 cursor-not-allowed'
                 : 'bg-[#011023] group-hover:bg-[#FC7701] group-hover:scale-105',

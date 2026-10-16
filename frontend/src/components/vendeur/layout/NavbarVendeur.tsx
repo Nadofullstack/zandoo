@@ -1,4 +1,5 @@
 import { Menu, X } from 'lucide-react';
+import ClocheNotifications from '../../notifications/ClocheNotifications';
 import logo from '../../../assets/logo.jpg';
 
 interface NavbarVendeurProps {
@@ -25,6 +26,8 @@ export default function NavbarVendeur({ ouvert, basculerMenu }: NavbarVendeurPro
         </div>
       </div>
 
+      <div className="flex items-center gap-1">
+        <ClocheNotifications theme="sombre" />
       {/* Bouton hamburger */}
       <button
         onClick={basculerMenu}
@@ -34,6 +37,7 @@ export default function NavbarVendeur({ ouvert, basculerMenu }: NavbarVendeurPro
       >
         {ouvert ? <X size={24} /> : <Menu size={24} />}
       </button>
+      </div>
     </nav>
   );
 }

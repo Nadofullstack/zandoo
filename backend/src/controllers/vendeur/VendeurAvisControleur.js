@@ -94,7 +94,7 @@ export const repondreAvis = async (req, res) => {
     const avis = await Avis.findOneAndUpdate(
       { _id: req.params.id, vendeur: vendeurId },
       { $set: { reponseVendeur: { texte, reponduAt: texte ? new Date() : null } } },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
     if (!avis) return res.status(404).json({ success: false, message: 'Avis introuvable.' });
 

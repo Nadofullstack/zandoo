@@ -1,9 +1,15 @@
+import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './src/config/db.js';
+import env from './src/config/env.js';
+import { initialiserTempsReel } from './src/realtime/socket.js';
 import routesAuth             from './src/routes/AuthRoutes.js';
+import routesMessagerie       from './src/routes/MessagerieRoutes.js';
+import routesNotifications    from './src/routes/NotificationRoutes.js';
 import routesAdminVendeur     from './src/routes/admin/AdminVendeurRoutes.js';
 import routesAdminProduit     from './src/routes/admin/AdminProduitRoutes.js';
 import routesAdminCategorie   from './src/routes/admin/AdminCategorieRoutes.js';
@@ -39,6 +45,13 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 connectDB();
 
+// ── Sécurité ─────────────────────────────────────────────────────────────────
+/* Adresse réelle du visiteur derrière un proxy (TRUST_PROXY = nombre de proxys) */
+app.set('trust proxy', env.server.trustProxy);
+
+/* En-têtes de sécurité HTTP (HSTS, nosniff, frameguard, masquage de X-Powered-By…) */
+app.use(helmet());
+
 // ── Middlewares ──────────────────────────────────────────────────────────────
 app.use(
   cors({
@@ -52,6 +65,8 @@ app.use(cookieParser());
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth',                 routesAuth);
+app.use('/api/messagerie',           routesMessagerie);
+app.use('/api/notifications',        routesNotifications);
 app.use('/api/admin/vendeurs',       routesAdminVendeur);
 app.use('/api/admin/produits',       routesAdminProduit);
 app.use('/api/admin/categories',     routesAdminCategorie);
@@ -95,6 +110,10 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ success: false, message: 'Erreur serveur interne' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+/* Serveur HTTP partagé entre l'API Express et le temps réel (Socket.IO) */
+const serveur = createServer(app);
+initialiserTempsReel(serveur);
+
+serveur.listen(PORT, () => {
+  console.log(`🚀 Serveur démarré sur le port ${PORT} (API + temps réel)`);
 });

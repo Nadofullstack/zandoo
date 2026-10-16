@@ -36,6 +36,8 @@ export interface ProduitResume {
 
 export interface ProduitDetail extends ProduitResume {
   description: string;
+  /** Stock disponible (limite le sélecteur de quantité) */
+  quantiteDisponible?: number;
   reference?: string;
   attributs?: { nom: string; valeur: string }[];
   variantes?: { nom: string; valeurs: string[] }[];

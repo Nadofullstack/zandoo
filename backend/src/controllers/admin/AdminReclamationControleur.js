@@ -254,7 +254,7 @@ export const assignerReclamation = async (req, res) => {
     const reclamation = await Reclamation.findByIdAndUpdate(
       req.params.id,
       { assigneA: adminId ?? null },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('utilisateur', 'fullName email')
       .populate('assigneA',    'fullName email')
@@ -289,7 +289,7 @@ export const modifierPriorite = async (req, res) => {
     const reclamation = await Reclamation.findByIdAndUpdate(
       req.params.id,
       { priorite },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('utilisateur', 'fullName email')
       .lean();
@@ -323,7 +323,7 @@ export const modifierNotesAdmin = async (req, res) => {
     const reclamation = await Reclamation.findByIdAndUpdate(
       req.params.id,
       { notesAdmin: notesAdmin.trim().slice(0, 500) },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('utilisateur', 'fullName email')
       .lean();

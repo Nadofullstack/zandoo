@@ -1,16 +1,16 @@
 import api from '../api';
-import type { RegisterPayload, AuthResponse } from '../../types/auth/auth';
+import type { RegisterPayload, AuthResponse, AuthUser } from '../../types/auth/auth';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Clé de stockage localStorage
 ───────────────────────────────────────────────────────────────────────────── */
 const CLE_UTILISATEUR = 'utilisateur_courant';
 
-export function sauvegarderSession(user: AuthResponse['data']['user']): void {
+export function sauvegarderSession(user: AuthUser): void {
   localStorage.setItem(CLE_UTILISATEUR, JSON.stringify(user));
 }
 
-export function lireSession(): AuthResponse['data']['user'] | null {
+export function lireSession(): AuthUser | null {
   try {
     const raw = localStorage.getItem(CLE_UTILISATEUR);
     return raw ? JSON.parse(raw) : null;
@@ -62,7 +62,7 @@ export async function logoutUser(): Promise<void> {
  * À appeler après des événements qui changent le profil (ex : approbation boutique).
  * Retourne l'utilisateur mis à jour, ou null si non connecté.
  */
-export async function rafraichirSession(): Promise<AuthResponse['data']['user'] | null> {
+export async function rafraichirSession(): Promise<AuthUser | null> {
   try {
     const { data } = await api.get<AuthResponse>('/auth/me');
     if (data.data?.user) {
@@ -81,9 +81,10 @@ export async function rafraichirSession(): Promise<AuthResponse['data']['user'] 
  */
 export async function mettreAJourProfil(
   payload: { fullName: string; phone: string }
-): Promise<AuthResponse['data']['user']> {
+): Promise<AuthUser> {
   const { data } = await api.put<AuthResponse>('/auth/me', payload);
-  if (data.data?.user) sauvegarderSession(data.data.user);
+  if (!data.data?.user) throw new Error(data.message || 'Réponse inattendue du serveur.');
+  sauvegarderSession(data.data.user);
   return data.data.user;
 }
 

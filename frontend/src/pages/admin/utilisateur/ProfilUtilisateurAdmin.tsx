@@ -139,9 +139,9 @@ export default function ProfilUtilisateurAdmin() {
               <h1 className="text-xl font-extrabold text-primary">{utilisateur.fullName}</h1>
               <BadgeRole role={utilisateur.role} />
               {utilisateur.isVerified ? (
-                <ShieldCheck size={16} className="text-green-600" title="Compte vérifié" />
+                <span title="Compte vérifié" aria-label="Compte vérifié" className="inline-flex"><ShieldCheck size={16} className="text-green-600" aria-hidden="true" /></span>
               ) : (
-                <ShieldOff size={16} className="text-gray-400" title="Non vérifié" />
+                <span title="Non vérifié" aria-label="Non vérifié" className="inline-flex"><ShieldOff size={16} className="text-gray-400" aria-hidden="true" /></span>
               )}
             </div>
 

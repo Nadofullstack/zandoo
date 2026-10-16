@@ -9,7 +9,7 @@ export const uploadPhotos = (req, res) => {
       return res.status(400).json({ success: false, message: 'Aucun fichier reçu.' });
     }
 
-    // multer-storage-cloudinary expose l'URL dans file.path
+    // Le moteur de stockage (config/cloudinary.js) expose l'URL dans file.path
     const urls = req.files.map((f) => f.path);
 
     return res.status(200).json({
@@ -33,7 +33,7 @@ export const uploadVideo = (req, res) => {
       return res.status(400).json({ success: false, message: 'Aucune vidéo reçue.' });
     }
 
-    // multer-storage-cloudinary expose l'URL dans file.path
+    // Le moteur de stockage (config/cloudinary.js) expose l'URL dans file.path
     const url = req.file.path;
 
     return res.status(200).json({

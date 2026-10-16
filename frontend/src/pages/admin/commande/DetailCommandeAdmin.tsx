@@ -15,6 +15,11 @@ const TRANSITIONS: Record<StatutCommande, { statut: StatutCommande; libelle: str
     { statut: 'annulee', libelle: 'Annuler',           variante: 'danger'  },
   ],
   payee: [
+    { statut: 'en_preparation', libelle: 'Marquer en préparation', variante: 'warning' },
+    { statut: 'expediee',       libelle: 'Marquer expédiée',       variante: 'success' },
+    { statut: 'annulee',        libelle: 'Annuler',                variante: 'danger'  },
+  ],
+  en_preparation: [
     { statut: 'expediee', libelle: 'Marquer expédiée', variante: 'success' },
     { statut: 'annulee',  libelle: 'Annuler',           variante: 'danger'  },
   ],

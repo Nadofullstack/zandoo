@@ -1,4 +1,5 @@
 import Commande from '../../models/Commande.js';
+import { notifierStatutCommande } from '../../services/notificationService.js';
 import Vendeur from '../../models/Vendeur.js';
 import { envoyerChangementStatutAcheteur } from '../../services/emailService.js';
 import { annulerCommande as annulerCommandeService, ErreurCommande, STATUTS_ANNULABLES_VENDEUR } from '../../services/commandeService.js';
@@ -170,6 +171,11 @@ export const marquerCommande = async (req, res) => {
       }).catch((err) => console.error('Email statut commande vendeur:', err.message));
     }
 
+    /* Notification in-app acheteur */
+    notifierStatutCommande({
+      acheteur: miseAJour?.acheteur?._id, commandeId: commande._id, numero: commande.numero, statut,
+    });
+
     return res.status(200).json({
       success: true,
       message: `Commande passée à "${statut}".`,
@@ -219,6 +225,10 @@ export const annulerCommande = async (req, res) => {
         vendeurNom:    vendeur?.nomEntreprise ?? 'Un vendeur',
       }).catch((err) => console.error('Email annulation commande vendeur:', err.message));
     }
+
+    notifierStatutCommande({
+      acheteur: miseAJour?.acheteur?._id, commandeId: commande._id, numero: commande.numero, statut: 'annulee',
+    });
 
     return res.status(200).json({
       success: true,
